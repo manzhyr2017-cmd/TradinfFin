@@ -1369,3 +1369,16 @@ INFO:Dashboard:\u26a1 AI Agent requested execution for AVAXUSDT Buy
 WARNING:ai_agent:\u274c AI AUTO-TRADE REJECTED: AVAXUSDT - Auto-trade not enabled in Web Controller yet
 INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
 INFO:ai_agent:\u2705 Sentinel Cycle Complete. Sleeping for 15m
+INFO:bybit_client:\U0001f50d DEBUG POSITIONS RAW (ALL): {"nextPageCursor": "FARTCOINUSDT%2C1770357991245%2C0", "category": "linear", "list": [{"symbol": "FARTCOINUSDT", "leverage": "3", "breakEvenPrice": "0.18769517", "autoAddMargin": 0, "avgPrice": "0.18744", "liqPrice": "0.0899769", "riskLimitValue": "10000", "takeProfit": "0.19638", "positionValue": "230.92608", "isReduceOnly": false, "positionIMByMp": "76.34493815", "tpslMode": "Full", "riskId": 1, "trailingStop": "0", "liqPriceByMp": "", "unrealisedPnl": "-2.35312", "markPrice": "0.18553", "adlRankIndicator": 2, "cumRealisedPnl": "-0.08313339", "positionMM": "1.68539032", "createdTime": "1770357706033", "positionIdx": 0, "positionIM": "76.34493815", "positionMMByMp": "1.68539032", "seq": 225845556169, "updatedTime": "1770357991245", "side": "Buy", "bustPrice": "", "positionBalance": "0", "leverageSysUpdatedTime": "", "curRealisedPnl": "-0.08313339", "size": "1232", "positionStatus": "Normal", "mmrSysUpdatedTime": "", "stopLoss": "0.1845", "tradeMode": 0, "sessionAvgPrice": ""}]}
+INFO:ai_agent:\U0001f575\ufe0f Smart Exit: Checking 1 active positions...
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing FARTCOINUSDT...
+INFO:ai_agent:\U0001f4b2 Real-time Price for FARTCOINUSDT: 0.18543
+INFO:ai_agent:\U0001f4ca MTF RSI: 1m=47.5, 15m=67.4, 1H=33.5, 4H=27.8
+INFO:ai_agent:\U0001f50e Searching Brave: FARTCOINUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:\u26a0\ufe0f AI generated weak RR (1.05) for strategy Neuro-Scalper (1m Micro). Adjusting TP to 1:1.5.
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 70, 'reasoning': 'На данный момент мы наблюдаем за формированием восходящего треугольника на графике FARTCOINUSDT. Уровни RSI на разных таймфреймах показывают смешанную картину, но ни один из них не находится в зоне экстремальных значений. 1-минутный RSI находится на уровне 47,5, что может быть сигналом для скальпинга. Учитывая наличие новостного щита и отсутствие сильной негативной дивергенции, мы можем рассмотреть возможность входа в длинную позицию. Важно отметить, что текущая цена находится вблизи уровня поддержки, что может быть хорошим моментом для входа в рынок \U0001f4c8 [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 0.18543, 'take_profit': 0.18982500000000002, 'stop_loss': 0.1825, 'signal_title': 'Вход в восходящий треугольник', 'strategy_name': 'Neuro-Scalper (1m Micro)'}
+INFO:ai_agent:\U0001f4ca Sentinel selected top 5 MOVE-MAKERS (from top 20 volume): ['AAVEUSDT', 'SUIUSDT', 'SOLUSDT', 'ZECUSDT', 'AVAXUSDT']
+INFO:ai_agent:\U0001f9e0 AI Sentinel Cycle: AAVEUSDT
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing AAVEUSDT...
+INFO:ai_agent:\U0001f4b2 Real-time Price for AAVEUSDT: 104.01

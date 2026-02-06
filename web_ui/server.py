@@ -44,6 +44,7 @@ bot_process = None
 ai_agent = None
 _sentinel_running = False
 _services = {}
+BOT_START_TIME = None
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -61,6 +62,9 @@ async def lifespan(app: FastAPI):
     
     init_db()
     
+    global ai_agent, tg_bot, BOT_START_TIME, bot_process
+    
+    BOT_START_TIME = datetime.now().isoformat()
     tg_bot = None  # Define early to avoid UnboundLocalError
     bot_process = None
     config = load_config()
@@ -622,15 +626,27 @@ async def get_status():
     # Merge with AI Agent's own live data if available
     llm_info = {"provider": "Unknown", "providers_count": 0}
     state = {}
+    
+    # Try to get live service data first
+    if _services.get('sentiment'):
+        s_data = _services['sentiment'].get_state()
+        state['sentiment_regime'] = s_data.get('regime', 'NEUTRAL')
+        state['sentiment_reason'] = s_data.get('reasoning', 'Initializing...')
+    else:
+        state['sentiment_regime'] = bot_state.get('sentiment_regime', 'N/A')
+        state['sentiment_reason'] = bot_state.get('sentiment_reason', 'N/A')
+
     if ai_agent:
-        state['sentiment_regime'] = bot_state.get('sentiment_regime', ai_agent.sentiment_regime if hasattr(ai_agent, 'sentiment_regime') else 'NEUTRAL')
-        state['sentiment_reason'] = bot_state.get('sentiment_reason', ai_agent.sentiment_reason if hasattr(ai_agent, 'sentiment_reason') else 'Initializing...')
-        
-        if hasattr(ai_agent, 'llm_clients'):
+        # LLM detection
+        if hasattr(ai_agent, 'get_llm_status'):
+            status = ai_agent.get_llm_status()
+            llm_info["provider"] = status.get("provider", "Unknown")
+            llm_info["providers_count"] = status.get("total_providers", 0)
+        elif hasattr(ai_agent, 'llm_clients'):
             llm_info["providers_count"] = len(ai_agent.llm_clients)
             if ai_agent.llm_clients:
                 current = ai_agent._get_current_llm()
-                if current[0]:
+                if current and current[0]:
                     llm_info["provider"] = current[0]
                     
         # If AI Agent has its own recent findings, prioritize them
