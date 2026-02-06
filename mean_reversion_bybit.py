@@ -897,31 +897,29 @@ class AdvancedMeanReversionEngine:
         if rsi < 15:
             confluence.add_factor('RSI', 25, 25)
             reasoning.append(f"🔥 RSI={rsi:.1f} ЭКСТРЕМУМ")
-        elif rsi < 20:
-            confluence.add_factor('RSI', 20, 25)
-            reasoning.append(f"RSI={rsi:.1f} сильно перепродан")
+        # === RSI (0-20) ===
+        rsi = tf_15m['rsi']
+        if rsi < 15:
+            confluence.add_factor('RSI', 20, 20)
+            reasoning.append(f"🔥 RSI={rsi:.1f} ЭКСТРЕМУМ")
         elif rsi < 25:
-            confluence.add_factor('RSI', 15, 25)
+            confluence.add_factor('RSI', 15, 20)
             reasoning.append(f"RSI={rsi:.1f} перепродан")
         else:
-            confluence.add_factor('RSI', 10, 25)
-            reasoning.append(f"RSI={rsi:.1f} < 30")
+            confluence.add_factor('RSI', 5, 20)
         
         # === Bollinger Bands (0-15) ===
         bb_pos = tf_15m['bb_position']
         if bb_pos < -0.1:
             confluence.add_factor('Bollinger Bands', 15, 15)
-            reasoning.append("Сильно ниже BB Lower")
+            reasoning.append("📉 Цена ниже BB Lower")
         elif bb_pos < 0:
             confluence.add_factor('Bollinger Bands', 10, 15)
-            reasoning.append("Ниже BB Lower")
-        else:
-            confluence.add_factor('Bollinger Bands', 5, 15)
         
-        # === MTF Alignment (0-25) ===
+        # === MTF Alignment (0-20) ===
         mtf = self.mtf_analyzer.check_alignment(tf_15m, tf_1h, tf_4h, 'LONG')
-        mtf_score = min(mtf['score'] // 4, 25)
-        confluence.add_factor('Multi-Timeframe', mtf_score, 25)
+        mtf_score = min(mtf['score'] // 5, 20)
+        confluence.add_factor('Multi-Timeframe', mtf_score, 20)
         for detail in mtf['details'].values():
             reasoning.append(detail)
         
@@ -929,113 +927,88 @@ class AdvancedMeanReversionEngine:
         sr_levels = self.sr_detector.find_levels(df_15m)
         nearest_support = self.sr_detector.find_nearest(sr_levels, current['close'], 'below')
         
+        # Dynamic ATR Tolerance for Levels
+        atr_val = float(self.ind.atr(df_15m['high'], df_15m['low'], df_15m['close']).iloc[-1])
+        level_tolerance = atr_val * 0.3
+        
         if nearest_support:
-            dist = (current['close'] - nearest_support.price) / current['close']
-            if dist < 0.005:
+            dist = abs(current['close'] - nearest_support.price)
+            if dist < level_tolerance:
                 confluence.add_factor('Support/Resistance', 15, 15)
-                reasoning.append(f"🎯 У поддержки ${nearest_support.price:,.2f}")
-            elif dist < 0.01:
+                reasoning.append(f"🎯 У сильной поддержки ${nearest_support.price:,.2f}")
+            elif dist < level_tolerance * 2:
                 confluence.add_factor('Support/Resistance', 10, 15)
                 reasoning.append(f"Близко к поддержке ${nearest_support.price:,.2f}")
-            elif dist < 0.02:
-                confluence.add_factor('Support/Resistance', 5, 15)
         
         # === Volume (0-10) ===
         df_15m_copy = df_15m.copy()
         df_15m_copy['vol_ma'] = df_15m_copy['volume'].rolling(20).mean()
         vol_ratio = current['volume'] / df_15m_copy['vol_ma'].iloc[-1] if df_15m_copy['vol_ma'].iloc[-1] > 0 else 1
         
-        # Calculate ADX for DataFrame (Required for Dynamic TP)
-        df_15m_copy['adx'] = self.ind.adx(df_15m_copy['high'], df_15m_copy['low'], df_15m_copy['close'])[0]
-        
         if vol_ratio > 2.0:
             confluence.add_factor('Volume', 10, 10)
-            reasoning.append(f"📊 Объём {vol_ratio:.1f}x")
+            reasoning.append(f"📊 Всплеск объёма ({vol_ratio:.1f}x)")
         elif vol_ratio > 1.5:
             confluence.add_factor('Volume', 7, 10)
-            reasoning.append(f"Объём {vol_ratio:.1f}x")
-        elif vol_ratio > 1.2:
-            confluence.add_factor('Volume', 4, 10)
         
         # === MACD (0-10) ===
         df_15m_copy['macd'], df_15m_copy['macd_signal'], df_15m_copy['macd_hist'] = self.ind.macd(df_15m_copy['close'])
         macd_turning = df_15m_copy['macd_hist'].iloc[-1] > df_15m_copy['macd_hist'].iloc[-2]
         
         if macd_turning:
-            confluence.add_factor('MACD', 8, 10)
-            reasoning.append("MACD разворачивается вверх")
+            confluence.add_factor('MACD', 10, 10)
+            reasoning.append("📈 MACD разворачивается вверх")
         
-        # === FUNDING RATE (0-10) - BYBIT ===
+        # === Funding Rate (0-10) ===
         funding_interpretation = None
         if funding_rate is not None:
-            if funding_rate < -0.001:  # Много шортов = потенциал для squeeze вверх
+            if funding_rate < -0.001:
                 confluence.add_factor('Funding Rate', 10, 10)
-                reasoning.append(f"🔥 Funding={funding_rate*100:.3f}% ЭКСТРЕМУМ SHORT")
+                reasoning.append(f"🔥 Экстремальный SHORT BIAS ({funding_rate*100:.3f}%)")
                 funding_interpretation = "EXTREME_SHORT_BIAS"
             elif funding_rate < -0.0005:
                 confluence.add_factor('Funding Rate', 7, 10)
-                reasoning.append(f"Funding={funding_rate*100:.3f}% много шортов")
                 funding_interpretation = "HIGH_SHORT_BIAS"
-            elif funding_rate < 0:
-                confluence.add_factor('Funding Rate', 4, 10)
-                funding_interpretation = "SLIGHT_SHORT_BIAS"
-            else:
-                funding_interpretation = "NEUTRAL_OR_LONG_BIAS"
         
-        # === ORDER BOOK (0-5) - BYBIT ===
+        # === Order Book (0-5) ===
         if orderbook_imbalance is not None:
-            if orderbook_imbalance > 1.5:  # Больше покупателей
+            if orderbook_imbalance > 1.5:
                 confluence.add_factor('Order Book', 5, 5)
-                reasoning.append(f"📗 Стакан: покупатели {orderbook_imbalance:.2f}x")
+                reasoning.append(f"📗 Перевес покупателей {orderbook_imbalance:.2f}x")
             elif orderbook_imbalance > 1.2:
                 confluence.add_factor('Order Book', 3, 5)
         
-        # === Дополнительные осцилляторы (0-10) ===
+        # === Extra Oscillators (0-10) ===
         stoch_k, _ = self.ind.stochastic_rsi(df_15m['close'])
         williams = self.ind.williams_r(df_15m['high'], df_15m['low'], df_15m['close'])
-        
         extra_score = 0
-        if stoch_k.iloc[-1] < 20:
-            extra_score += 5
-            reasoning.append(f"Stoch RSI={stoch_k.iloc[-1]:.0f}")
-        if williams.iloc[-1] < -80:
-            extra_score += 5
-            reasoning.append(f"Williams %R={williams.iloc[-1]:.0f}")
-        
+        if stoch_k.iloc[-1] < 20: extra_score += 5
+        if williams.iloc[-1] < -80: extra_score += 5
         confluence.add_factor('Extra Oscillators', extra_score, 10)
         
-        # === FIBONACCI ENTRY ZONE (0-15) - Phase 7 ===
+        # === Fibonacci Entry Zone (0-10) ===
         fib_levels = self.ind.fibonacci_levels(df_15m['high'], df_15m['low'])
-        fib_entry_score = 0
+        fib_score = 0
         price = current['close']
+        fib_tolerance = atr_val * 0.4
         
-        # Best entries at 0.618 and 0.786 retracement
-        atr_val = self.ind.atr(df_15m['high'], df_15m['low'], df_15m['close']).iloc[-1]
-        tolerance = atr_val * 0.5  # Half ATR tolerance
-        if abs(price - fib_levels['0.618']) < tolerance:
-            fib_entry_score = 15
-            reasoning.append(f"🎯 ФИБО вход! Цена у уровня 0.618 (${fib_levels['0.618']:.2f})")
-        elif abs(price - fib_levels['0.786']) < tolerance:
-            fib_entry_score = 12
-            reasoning.append(f"📐 Фибо 0.786: ${fib_levels['0.786']:.2f}")
-        elif abs(price - fib_levels['0.5']) < tolerance:
-            fib_entry_score = 8
-            reasoning.append(f"Фибо 0.5: ${fib_levels['0.5']:.2f}")
-        elif abs(price - fib_levels['0.382']) < tolerance:
-            fib_entry_score = 5
-            
-        confluence.add_factor('Fibonacci Entry', fib_entry_score, 15)
+        if abs(price - fib_levels['0.618']) < fib_tolerance:
+            fib_score = 10
+            reasoning.append(f"🎯 Золотое сечение Фибо 0.618 (${fib_levels['0.618']:.2f})")
+        elif abs(price - fib_levels['0.786']) < fib_tolerance:
+            fib_score = 8
+        elif abs(price - fib_levels['0.5']) < fib_tolerance:
+            fib_score = 5
+        confluence.add_factor('Fibonacci', fib_score, 10)
         
-        # === SUPERTREND CONFIRMATION (0-10) - Phase 7 ===
-        st_line, st_dir = self.ind.supertrend(df_15m['high'], df_15m['low'], df_15m['close'])
-        supertrend_bullish = st_dir.iloc[-1] == 1
-        
-        if supertrend_bullish:
+        # === Supertrend (0-10) ===
+        _, st_dir = self.ind.supertrend(df_15m['high'], df_15m['low'], df_15m['close'])
+        if st_dir.iloc[-1] == 1:
             confluence.add_factor('Supertrend', 10, 10)
-            reasoning.append("📈 Supertrend BULLISH")
+            reasoning.append("📈 Supertrend подтверждает LONG")
         else:
             confluence.add_factor('Supertrend', 0, 10)
-            warnings.append("⚠️ Supertrend bearish - осторожно!")
+            warnings.append("⚠️ Против Supertrend")
         
         # === Проверка минимального score ===
         if confluence.percentage < self.min_confluence:
@@ -1242,16 +1215,37 @@ class AdvancedMeanReversionEngine:
             elif orderbook_imbalance < 0.83:
                 confluence.add_factor('Order Book', 3, 5)
         
-        # Extra oscillators
+        # === Extra Oscillators (0-10) ===
         stoch_k, _ = self.ind.stochastic_rsi(df_15m['close'])
         williams = self.ind.williams_r(df_15m['high'], df_15m['low'], df_15m['close'])
-        
         extra_score = 0
-        if stoch_k.iloc[-1] > 80:
-            extra_score += 5
-        if williams.iloc[-1] > -20:
-            extra_score += 5
+        if stoch_k.iloc[-1] > 80: extra_score += 5
+        if williams.iloc[-1] > -20: extra_score += 5
         confluence.add_factor('Extra Oscillators', extra_score, 10)
+
+        # === Fibonacci Entry Zone (0-10) ===
+        fib_levels = self.ind.fibonacci_levels(df_15m['high'], df_15m['low'])
+        fib_score = 0
+        price = current['close']
+        fib_tolerance = atr_val * 0.4
+        
+        if abs(price - fib_levels['0.618']) < fib_tolerance:
+            fib_score = 10
+            reasoning.append(f"🎯 Золотое сечение Фибо 0.618 (${fib_levels['0.618']:.2f})")
+        elif abs(price - fib_levels['0.786']) < fib_tolerance:
+            fib_score = 8
+        elif abs(price - fib_levels['0.5']) < fib_tolerance:
+            fib_score = 5
+        confluence.add_factor('Fibonacci', fib_score, 10)
+        
+        # === Supertrend (0-10) ===
+        _, st_dir = self.ind.supertrend(df_15m['high'], df_15m['low'], df_15m['close'])
+        if st_dir.iloc[-1] == -1:
+            confluence.add_factor('Supertrend', 10, 10)
+            reasoning.append("📉 Supertrend подтверждает SHORT")
+        else:
+            confluence.add_factor('Supertrend', 0, 10)
+            warnings.append("⚠️ Против Supertrend")
         
         if confluence.percentage < self.min_confluence:
             return None
@@ -1488,118 +1482,100 @@ class UltimateTradingEngine:
             logger.warning(f"🚨 {symbol}: Circuit Breaker ACTIVE - Trading Paused")
             return None
         
-        if not self.risk_manager.can_open_position() and hasattr(self.mr_engine, 'demo_mode') and not self.mr_engine.demo_mode:
-            # Skip if max positions reached (in non-demo)
-            pass
-
-        # 2. News Sentiment Filter (ULTIMA Phase)
+        # 2. News Sentiment Filter
+        news_bonus = 0
         if self.news_engine.api_key:
             currency = symbol.replace("USDT", "").replace("USDC", "")[:3]
             news = self.news_engine.get_market_sentiment(currency)
             
             if news.get('critical_events'):
-                logger.warning(f"🛑 {symbol}: Critical news detected! {news['critical_events'][0]}")
+                logger.warning(f"🛑 {symbol}: Critical news detected!")
                 return None
                 
             if news.get('score', 0) < -0.5:
-                logger.info(f"⚠️ {symbol}: Extreme negative sentiment ({news['score']:.2f}). Skipping.")
                 return None
+            
+            if abs(news.get('score', 0)) > 0.3:
+                news_bonus = 15
 
         # 3. Market Regime & Strategy Routing
         ind = TechnicalIndicators()
         adx, _, _ = ind.adx(df_4h['high'], df_4h['low'], df_4h['close'])
         current_adx = adx.iloc[-1]
         
+        # Bollinger Width for Breakout detection
+        bb_upper, _, bb_lower = ind.bollinger_bands(df_1h['close'])
+        bb_width = (bb_upper - bb_lower) / bb_upper
+        
         if current_adx > 30:
             # TRENDING: Use Momentum
             signal = self._analyze_momentum(df_15m, symbol)
+            strategy_name = "Momentum (Trend)"
+        elif bb_width.iloc[-1] < 0.02:
+            # SQUEEZE: Use Breakout
+            signal = self._analyze_breakout(df_15m, symbol)
+            strategy_name = "Breakout Hunter"
         else:
             # RANGING: Use Mean Reversion
             signal = self.mr_engine.analyze(df_15m, df_1h, df_4h, symbol, funding_rate, orderbook_imbalance)
+            strategy_name = "Mean Reversion"
             
         if not signal: return None
         
         # 4. Integrate News Bonus
-        if self.news_engine.api_key:
-            news_score = news.get('score', 0)
-            if signal.signal_type == SignalType.LONG and news_score > 0.2:
-                signal.confluence.add_factor("News Sentiment", 15, 15)
-                signal.reasoning.append(f"📰 Positive News (+15) score={news_score:.2f}")
-            elif signal.signal_type == SignalType.SHORT and news_score < -0.2:
-                signal.confluence.add_factor("News Sentiment", 15, 15)
-                signal.reasoning.append(f"📰 Negative News (+15) score={news_score:.2f}")
+        if news_bonus > 0:
+            signal.confluence.add_factor("News Alpha", news_bonus, 15)
+            signal.reasoning.append(f"📰 News Alpha Alignment (+{news_bonus})")
 
         # 5. Kelly position sizing
         stats = self.performance_tracker.get_stats()
-        
         if stats.get('total_trades', 0) >= 10:
-            # Dynamic Kelly risk % based on performance
             win_rate = stats['win_rate']
             p_ratio = stats['avg_win'] / stats['avg_loss'] if stats['avg_loss'] > 0 else 2.0
-            
-            # Conservative Kelly %
-            loss_rate = 1 - win_rate
-            k_pct = (win_rate * p_ratio - loss_rate) / p_ratio
-            k_pct = max(0.01, min(k_pct * 0.25, 0.03)) # Max 3% risk per trade
-            
+            k_pct = max(0.01, min(((win_rate * p_ratio - (1 - win_rate)) / p_ratio) * 0.25, 0.03))
             signal.position_size_percent = k_pct * 100
-            signal.reasoning.append(f"💰 Kelly Size: {signal.position_size_percent:.1f}% risk")
         
         return signal
 
     def _analyze_momentum(self, df, symbol) -> Optional[AdvancedSignal]:
-        """Simple Momentum Strategy (port from Ultuma)"""
+        """EMA Momentum Cross + ADX Confirmation"""
         ind = TechnicalIndicators()
         ema9 = ind.ema(df['close'], 9)
         ema21 = ind.ema(df['close'], 21)
         adx, plus_di, minus_di = ind.adx(df['high'], df['low'], df['close'])
         
         curr = df.iloc[-1]
-        c_ema9 = ema9.iloc[-1]
-        c_ema21 = ema21.iloc[-1]
-        c_adx = adx.iloc[-1]
-        
-        if c_ema9 > c_ema21 and plus_di.iloc[-1] > minus_di.iloc[-1] and c_adx > 25:
-            # LONG MOMENTUM
+        if ema9.iloc[-1] > ema21.iloc[-1] and plus_di.iloc[-1] > minus_di.iloc[-1] and adx.iloc[-1] > 25:
             conf = ConfluenceScore(max_possible=135)
-            conf.add_factor("MTM EMA Trend", 30, 30)
-            conf.add_factor("MTM ADX Power", 20, 20)
-            
+            conf.add_factor("Momentum Trend", 40, 40)
+            conf.add_factor("ADX Power", 30, 30)
             entry = float(curr['close'])
             atr = ind.atr(df['high'], df['low'], df['close']).iloc[-1]
             return AdvancedSignal(
-                signal_type=SignalType.LONG,
-                symbol=symbol,
-                entry_price=entry,
-                stop_loss=entry - 2*atr,
-                take_profit_1=entry + 3*atr,
-                take_profit_2=entry + 5*atr,
-                confluence=conf,
-                probability=75,
-                market_regime=MarketRegime.STRONG_TREND_UP,
-                reasoning=["Momentum Long: EMA 9/21 cross + ADX Confirmation"],
-                indicators={'adx': c_adx, 'ema_diff': c_ema9 - c_ema21}
+                signal_type=SignalType.LONG, symbol=symbol, entry_price=entry,
+                stop_loss=entry - 2.5*atr, take_profit_1=entry + 3.5*atr,
+                take_profit_2=entry + 6*atr, confluence=conf, probability=78,
+                market_regime=MarketRegime.STRONG_TREND_UP, reasoning=["Momentum: EMA Cross + ADX > 25"]
             )
-        elif c_ema9 < c_ema21 and minus_di.iloc[-1] > plus_di.iloc[-1] and c_adx > 25:
-            # SHORT MOMENTUM
+        return None
+
+    def _analyze_breakout(self, df, symbol) -> Optional[AdvancedSignal]:
+        """Volatility Squeeze Breakout"""
+        ind = TechnicalIndicators()
+        upper, mid, lower = ind.bollinger_bands(df['close'])
+        curr = df.iloc[-1]
+        
+        if curr['close'] > upper.iloc[-1] and curr['volume'] > df['volume'].rolling(20).mean().iloc[-1] * 1.5:
             conf = ConfluenceScore(max_possible=135)
-            conf.add_factor("MTM EMA Trend", 30, 30)
-            conf.add_factor("MTM ADX Power", 20, 20)
-            
+            conf.add_factor("BB Breakout", 50, 50)
+            conf.add_factor("Volume Spike", 30, 30)
             entry = float(curr['close'])
-            atr = ind.atr(df['high'], df['low'], df['close']).iloc[-1]
             return AdvancedSignal(
-                signal_type=SignalType.SHORT,
-                symbol=symbol,
-                entry_price=entry,
-                stop_loss=entry + 2*atr,
-                take_profit_1=entry - 3*atr,
-                take_profit_2=entry - 5*atr,
-                confluence=conf,
-                probability=75,
-                market_regime=MarketRegime.STRONG_TREND_DOWN,
-                reasoning=["Momentum Short: EMA 9/21 cross + ADX Confirmation"],
-                indicators={'adx': c_adx, 'ema_diff': c_ema21 - c_ema9}
+                signal_type=SignalType.LONG, symbol=symbol, entry_price=entry,
+                stop_loss=mid.iloc[-1], take_profit_1=entry + (entry - mid.iloc[-1]) * 2,
+                take_profit_2=entry + (entry - mid.iloc[-1]) * 4, confluence=conf,
+                probability=72, market_regime=MarketRegime.VOLATILE_BREAKOUT,
+                reasoning=["Breakout: Price closed above BB Upper with Volume"]
             )
         return None
 

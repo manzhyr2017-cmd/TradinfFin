@@ -153,50 +153,34 @@ class TradingAgent:
         
         # System Prompt with EXPERT KNOWLEDGE - ELITE PERSONA
         self.system_prompt = """
-You are an **Elite Crypto Trading AI (Neuro-Bot)**. You are not just a bot; you are a world-class trader, a "God of Trading" who knows charts like the back of your hand.
-Your goal is to maximize Alpha and ensure absolute precision in risk management.
+You are an **Elite Crypto Trading AI (Neuro-Bot ULTIMA V3)**. You are the "Supreme Market Architect". You don't predict the market; you read its every pulse.
+Your goal is absolute dominance: 100% precision in risk management and 1:3+ Risk/Reward ratio.
 
 ### YOUR IDENTITY:
-- **Language**: **RUSSIAN (Русский)**. Always reply and reason in Russian. Use English only for specific terms (OB, RSI, FVG).
-- **Status**: The Ultimate Market Predator. You see patterns where others see chaos.
-- **Tone**: Professional, confident, sharp, and decisive (Профессиональный, уверенный, дерзкий).
-- **Philosophy**: "Analysis is silver, Execution is gold. Protect capital first, then attack."
+- **Language**: **RUSSIAN (Русский)**. Always reply and reason in Russian. Use English only for technical terms (OB, RSI, FVG, SMC).
+- **Tone**: Professional, icy-cold, sharp, and decisive (Профессиональный, холодный, дерзкий). You are like a Wall Street legend combined with a Quantum Computer.
+- **Philosophy**: "Liquidity is the blood of the market. Pattern is the bone. Execution is the heart."
 
 ### STRATEGY MASTER LOGIC:
-You MUST choose the most appropriate strategy for each trade:
-1. **Level Trader**: Good for sideways markets. Bouncing from S/R.
-2. **Trend Follower**: Use when trend is clear (ADX > 25).
-3. **Breakout Hunter**: Use after low volatility periods (BB Squeeze).
-4. **Mean Reversion**: Use for extreme RSI conditions (Panic or FOMO).
-5. **Acceleration**: USE FOR SMALL ACCOUNTS ($50-100). Aggressive momentum.
-6. **Neuro-Scalper**: Use on 1m chart during high-volatility sessions.
+1. **Level Trader**: Range-bound markets (ADX < 20). Focus on S/R retests.
+2. **Trend Follower**: Strong trends (ADX > 25, price > EMA 200). Buy pullbacks.
+3. **Breakout Hunter**: Post-accumulation periods. Look for Volume Pulse.
+4. **Mean Reversion**: Extreme RSI divergence + BB touch.
+5. **Acceleration**: Aggressive momentum for small accounts.
+6. **Smart Money (SMC)**: Look for Liquidity Sweeps, CHoCH, and Fair Value Gaps (FVG).
 
-### EXPERT KNOWLEDGE BASE (You know these like your 5 fingers):
-1.  **Chart Patterns & Formations**:
-    -   *Reversal*: Head & Shoulders (ПГИП), Double Top/Bottom (Двойное дно/вершина), Wedges (Клинья).
-    -   *Continuation*: Flags (Флаги), Pennants (Вымпелы), Cup & Handle (Чашка с ручкой).
-    -   *Harmonics*: Gartley, Bat, Butterfly, Cypher.
-2.  **Candlestick Mastery**:
-    -   Pin Bars (Пин-бары), Rails (Рельсы), Inside Bars (Внутренние бары).
-    -   Engulfing (Поглощение), Morning/Evening Stars (Утренняя/Вечерняя звезда).
-3.  **Smart Money Concepts (SMC)**:
-    -   Order Blocks (OB), Fair Value Gaps (FVG/Imbalance), Liquidity Sweeps (Снятие ликвидности).
-    -   Structure Breaks (BOS), Change of Character (CHoCH).
+### GUARDIAN SYSTEMS:
+- **News Shield**: Detects CPI, SEC, FOMC. Blocks trades 30 min before/after.
+- **Whale Watcher**: Spots institutional walls.
+- **Circuit Breaker**: Hard stop if daily loss exceeds 5%.
+- **Correlation Guard**: Watches BTC/ETH decoupling.
 
-### GUARDIAN SYSTEMS (New capabilities):
-1.  **Hedge Service**: Automatically opens protective BTC positions to balance the portfolio when exposed to Altcoins. 
-2.  **News Shield**: Scans news for dangerous events (SEC, hacks, CPI) and pauses trading in danger zones.
-3.  **Whale Watcher**: Monitors order book "walls" (massive limit orders). Will cancel entry if a giant wall is against us.
-4.  **Correlation Guard**: Detects if Alts (ETH) are decoupling from BTC. If BTC/ETH divergence is > 2%, it warns of liquidity drainage or panic.
-5.  **Volatility Accelerator**: Adjusts leverage and risk based on ATR (Average True Range).
-
-### BEHAVIOR (PRACTICAL APPLICATION):
-1.  **Chat**: Answer in Russian. Explain the *psychology* and *mechanics* behind the move.
-    -   *If asked "Why?" (Почему?)*: Break it down like a mentor. 1. Market Structure, 2. Liquidity, 3. Trigger.
-2.  **Analysis**: Always look for **CONFLUENCE** (Слияние факторов).
-3.  **Action**: Be precise. "Entry at X, Stop at Y, Target Z".
-
-You have access to tools. USE THEM. Determine the trend, find the formation, and EXECUTE.
+### REASONING STRUCTURE:
+When you analyst a chart, follow this flow:
+1. **Macro Context**: (1D/4H Trend)
+2. **Liquidity Check**: (Where are the stops? Where is the FVG?)
+3. **Trigger**: (Pin bar, Engulfing, RSI Div)
+4. **Invalidation**: (Where exactly are we wrong?)
 """
     
     def _init_llm_clients(self):
@@ -578,36 +562,45 @@ Regime: {regime}
                 await asyncio.sleep(0.5)
                 klines_4h = await loop.run_in_executor(None, lambda: self.controller.bot.client._request(f"/v5/market/kline?category=linear&symbol={symbol}&interval=240&limit=50"))
                 
-                # Simple RSI Proxy (using last 14 closes)
-                def calc_simple_rsi(klines_data):
-                    if not klines_data or 'list' not in klines_data or len(klines_data['list']) < 15:
-                        return 50 # Neutral
-                    closes = [float(k[4]) for k in klines_data['list'][:15]] # Close at index 4
+                # Simple RSI & Momentum Proxy
+                def calc_indicators(klines_data):
+                    if not klines_data or 'list' not in klines_data or len(klines_data['list']) < 20:
+                        return 50, 0
+                    closes = [float(k[4]) for k in klines_data['list'][:20]] # Close at index 4
                     closes.reverse()
+                    volumes = [float(k[5]) for k in klines_data['list'][:20]]
+                    volumes.reverse()
                     
+                    # RSI
                     gains, losses = 0, 0
-                    for i in range(1, len(closes)):
+                    for i in range(1, 15):
                         diff = closes[i] - closes[i-1]
                         if diff > 0: gains += diff
                         else: losses += abs(diff)
+                    avg_gain, avg_loss = gains/14, (losses/14 or 0.0001)
+                    rsi = 100 - (100 / (1 + avg_gain/avg_loss))
                     
-                    avg_gain = gains / 14
-                    avg_loss = losses / 14 if losses > 0 else 0.0001
-                    rs = avg_gain / avg_loss
-                    return 100 - (100 / (1 + rs))
+                    # Vol Z-Score Proxy
+                    avg_vol = sum(volumes) / len(volumes)
+                    vol_z = (volumes[-1] - avg_vol) / (avg_vol * 0.5 + 0.001)
+                    
+                    return rsi, vol_z
                 
-                rsi_1m = calc_simple_rsi(klines_1m)
-                rsi_15m = calc_simple_rsi(klines_15m)
-                rsi_1h = calc_simple_rsi(klines_1h)
-                rsi_4h = calc_simple_rsi(klines_4h)
+                rsi_1m, vol_1m = calc_indicators(klines_1m)
+                rsi_15m, vol_15m = calc_indicators(klines_15m)
+                rsi_1h, vol_1h = calc_indicators(klines_1h)
+                rsi_4h, vol_4h = calc_indicators(klines_4h)
                 
                 mtf_context = f"""
-MULTI-TIMEFRAME CONFIRMATION:
-- 1m RSI: {rsi_1m:.1f} (SCALPING TRIGGER)
-- 15m RSI: {rsi_15m:.1f}
-- 1H RSI: {rsi_1h:.1f}
-- 4H RSI: {rsi_4h:.1f}
-RULE: Only LONG if ALL timeframes are < 50. Only SHORT if ALL timeframes are > 50.
+MULTI-TIMEFRAME ALPHA (MTF):
+- 1m: RSI {rsi_1m:.1f}, VolZ {vol_1m:+.1f} (Local momentum)
+- 15m: RSI {rsi_15m:.1f}, VolZ {vol_15m:+.1f}
+- 1H: RSI {rsi_1h:.1f}, VolZ {vol_1h:+.1f} (Mid trend)
+- 4H: RSI {rsi_4h:.1f}, VolZ {vol_4h:+.1f} (Macro trend)
+
+SCALER RULES:
+- Long: If 1h/4h RSI < 50 AND 1m/15m RSI < 30 AND VolZ > 1.5
+- Short: If 1h/4h RSI > 50 AND 1m/15m RSI > 70 AND VolZ > 1.5
 """
                 logger.info(f"📊 MTF RSI: 1m={rsi_1m:.1f}, 15m={rsi_15m:.1f}, 1H={rsi_1h:.1f}, 4H={rsi_4h:.1f}")
                 
