@@ -2213,3 +2213,66 @@ INFO:Dashboard:\u26a1 AI Agent requested execution for BNBUSDT Sell
 WARNING:ai_agent:\u274c AI AUTO-TRADE REJECTED: BNBUSDT - Auto-trade not enabled in Web Controller yet
 INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
 INFO:ai_agent:\u2705 Sentinel Cycle Complete. Sleeping for 15m
+INFO:bybit_client:\U0001f50d DEBUG POSITIONS RAW (ALL): {"nextPageCursor": "BNBUSDT%2C1770378957664%2C0", "category": "linear", "list": [{"symbol": "BNBUSDT", "leverage": "3", "breakEvenPrice": "632.90027931", "autoAddMargin": 0, "avgPrice": "634.16734694", "liqPrice": "844.05550426", "riskLimitValue": "200000", "takeProfit": "", "positionValue": "310.742", "isReduceOnly": false, "positionIMByMp": "103.9349914", "tpslMode": "Full", "riskId": 251, "trailingStop": "0", "liqPriceByMp": "", "unrealisedPnl": "0.18", "markPrice": "633.8", "adlRankIndicator": 2, "cumRealisedPnl": "-0.310742", "positionMM": "3.51994473", "createdTime": "1770375882285", "positionIdx": 0, "positionIM": "103.9349914", "positionMMByMp": "3.51994473", "seq": 250704735710, "updatedTime": "1770378957664", "side": "Sell", "bustPrice": "", "positionBalance": "0", "leverageSysUpdatedTime": "", "curRealisedPnl": "-0.310742", "size": "0.49", "positionStatus": "Normal", "mmrSysUpdatedTime": "", "stopLoss": "", "tradeMode": 0, "sessionAvgPrice": ""}]}
+ERROR:ai_agent:Smart Exit Error: could not convert string to float: ''
+INFO:ai_agent:\U0001f4ca Sentinel selected top 5 MOVE-MAKERS (from top 20 volume): ['AAVEUSDT', 'HYPEUSDT', 'SOLUSDT', 'ETHUSDT', 'LTCUSDT']
+INFO:ai_agent:\U0001f9e0 AI Sentinel Cycle: AAVEUSDT
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing AAVEUSDT...
+INFO:ai_agent:\U0001f4b2 Real-time Price for AAVEUSDT: 106.19
+INFO:ai_agent:\U0001f4ca MTF RSI: 1m=55.6, 15m=81.1, 1H=59.8, 4H=23.3
+INFO:ai_agent:\U0001f50e Searching Brave: AAVEUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:\u26a0\ufe0f AI generated weak RR (1.29) for strategy Mean Reversion (RSI). Adjusting TP to 1:3.0.
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'BEARISH', 'confidence': 70, 'reasoning': 'Мы видим, что 1м RSI составляет 55,6, что является нейтральным значением. Однако, на более высоких таймфреймах (15м, 1ч) RSI находится в зоне перекупленности, что может указывать на потенциальный разворот. Кроме того, 4ч RSI составляет 23,3, что является низким значением и может указывать на потенциальную коррекцию. Учитывая эти факторы, мы можем ожидать коррекции цены вниз. \U0001f4c9 [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'SELL', 'entry_price': 106.19, 'take_profit': 102.25999999999999, 'stop_loss': 107.5, 'signal_title': 'Продажа на коррекции', 'strategy_name': 'Mean Reversion (RSI)'}
+INFO:ai_agent:\U0001f680 AI SIGNAL found: SELL AAVEUSDT (Conf: 70%)
+INFO:ai_agent:\u26a1 AI AUTO-TRADE TRIGGERED: AAVEUSDT SELL
+INFO:Dashboard:\u26a1 AI Agent requested execution for AAVEUSDT Sell
+WARNING:ai_agent:\u274c AI AUTO-TRADE REJECTED: AAVEUSDT - Auto-trade not enabled in Web Controller yet
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:ai_agent:\U0001f9e0 AI Sentinel Cycle: HYPEUSDT
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing HYPEUSDT...
+INFO:ai_agent:\U0001f4b2 Real-time Price for HYPEUSDT: 34.129
+INFO:ai_agent:\U0001f4ca MTF RSI: 1m=73.0, 15m=83.9, 1H=52.1, 4H=52.8
+INFO:ai_agent:\U0001f50e Searching Brave: HYPEUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:\u26a0\ufe0f AI generated weak RR (0.94) for strategy Mean Reversion (RSI). Adjusting TP to 1:3.0.
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'BEARISH', 'confidence': 70, 'reasoning': 'На данный момент мы наблюдаем высокие значения RSI на графиках 1м (73,0) и 15м (83,9), что указывает на потенциальную перекупленность актива. Однако, согласно нашему правилу, мы должны видеть значения RSI > 50 на всех временных рамках, чтобы открыть короткую позицию. Поскольку значения RSI на 1ч (52,1) и 4ч (52,8) графиках находятся чуть выше 50, мы можем рассмотреть возможность открытия короткой позиции. \U0001f4c9 [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'SELL', 'entry_price': 34.129, 'take_profit': 32.116, 'stop_loss': 34.8, 'signal_title': 'Продажа на перекупленности', 'strategy_name': 'Mean Reversion (RSI)'}
+INFO:ai_agent:\U0001f680 AI SIGNAL found: SELL HYPEUSDT (Conf: 70%)
+INFO:ai_agent:\u26a1 AI AUTO-TRADE TRIGGERED: HYPEUSDT SELL
+INFO:Dashboard:\u26a1 AI Agent requested execution for HYPEUSDT Sell
+WARNING:ai_agent:\u274c AI AUTO-TRADE REJECTED: HYPEUSDT - Auto-trade not enabled in Web Controller yet
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:ai_agent:\U0001f9e0 AI Sentinel Cycle: SOLUSDT
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing SOLUSDT...
+INFO:ai_agent:\U0001f4b2 Real-time Price for SOLUSDT: 81.42
+INFO:ai_agent:\U0001f4ca MTF RSI: 1m=66.7, 15m=77.3, 1H=54.0, 4H=21.9
+INFO:ai_agent:\U0001f50e Searching Brave: SOLUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:\u26a0\ufe0f AI generated weak RR (0.85) for strategy Mean Reversion (RSI). Adjusting TP to 1:3.0.
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'BEARISH', 'confidence': 70, 'reasoning': 'На данный момент мы наблюдаем смешанные сигналы на разных таймфреймах. На 1-минутном графике RSI составляет 66,7, что является сигналом к продаже в краткосрочной перспективе. На 15-минутном графике RSI составляет 77,3, что также указывает на потенциальное снижение. Однако на 1-часовом графике RSI составляет 54,0, что не является сигналом к продаже. На 4-часовом графике RSI составляет 21,9, что является сигналом к покупке. Но поскольку наши правила говорят, что мы можем открывать короткие позиции только если все таймфреймы указывают на продажу, мы не можем сделать вывод, что это идеальный вход. Однако, учитывая общую картину, мы можем сделать вывод, что сейчас не время для покупок. Поэтому мы будем открывать короткую позицию с осторожностью. [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'SELL', 'entry_price': 81.42, 'take_profit': 78.18, 'stop_loss': 82.5, 'signal_title': 'Продажа на локальном максимуме', 'strategy_name': 'Mean Reversion (RSI)'}
+INFO:ai_agent:\U0001f680 AI SIGNAL found: SELL SOLUSDT (Conf: 70%)
+INFO:ai_agent:\u26a1 AI AUTO-TRADE TRIGGERED: SOLUSDT SELL
+INFO:Dashboard:\u26a1 AI Agent requested execution for SOLUSDT Sell
+WARNING:ai_agent:\u274c AI AUTO-TRADE REJECTED: SOLUSDT - Auto-trade not enabled in Web Controller yet
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:ai_agent:\U0001f9e0 AI Sentinel Cycle: ETHUSDT
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing ETHUSDT...
+INFO:ai_agent:\U0001f4b2 Real-time Price for ETHUSDT: 1918.59
+INFO:ai_agent:\U0001f4ca MTF RSI: 1m=39.4, 15m=76.6, 1H=56.0, 4H=22.0
+INFO:ai_agent:\U0001f50e Searching Brave: ETHUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:\u26a0\ufe0f AI generated weak RR (1.19) for strategy Mean Reversion (RSI). Adjusting TP to 1:3.0.
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 70, 'reasoning': 'Мы видим, что 1м RSI находится в зоне перепродажи (39.4), что является сигналом к покупке. Однако, 15м RSI находится в зоне перекупленности (76.6), что может быть препятствием для бычьего движения. Тем не менее, 4H RSI находится в зоне перепродажи (22.0), что подтверждает наш сигнал к покупке. Уровни поддержки находятся около 1800-1900. Мы видим потенциал для роста до 2000 и выше. [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 1918.59, 'take_profit': 2124.3599999999997, 'stop_loss': 1850, 'signal_title': 'Отскок от поддержки', 'strategy_name': 'Mean Reversion (RSI)'}
+INFO:ai_agent:\U0001f680 AI SIGNAL found: BUY ETHUSDT (Conf: 70%)
+INFO:ai_agent:\u26a1 AI AUTO-TRADE TRIGGERED: ETHUSDT BUY
+INFO:Dashboard:\u26a1 AI Agent requested execution for ETHUSDT Buy
+WARNING:ai_agent:\u274c AI AUTO-TRADE REJECTED: ETHUSDT - Auto-trade not enabled in Web Controller yet
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:ai_agent:\U0001f9e0 AI Sentinel Cycle: LTCUSDT
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing LTCUSDT...
+INFO:ai_agent:\U0001f4b2 Real-time Price for LTCUSDT: 52.31
+INFO:ai_agent:\U0001f4ca MTF RSI: 1m=59.0, 15m=83.2, 1H=54.0, 4H=23.5
+INFO:ai_agent:\U0001f50e Searching Brave: LTCUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'NEUTRAL', 'confidence': 60, 'reasoning': 'На данный момент рынок LTCUSDT демонстрирует смешанные сигналы. С одной стороны, краткосрочный индикатор RSI (1m) находится в нейтральной зоне (59,0), что может указывать на возможность входа в рынок. Однако, среднесрочный индикатор RSI (15m) находится в зоне перекупленности (83,2), что может указывать на коррекцию. Длинные индикаторы RSI (1H и 4H) находятся в нейтральной и недооцененной зонах соответственно. Таким образом, нет четкого сигнала для входа в рынок. \U0001f4ca', 'suggested_risk': 1.0, 'action': 'WAIT', 'entry_price': 'Market', 'take_profit': None, 'stop_loss': None, 'signal_title': 'Нейтральный сигнал', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:\u2705 Sentinel Cycle Complete. Sleeping for 15m

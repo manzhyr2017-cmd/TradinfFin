@@ -205,6 +205,7 @@ class NewsEngine:
                 sentiments.append(score)
             
             avg_score = sum(sentiments) / len(sentiments) if sentiments else 0.0
+            logger.info(f"📰 NewsEngine: {currency} analysis complete. Items: {len(news)}, Score: {avg_score:.2f}")
             return {
                 'score': float(avg_score),
                 'news_count': len(news),
