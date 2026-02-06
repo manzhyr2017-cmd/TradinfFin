@@ -139,10 +139,9 @@ async def lifespan(app: FastAPI):
                             await self.tg_bot.app.bot.send_message(chat_id=channel_id, text=data["message"], parse_mode="HTML")
                         return
 
-                    # ТОРГОВЫЙ СИГНАЛ: Используем расширенный форматер
-                    try:
-                        from mean_reversion_bybit import AdvancedSignal, SignalType
+                        from mean_reversion_bybit import AdvancedSignal, SignalType, SignalStrength, MarketRegime
                         from telegram_bot import SignalFormatter
+                        from datetime import datetime, timedelta
                         
                         # Преобразуем данные AI в объект AdvancedSignal для форматера
                         sig_type = SignalType.LONG if data.get('action') == "BUY" else SignalType.SHORT
@@ -151,21 +150,44 @@ async def lifespan(app: FastAPI):
                             try:
                                 if isinstance(val, (int, float)): return float(val)
                                 if not val: return 0.0
-                                return float(str(val).replace('$', '').replace(',', '').strip())
+                                # Clean string from non-numeric chars except . and -
+                                cleaned = ''.join(c for c in str(val) if c.isdigit() or c in '.-')
+                                return float(cleaned) if cleaned else 0.0
                             except: return 0.0
 
+                        entry = safe_float(data.get('entry'))
+                        tp = safe_float(data.get('tp'))
+                        sl = safe_float(data.get('sl'))
+                        
                         signal = AdvancedSignal(
                             symbol=data.get('symbol'),
                             signal_type=sig_type,
+                            entry_price=entry,
+                            stop_loss=sl,
+                            take_profit_1=tp,
+                            take_profit_2=tp * 1.05,
+                            confluence=type('obj', (object,), {
+                                'total_score': data.get('confidence', 70),
+                                'max_possible': 100,
+                                'percentage': data.get('confidence', 70),
+                                'get_strength': lambda: SignalStrength.STRONG,
+                                'get_breakdown': lambda: "AI Analysis Confluence"
+                            })(),
                             probability=data.get('confidence', 70),
-                            entry_price=safe_float(data.get('entry')),
-                            stop_loss=safe_float(data.get('sl')),
-                            take_profit_1=safe_float(data.get('tp')),
-                            take_profit_2=safe_float(data.get('tp')) * 1.05,
-                            reasoning=[data.get('reason', '')],
+                            strength=SignalStrength.STRONG,
+                            timeframes_aligned={'1m': True, '15m': True, '1h': True},
+                            support_resistance_nearby=None,
+                            market_regime=MarketRegime.RANGING_WIDE,
+                            risk_reward_ratio=2.0,
+                            position_size_percent=1.0,
+                            funding_rate=None,
+                            funding_interpretation=None,
+                            orderbook_imbalance=None,
+                            timestamp=datetime.now(),
+                            valid_until=datetime.now() + timedelta(hours=4),
                             indicators={},
-                            confluence=type('obj', (object,), {'percentage': data.get('confidence', 0)})(),
-                            strength=None
+                            reasoning=[data.get('reason', '')],
+                            warnings=[]
                         )
 
                         # Если цены нет, пробуем получить текущую
@@ -223,7 +245,8 @@ async def lifespan(app: FastAPI):
                         return {"success": False, "error": "Auto-trade disabled in settings"}
 
                     from execution import ExecutionManager, RiskLimits
-                    from mean_reversion_bybit import AdvancedSignal, SignalType
+                    from mean_reversion_bybit import AdvancedSignal, SignalType, SignalStrength, MarketRegime
+                    from datetime import datetime, timedelta
                     
                     # 1. Initialize manager
                     limits = RiskLimits(
@@ -238,17 +261,44 @@ async def lifespan(app: FastAPI):
                     sig_type = SignalType.LONG if action == "BUY" else SignalType.SHORT
                     
                     def safe_float(v, default=0.0):
-                        try: return float(str(v).replace('$','').replace(',',''))
+                        try:
+                            cleaned = ''.join(c for c in str(v) if c.isdigit() or c in '.-')
+                            return float(cleaned) if cleaned else default
                         except: return default
+
+                    entry = safe_float(analysis.get('entry_price'))
+                    tp = safe_float(analysis.get('take_profit'))
+                    sl = safe_float(analysis.get('stop_loss'))
 
                     signal = AdvancedSignal(
                         symbol=symbol,
                         signal_type=sig_type,
-                        probability=analysis.get('confidence', 70),
-                        entry_price=safe_float(analysis.get('entry_price')),
-                        stop_loss=safe_float(analysis.get('stop_loss')),
-                        take_profit_1=safe_float(analysis.get('take_profit')),
-                        reasoning=analysis.get('reasoning', 'AI Web Execution')
+                        entry_price=entry,
+                        stop_loss=sl,
+                        take_profit_1=tp,
+                        take_profit_2=tp * 1.02,
+                        confluence=type('obj', (object,), {
+                            'total_score': analysis.get('confidence', 90),
+                            'max_possible': 100,
+                            'percentage': analysis.get('confidence', 90),
+                            'get_strength': lambda: SignalStrength.STRONG,
+                            'get_breakdown': lambda: "AI Trade Execution"
+                        })(),
+                        probability=analysis.get('confidence', 90),
+                        strength=SignalStrength.STRONG,
+                        timeframes_aligned={'15m': True},
+                        support_resistance_nearby=None,
+                        market_regime=MarketRegime.RANGING_WIDE,
+                        risk_reward_ratio=2.0,
+                        position_size_percent=1.0,
+                        funding_rate=None,
+                        funding_interpretation=None,
+                        orderbook_imbalance=None,
+                        timestamp=datetime.now(),
+                        valid_until=datetime.now() + timedelta(hours=4),
+                        indicators={},
+                        reasoning=[analysis.get('reasoning', 'AI Web Execution')],
+                        warnings=[]
                     )
 
                     # 3. Execute

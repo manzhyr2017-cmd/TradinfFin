@@ -978,3 +978,92 @@ INFO:ai_agent:\U0001f4ca Sentinel selected top 5 MOVE-MAKERS (from top 20 volume
 INFO:ai_agent:\U0001f9e0 AI Sentinel Cycle: SUIUSDT
 INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing SUIUSDT...
 INFO:ai_agent:\U0001f4b2 Real-time Price for SUIUSDT: 0.9084
+INFO:ai_agent:\U0001f4ca MTF RSI: 1m=51.1, 15m=51.5, 1H=37.2, 4H=21.7
+INFO:ai_agent:\U0001f50e Searching Brave: SUIUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:\u26a0\ufe0f AI generated weak RR (1.42) for strategy Level Trader (S&R). Adjusting TP to 1:3.0.
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'BEARISH', 'confidence': 60, 'reasoning': 'Мы видим, что RSI на разных таймфреймах показывает смешанную картину, но в целом не указывает на сильное покупательное давление. Уровни сопротивления находятся выше текущей цены, и мы не видим явного пробоя. Следовательно, мы можем предположить, что цена будет двигаться вниз. \U0001f4c9 [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'SELL', 'entry_price': 0.9084, 'take_profit': 0.8483999999999999, 'stop_loss': 0.9284, 'signal_title': 'Продажа на отскоке', 'strategy_name': 'Level Trader (S&R)'}
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:bybit_client:\U0001f4b0 Balance (UNIFIED): $121.52
+INFO:bybit_client:\U0001f50d DEBUG POSITIONS RAW (ALL): {"nextPageCursor": "", "category": "linear", "list": []}
+INFO:ai_agent:\U0001f9e0 AI Sentinel Cycle: SOLUSDT
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing SOLUSDT...
+INFO:ai_agent:\U0001f4b2 Real-time Price for SOLUSDT: 78.82
+INFO:ai_agent:\U0001f4ca MTF RSI: 1m=48.6, 15m=46.0, 1H=37.3, 4H=17.3
+INFO:ai_agent:\U0001f50e Searching Brave: SOLUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:\u26a0\ufe0f AI generated weak RR (1.27) for strategy Level Trader (S&R). Adjusting TP to 1:3.0.
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 80, 'reasoning': 'Мы видим, что цена SOLUSDT находится в восходящем тренде после сильного импульсного восстановления с низов. Все рамки RSI (1м, 15м, 1ч, 4ч) находятся ниже 50, что соответствует нашему правилу для LONG. Кроме того, цена успешно сформировала зону breaker block, которая теперь действует как зона высокой вероятности для продолжения роста. \U0001f680 [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 78.82, 'take_profit': 82.77999999999997, 'stop_loss': 77.5, 'signal_title': 'Пробой зоны breaker block', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:\U0001f680 AI SIGNAL found: BUY SOLUSDT (Conf: 80%)
+INFO:ai_agent:\u26a1 AI AUTO-TRADE TRIGGERED: SOLUSDT BUY
+INFO:Dashboard:\u26a1 AI Agent requested execution for SOLUSDT Buy
+WARNING:ai_agent:\u274c AI AUTO-TRADE REJECTED: SOLUSDT - Auto-trade not enabled in Web Controller yet
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:bybit_client:\U0001f4b0 Balance (UNIFIED): $121.52
+INFO:bybit_client:\U0001f50d DEBUG POSITIONS RAW (ALL): {"nextPageCursor": "", "category": "linear", "list": []}
+INFO:ai_agent:\U0001f9e0 AI Sentinel Cycle: FARTCOINUSDT
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing FARTCOINUSDT...
+INFO:ai_agent:\U0001f4b2 Real-time Price for FARTCOINUSDT: 0.18398
+INFO:ai_agent:\U0001f4ca MTF RSI: 1m=53.4, 15m=43.3, 1H=32.2, 4H=26.4
+INFO:ai_agent:\U0001f50e Searching Brave: FARTCOINUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:\u26a0\ufe0f AI generated weak RR (1.00) for strategy Neuro-Scalper (1m Micro). Adjusting TP to 1:1.5.
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 70, 'reasoning': 'Формируется восходящий треугольник, демонстрирующий рост давления. RSI на 1м графике 53.4, что является триггером для скальпинга. Остальные таймфреймы (15м, 1ч, 4ч) показывают низкие значения RSI (< 50), что указывает на потенциал роста. \U0001f4aa [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 0.18398, 'take_profit': 0.18742999999999999, 'stop_loss': 0.18168, 'signal_title': 'Пробой восходящего треугольника', 'strategy_name': 'Neuro-Scalper (1m Micro)'}
+INFO:ai_agent:\U0001f680 AI SIGNAL found: BUY FARTCOINUSDT (Conf: 70%)
+INFO:ai_agent:\u26a1 AI AUTO-TRADE TRIGGERED: FARTCOINUSDT BUY
+INFO:Dashboard:\u26a1 AI Agent requested execution for FARTCOINUSDT Buy
+WARNING:ai_agent:\u274c AI AUTO-TRADE REJECTED: FARTCOINUSDT - Auto-trade not enabled in Web Controller yet
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:ai_agent:\U0001f9e0 AI Sentinel Cycle: AAVEUSDT
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing AAVEUSDT...
+INFO:ai_agent:\U0001f4b2 Real-time Price for AAVEUSDT: 105.47
+INFO:ai_agent:\U0001f4ca MTF RSI: 1m=49.7, 15m=54.3, 1H=37.0, 4H=25.0
+INFO:ai_agent:\U0001f50e Searching Brave: AAVEUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:\u26a0\ufe0f AI generated weak RR (1.09) for strategy Mean Reversion (RSI). Adjusting TP to 1:3.0.
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 70, 'reasoning': 'На данный момент наблюдаем пересечение линий RSI на разных таймфреймах. 1-минутный график показывает RSI 49,7, что является сигналом к покупке. Кроме того, 15-минутный график имеет RSI 54,3, что также выше 50. Однако, 1-часовой и 4-часовой графики показывают RSI ниже 50, что указывает на возможную коррекцию. Учитывая общую картину, мы видим возможность для длинной позиции. \u2696\ufe0f [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 105.47, 'take_profit': 107.48, 'stop_loss': 104.8, 'signal_title': 'Длинная позиция на AAVEUSDT', 'strategy_name': 'Mean Reversion (RSI)'}
+INFO:ai_agent:\U0001f680 AI SIGNAL found: BUY AAVEUSDT (Conf: 70%)
+INFO:ai_agent:\u26a1 AI AUTO-TRADE TRIGGERED: AAVEUSDT BUY
+INFO:Dashboard:\u26a1 AI Agent requested execution for AAVEUSDT Buy
+WARNING:ai_agent:\u274c AI AUTO-TRADE REJECTED: AAVEUSDT - Auto-trade not enabled in Web Controller yet
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:ai_agent:\U0001f9e0 AI Sentinel Cycle: ENAUSDT
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing ENAUSDT...
+INFO:ai_agent:\U0001f4b2 Real-time Price for ENAUSDT: 0.11617
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:bybit_client:\U0001f4b0 Balance (UNIFIED): $121.52
+INFO:bybit_client:\U0001f50d DEBUG POSITIONS RAW (ALL): {"nextPageCursor": "", "category": "linear", "list": []}
+INFO:ai_agent:\U0001f4ca MTF RSI: 1m=71.8, 15m=60.2, 1H=40.6, 4H=25.4
+INFO:ai_agent:\U0001f50e Searching Brave: ENAUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:\u26a0\ufe0f AI generated weak RR (1.06) for strategy Trend Follower (EMA). Adjusting TP to 1:3.0.
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'BEARISH', 'confidence': 60, 'reasoning': 'На данный момент рынок ENAUSDT находится в состоянии медвежьего тренда. Цена продолжает формировать нижние максимумы и минимумы, указывая на отсутствие подтверждения разворота тренда. Индикатор RSI на разных таймфреймах показывает смешанные сигналы, но большинство из них не достигают зоны перекупленности. Уровни поддержки и сопротивления также не демонстрируют четких сигналов на вход. Однако, учитывая общий медвежий тренд и низкие значения RSI на 4-часовом графике, можно рассмотреть возможность короткой позиции. [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'SELL', 'entry_price': 0.11617, 'take_profit': 0.09867999999999999, 'stop_loss': 0.122, 'signal_title': 'Продажа в медвежьем тренде', 'strategy_name': 'Trend Follower (EMA)'}
+INFO:ai_agent:\u2705 Sentinel Cycle Complete. Sleeping for 15m
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:bybit_client:\U0001f4b0 Balance (UNIFIED): $121.52
+INFO:bybit_client:\U0001f50d DEBUG POSITIONS RAW (ALL): {"nextPageCursor": "", "category": "linear", "list": []}
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:bybit_client:\U0001f4b0 Balance (UNIFIED): $121.52
+INFO:bybit_client:\U0001f50d DEBUG POSITIONS RAW (ALL): {"nextPageCursor": "", "category": "linear", "list": []}
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:bybit_client:\U0001f4b0 Balance (UNIFIED): $121.52
+INFO:bybit_client:\U0001f50d DEBUG POSITIONS RAW (ALL): {"nextPageCursor": "", "category": "linear", "list": []}
