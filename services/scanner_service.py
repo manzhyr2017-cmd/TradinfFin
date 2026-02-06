@@ -123,6 +123,46 @@ class ScannerService:
                             logger.info(f"⏭️ Skipping {signal.symbol} {signal.signal_type.value} - Market Regime: {allowed}")
                             continue
 
+                    # --- NEW: ML & NEWS SENTIMENT FILTERS ---
+                    
+                    # 1. ML Validation
+                    if hasattr(self.bot, 'ml_service') and self.bot.ml_service and self.bot.ml_service.is_ready:
+                        # We need full df for ML. self.bot.client.get_klines can be used if not in market_data
+                        # For simplicity, we assume market_data might not have full df history
+                        # We fetch if needed
+                        try:
+                            ml_res = self.bot.ml_service.predict(market_data.get('df_15m'))
+                            prediction = ml_res['prediction']
+                            confidence = ml_res['confidence']
+                            
+                            logger.info(f"🤖 ML Check for {signal.symbol}: Pred {prediction:+.4f}, Conf {confidence:.2f}")
+                            
+                            # Filter: ML must agree with direction (prediction > 0 for LONG, < 0 for SHORT)
+                            from mean_reversion_bybit import SignalType
+                            if (signal.signal_type == SignalType.LONG and prediction < 0.001) or \
+                               (signal.signal_type == SignalType.SHORT and prediction > -0.001):
+                                if confidence > 0.7: # Only reject if ML is confident
+                                    logger.info(f"⏭️ ML REJECTED {signal.symbol} {signal.signal_type.value} (Prediction disagreement)")
+                                    continue
+                            
+                            signal.reasoning.append(f"🤖 ML: Pred {prediction:+.4f} (Conf: {confidence:.2f})")
+                        except Exception as e:
+                            logger.error(f"ML check failed: {e}")
+
+                    # 2. News Sentiment (Symbol Specific)
+                    if hasattr(self.bot, 'news_service') and self.bot.news_service:
+                        news_res = await self.bot.news_service.get_symbol_sentiment(signal.symbol)
+                        logger.info(f"📰 News Sentiment for {signal.symbol}: {news_res['label']} (Score: {news_res['score']:.2f})")
+                        
+                        # Filter: Don't trade if sentiment is contrary and strong
+                        from mean_reversion_bybit import SignalType
+                        if (signal.signal_type == SignalType.LONG and news_res['score'] < -0.4) or \
+                           (signal.signal_type == SignalType.SHORT and news_res['score'] > 0.4):
+                            logger.info(f"⏭️ NEWS REJECTED {signal.symbol} {signal.signal_type.value} (Sentiment contradiction)")
+                            continue
+                            
+                        signal.reasoning.append(f"📰 News: {news_res['label']} ({news_res['score']:.2f})")
+
                     signals.append(signal)
                     self.bot.signals_history.append(signal)
                     self.bot.stats['signals_qualified'] += 1
@@ -254,10 +294,11 @@ class ScannerService:
                                 df = df.astype(float).sort_values('startTime').reset_index(drop=True)
                     
                     if df is not None and not df.empty:
-                        global_regime = self.bot.engine.detect_regime(df)
-                        regime_info = global_regime.value
+                        # Use new Strategy Router
+                        regime = self.bot.strategy_router.detect_regime(df)
+                        regime_info = regime.value
                         
-                        # --- AUTONOMOUS DECISION CORE ---
+                        # --- AUTONOMOUS DECISION CORE (New) ---
                         
                         # 1. Check Balance
                         balance = 0.0
@@ -269,36 +310,20 @@ class ScannerService:
                              except: 
                                  balance = start_balance
                         
-                        # Decision Logic
+                        # 2. Select Strategy via Router
+                        selected_strat = self.bot.strategy_router.select_strategy(regime)
+                        
+                        # 3. Dynamic overrides based on state
                         if balance < 200 and balance > 0:
-                            # Low Balance -> Acceleration Mode (Aggressive, small steps)
                             active_strategy = "ACCELERATION"
                             recommendation = "Low Balance (<$200) -> ACCELERATION Mode"
-                            self.bot.strategy_name = "acceleration"
-                            
-                        elif "RANGING" in regime_info:
-                            if balance > 1000:
-                                active_strategy = "GRID"
-                                recommendation = "Ranging Market + High Bal -> GRID Strategy"
-                                self.bot.strategy_name = "grid" # If grid engine supported
-                                # For now we stick to mean_reversion or run grid logic manually
-                                self.bot._run_grid_logic(leader_symbol, df.iloc[-1]['close'])
-                            else:
-                                active_strategy = "MEAN_REVERSION"
-                                recommendation = "Ranging Market -> MEAN REVERSION"
-                                self.bot.strategy_name = "mean_reversion"
-
-                        elif "TREND" in regime_info:
-                            if self.bot.strategy_name != "trend":
-                                active_strategy = "TREND"
-                                recommendation = "Trending Market -> TREND FOLLOWING"
-                                self.bot.strategy_name = "trend"
-                            
+                            self.bot.switch_strategy("acceleration")
                         else:
-                            active_strategy = "DEFENSIVE"
-                            recommendation = "High Volatility -> Reducing Risk"
-                            
-                        logger.info(f"🧠 AI DECISION: {recommendation} (Regime: {regime_info}, Bal: ${balance:.0f})")
+                            active_strategy = selected_strat.upper()
+                            recommendation = f"Market Regime {regime_info} -> {active_strategy} Strategy"
+                            self.bot.switch_strategy(selected_strat)
+                        
+                        logger.info(f"🧠 AI DECISION (V2): {recommendation} (Regime: {regime_info}, Bal: ${balance:.0f})")
                         
                         # Execute based on decided strategy
                         if active_strategy == "GRID":

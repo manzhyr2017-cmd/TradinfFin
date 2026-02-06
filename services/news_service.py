@@ -18,6 +18,20 @@ class NewsService:
         self.last_update = None
         self.is_running = False
         self.risk_off_active = False
+        
+        # --- NEW: FinBERT Sentiment ---
+        self.sentiment_analyzer = None
+        try:
+            from transformers import pipeline
+            import torch
+            self.sentiment_analyzer = pipeline(
+                "sentiment-analysis",
+                model="ProsusAI/finbert",
+                device=0 if torch.cuda.is_available() else -1
+            )
+            logger.info("✅ News Sentiment (FinBERT) model loaded")
+        except Exception as e:
+            logger.warning(f"⚠️ FinBERT model load failed: {e}")
 
     async def start(self, interval_hours: int = 6):
         """Starts the background news monitoring loop"""
@@ -115,11 +129,64 @@ class NewsService:
 
     def get_upcoming_events(self) -> List[Dict]:
         """Returns future events only"""
-        now = datetime.utcnow()
+        now = datetime.now()
         upcoming = []
         for e in self.events:
             try:
-                if datetime.strptime(e['time_utc'], '%Y-%m-%d %H:%M:%S') > now:
+                # Handle both timestamp strings and datetime objects
+                e_time = e['time_utc']
+                if isinstance(e_time, str):
+                    e_time = datetime.strptime(e_time, '%Y-%m-%d %H:%M:%S')
+                
+                if e_time > now:
                     upcoming.append(e)
             except: pass
         return upcoming
+
+    # --- NEW: SYMBOL SENTIMENT LOGIC ---
+    
+    def analyze_sentiment(self, text: str) -> Dict:
+        """Analyzes sentiment of a text string"""
+        if not self.sentiment_analyzer:
+            return {"label": "neutral", "score": 0.0}
+        try:
+            result = self.sentiment_analyzer(text[:500])[0]
+            return {"label": result['label'].lower(), "score": result['score']}
+        except Exception as e:
+            logger.error(f"Sentiment analysis error: {e}")
+            return {"label": "neutral", "score": 0.0}
+
+    async def get_symbol_sentiment(self, symbol: str) -> Dict:
+        """Fetch and analyze news sentiment for a specific symbol"""
+        currency = symbol.replace("USDT", "")
+        # Use CryptoPanic API if key available, else fallback to web search via Agent
+        # For now, let's stick to the Agent search to avoid requiring another API Key immediately
+        
+        try:
+            query = f"latest {currency} crypto news price prediction sentiment"
+            loop = asyncio.get_running_loop()
+            news_text = await loop.run_in_executor(None, lambda: self.agent._search_web(query))
+            
+            if not news_text:
+                return {"score": 0.0, "label": "neutral"}
+                
+            # Analyze chunks of text
+            lines = [line for line in news_text.split('\n') if len(line) > 20]
+            scores = []
+            
+            for line in lines[:5]: # Take top 5 snippets
+                res = self.analyze_sentiment(line)
+                if res['label'] == 'positive': scores.append(res['score'])
+                elif res['label'] == 'negative': scores.append(-res['score'])
+                else: scores.append(0.0)
+                
+            avg_score = sum(scores) / len(scores) if scores else 0.0
+            
+            return {
+                "score": avg_score,
+                "label": "positive" if avg_score > 0.2 else ("negative" if avg_score < -0.2 else "neutral"),
+                "count": len(scores)
+            }
+        except Exception as e:
+            logger.error(f"Symbol sentiment check failed for {symbol}: {e}")
+            return {"score": 0.0, "label": "neutral"}

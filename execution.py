@@ -80,16 +80,20 @@ class ExecutionManager:
         client: BybitClient, 
         risk_limits: Optional[RiskLimits] = None,
         dry_run: bool = False,
-        news_service: Optional[object] = None
+        news_service: Optional[object] = None,
+        analytics: Optional[object] = None
     ):
         self.client = client
         self.risk_limits = risk_limits or RiskLimits()
         self.dry_run = dry_run
         self.news_service = news_service
+        self.analytics = analytics
         
         # Session state
+        self.daily_pnl = 0.0
         self.daily_loss = 0.0
         self.last_reset_date = date.today()
+        self.circuit_triggered = False
         
         # Phase 5: Cooldown after losses
         self.consecutive_losses = 0
@@ -97,6 +101,40 @@ class ExecutionManager:
         self.cooldown_until = None  # datetime when cooldown ends
         self.max_consecutive_losses = 3  # Trigger cooldown after 3 losses
         self.cooldown_minutes = 60  # 1 hour cooldown
+        self.trade_logger = get_trade_logger()
+
+    def calculate_kelly_size(self, win_rate: float, avg_win: float, avg_loss: float) -> float:
+        """
+        Calculates Conservative Kelly Size (25% of full Kelly)
+        Kelly % = (win_rate * avg_win - (1-win_rate) * avg_loss) / avg_win
+        """
+        if avg_win <= 0 or win_rate <= 0:
+            return 0.0
+            
+        kelly_pct = (win_rate * avg_win - (1 - win_rate) * avg_loss) / avg_win
+        # Use Quarter Kelly for safety
+        return max(0.0, min(kelly_pct * 0.25, self.risk_limits.risk_per_trade_percent / 100))
+
+    def check_circuit_breaker(self, trade_pnl: float, total_capital: float) -> bool:
+        """
+        Circuit breaker logic from Ultimate Bot upgrade
+        """
+        today = date.today()
+        if today != self.last_reset_date:
+            self.daily_pnl = 0.0
+            self.circuit_triggered = False
+            self.last_reset_date = today
+            
+        self.daily_pnl += trade_pnl
+        daily_loss_pct = self.daily_pnl / total_capital if total_capital > 0 else 0
+        
+        # If daily loss exceeds limit (e.g. 5%)
+        if daily_loss_pct <= -0.05: # 5% limit
+            self.circuit_triggered = True
+            logger.error(f"🚨 CIRCUIT BREAKER TRIGGERED! Daily loss: {daily_loss_pct*100:.2f}%")
+            return True
+            
+        return False
         
         # Accelerator State
         self.initial_equity = self.client.get_total_equity()
@@ -153,11 +191,13 @@ class ExecutionManager:
         """
         if is_win:
             self.consecutive_losses = 0
-            logger.info(f"✅ Win recorded. Consecutive losses reset.")
+            self.daily_pnl += abs(pnl)
+            logger.info(f"✅ Win recorded. Consecutive losses reset. Daily PnL: ${self.daily_pnl:.2f}")
         else:
             self.consecutive_losses += 1
             self.daily_loss += abs(pnl)
-            logger.info(f"❌ Loss #{self.consecutive_losses} recorded. Daily Loss: ${self.daily_loss:.2f}")
+            self.daily_pnl -= abs(pnl)
+            logger.info(f"❌ Loss #{self.consecutive_losses} recorded. Daily Loss: ${self.daily_loss:.2f}. Daily PnL: ${self.daily_pnl:.2f}")
             
             if self.consecutive_losses >= self.max_consecutive_losses:
                 self.cooldown_until = datetime.now() + timedelta(minutes=self.cooldown_minutes)
@@ -472,8 +512,28 @@ class ExecutionManager:
             min_qty = _parse_float(lot_filter.get('minOrderQty'), 0.001)
             price_tick = _parse_float(price_filter.get('tickSize'), 0.01)
             
-            # Риск в %: Приоритет risk_override -> конфиг
-            base_risk = risk_override if risk_override is not None else self.risk_limits.risk_per_trade_percent
+            # --- CIRCUIT BREAKER ---
+            if self.circuit_triggered:
+                return False, "🚨 Trading HALTED by Circuit Breaker (Max daily loss reached)"
+
+            # --- KELLY CRITERION SIZING ---
+            kelly_risk = None
+            if self.analytics:
+                try:
+                    metrics = self.analytics.calculate_metrics()
+                    if metrics['total_trades'] >= 10:
+                        kelly_risk = self.calculate_kelly_size(
+                            win_rate=metrics['win_rate'] / 100,
+                            avg_win=metrics['avg_win'],
+                            avg_loss=abs(metrics['avg_loss'])
+                        )
+                        if kelly_risk > 0:
+                            logger.info(f"🧬 Kelly Sizing: Optimized Risk {kelly_risk*100:.2f}% (based on {metrics['total_trades']} trades)")
+                except Exception as e:
+                    logger.warning(f"Failed to calculate Kelly: {e}")
+
+            # Риск в %: Приоритет risk_override -> Kelly -> конфиг
+            base_risk = risk_override if risk_override is not None else (kelly_risk * 100 if kelly_risk else self.risk_limits.risk_per_trade_percent)
             
             # --- CAPITAL ACCELERATOR MULTIPLIER ---
             perf_multiplier = self.get_performance_multiplier()
@@ -484,7 +544,7 @@ class ExecutionManager:
             effective_risk = vol_risk * perf_multiplier
             
             if vol_risk != base_risk:
-                logger.info(f"🛡️ Volatility sizing: ATR={atr_pct*100:.2f}%. Risk adjusted {base_risk}% -> {vol_risk:.1f}%")
+                logger.info(f"🛡️ Volatility sizing: ATR={atr_pct*100:.2f}%. Risk adjusted {base_risk:.1f}% -> {vol_risk:.1f}%")
 
             # --- WHALE WATCHER (Phase 9) --- (Disabled for better trade frequency)
             # if not self._check_liquidity_barriers(signal.symbol, side, signal.entry_price, signal.take_profit_1):

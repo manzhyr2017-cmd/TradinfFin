@@ -42,6 +42,10 @@ from services.selector_service import SelectorService
 from services.news_service import NewsService
 from services.hedge_service import HedgeService
 from services.whale_alert_service import WhaleAlertService
+from services.ml_service import MLService
+from services.strategy_router_service import StrategyRouterService
+from services.analytics_service import AnalyticsService
+from web_ui.database import db
 
 # Telegram (опционально)
 try:
@@ -88,6 +92,25 @@ class TradingBot:
         else:
             # Sniper Mode: Extreme signals only (85%+), R:R 1:4 minimum
             self.engine = AdvancedMeanReversionEngine(min_confluence=85, min_rr=4.0)
+
+    def switch_strategy(self, new_strategy: str):
+        """Dynamically switches the trading engine"""
+        if self.strategy_name == new_strategy:
+            return
+            
+        logger.info(f"🔄 Switching strategy from {self.strategy_name} to {new_strategy}")
+        self.strategy_name = new_strategy
+        
+        if new_strategy == "trend":
+            self.engine = TrendFollowingStrategy()
+        elif new_strategy == "breakout":
+            self.engine = BreakoutStrategy()
+        elif new_strategy == "acceleration":
+            self.engine = AccelerationStrategy()
+        elif new_strategy == "scalping":
+            self.engine = AdvancedMeanReversionEngine(min_confluence=80, min_rr=1.5)
+        else:
+            self.engine = AdvancedMeanReversionEngine(min_confluence=85, min_rr=4.0)
             
         # 2. Client & Scanner
         self.client = BybitClient(
@@ -123,7 +146,12 @@ class TradingBot:
             
             dry_run = not self.auto_trade or self.demo_mode or (not self.keys_valid)
             try:
-                self.execution = ExecutionManager(self.client, risk_limits, dry_run=dry_run)
+                self.execution = ExecutionManager(
+                    self.client, 
+                    risk_limits, 
+                    dry_run=dry_run,
+                    analytics=self.analytics_service
+                )
             except Exception as e:
                 logger.error(f"Execution Manager init failed: {e}")
                 self.execution = None
@@ -166,6 +194,9 @@ class TradingBot:
         self.news_service = None
         self.hedge_service = None
         self.whale_service = None
+        self.analytics_service = AnalyticsService(db)
+        self.ml_service = MLService()
+        self.strategy_router = StrategyRouterService(self)
         
         # Save initial state immediately
         self.save_state_to_file()
