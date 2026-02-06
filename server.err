@@ -1,0 +1,195 @@
+INFO:Database:Database initialized: C:\Projects\Trading\Trading-fin\trading_bot.db
+INFO:Database:Database initialized: C:\Projects\Trading\Trading-fin\trading_bot.db
+INFO:     Started server process [41716]
+INFO:     Waiting for application startup.
+INFO:Database:Database initialized: C:\Projects\Trading\Trading-fin\trading_bot.db
+INFO:ai_agent:  \u2705 LLM Provider Added: NVIDIA_API (meta/llama-3.1-405b-instruct)
+INFO:ai_agent:  \u2705 LLM Provider Added: Google Gemini (gemini-2.5-flash) [Native REST]
+INFO:ai_agent:  \u2705 LLM Provider Added: GROQ_PRIMARY (llama-3.3-70b-versatile)
+INFO:ai_agent:  \u2705 LLM Provider Added: GROQ_BACKUP (llama-3.3-70b-versatile)
+INFO:ai_agent:\U0001f9e0 AI Agent starting with: NVIDIA_API (meta/llama-3.1-405b-instruct)
+ERROR:Dashboard:Failed to start Telegram: Timed out
+INFO:ai_agent:  \u2705 LLM Provider Added: NVIDIA_API (meta/llama-3.1-405b-instruct)
+INFO:ai_agent:  \u2705 LLM Provider Added: Google Gemini (gemini-2.5-flash) [Native REST]
+INFO:ai_agent:  \u2705 LLM Provider Added: GROQ_PRIMARY (llama-3.3-70b-versatile)
+INFO:ai_agent:  \u2705 LLM Provider Added: GROQ_BACKUP (llama-3.3-70b-versatile)
+INFO:ai_agent:\U0001f9e0 AI Agent starting with: NVIDIA_API (meta/llama-3.1-405b-instruct)
+INFO:ai_agent:\U0001f6e1\ufe0f Sentinel Loop STARTED (Interval: 15m)
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:bybit_client:\U0001f50d DEBUG POSITIONS RAW (ALL): {"nextPageCursor": "", "category": "linear", "list": []}
+INFO:ai_agent:\U0001f9e0 AI Self-Correction: Analyzing past performance...
+INFO:ai_agent:  Insufficient history for analysis.
+INFO:ai_agent:\U0001f4ca Sentinel selected top 5 MOVE-MAKERS (from top 20 volume): ['SUIUSDT', 'FARTCOINUSDT', 'SOLUSDT', 'ZECUSDT', 'ENAUSDT']
+INFO:ai_agent:\U0001f9e0 AI Sentinel Cycle: SUIUSDT
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing SUIUSDT...
+INFO:ai_agent:\U0001f4b2 Real-time Price for SUIUSDT: 0.8858
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:bybit_client:\U0001f4b0 Balance (UNIFIED): $121.52
+INFO:bybit_client:\U0001f50d DEBUG POSITIONS RAW (ALL): {"nextPageCursor": "", "category": "linear", "list": []}
+INFO:trade_logger:\U0001f4e6 Trade Logger initialized: C:\Projects\Trading\Trading-fin\trading_bot.db
+INFO:ai_agent:\U0001f4ca MTF RSI: 1m=56.2, 15m=58.1, 1H=25.5, 4H=17.1
+INFO:ai_agent:\U0001f50e Searching Brave: SUIUSDT price analysis technical news today
+WARNING:ai_agent:\U0001f50c Proxy error in Brave Search: HTTPSConnectionPool(host='api.search.brave.com', port=443): Max retries exceeded with url: /res/v1/web/search?q=SUIUSDT+price+analysis+technical+news+today&count=3 (Caused by ProxyError('Unable to connect to proxy', ConnectTimeoutError(<HTTPSConnection(host='156.246.213.194', port=62956) at 0x1be7307fb10>, 'Connection to 156.246.213.194 timed out. (connect timeout=10)')))
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:\u26a0\ufe0f AI generated weak RR (1.29) for strategy Neuro-Scalper (1m Micro). Adjusting TP to 1:1.5.
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 60, 'reasoning': 'На данный момент наблюдаем-scalping сигнал на 1-минутном графике, RSI 56,2. Это может быть хорошим моментом для входа в рынок с использованием стратегии Neuro-Scalper (1m Micro). Уровни поддержки и сопротивления не являются четкими, но в данном случае мы полагаемся на RSI и скорость движения цены. \U0001f680 [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 0.8858, 'take_profit': 0.8910500000000001, 'stop_loss': 0.8823, 'signal_title': 'Скальпинг на отскоке', 'strategy_name': 'Neuro-Scalper (1m Micro)'}
+INFO:ai_agent:\U0001f9e0 AI Sentinel Cycle: FARTCOINUSDT
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing FARTCOINUSDT...
+INFO:ai_agent:\U0001f4b2 Real-time Price for FARTCOINUSDT: 0.18091
+INFO:ai_agent:\U0001f4ca MTF RSI: 1m=53.7, 15m=54.3, 1H=24.8, 4H=23.6
+INFO:ai_agent:\U0001f50e Searching Brave: FARTCOINUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:\u26a0\ufe0f AI generated weak RR (0.83) for strategy Level Trader (S&R). Adjusting TP to 1:3.0.
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 70, 'reasoning': 'На данный момент мы видим, что цена находится в зоне поддержки после длительного нисходящего тренда. Формируется восходящий треугольник, что указывает на накопление давления на покупку. RSI на всех таймфреймах, кроме 1 минуты, находится в зоне перепродажи (< 50), что подтверждает потенциал для роста. \U0001f680 [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 0.18091, 'take_profit': 0.19563999999999998, 'stop_loss': 0.176, 'signal_title': 'Пробой восходящего треугольника', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:\U0001f680 AI SIGNAL found: BUY FARTCOINUSDT (Conf: 70%)
+INFO:ai_agent:\u26a1 AI AUTO-TRADE TRIGGERED: FARTCOINUSDT BUY
+INFO:Dashboard:\u26a1 AI Agent requested execution for FARTCOINUSDT Buy
+WARNING:ai_agent:\u274c AI AUTO-TRADE REJECTED: FARTCOINUSDT - Auto-trade not enabled in Web Controller yet
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:ai_agent:\U0001f9e0 AI Sentinel Cycle: SOLUSDT
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing SOLUSDT...
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:bybit_client:\U0001f4b0 Balance (UNIFIED): $121.52
+INFO:bybit_client:\U0001f50d DEBUG POSITIONS RAW (ALL): {"nextPageCursor": "", "category": "linear", "list": []}
+INFO:ai_agent:\U0001f4b2 Real-time Price for SOLUSDT: 76.46
+INFO:ai_agent:\U0001f4ca MTF RSI: 1m=62.4, 15m=56.6, 1H=25.3, 4H=10.6
+INFO:ai_agent:\U0001f50e Searching Brave: SOLUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:\u26a0\ufe0f AI generated weak RR (1.50) for strategy Neuro-Scalper (1m Micro). Adjusting TP to 1:1.5.
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'BEARISH', 'confidence': 70, 'reasoning': 'На данный момент мы видим, что RSI на всех таймфреймах, кроме 1-минутного, находится в зоне ниже 50. Однако, 1-минутный RSI находится в зоне 62.4, что является сигналом для скалпинга в сторону продажи. Уровень поддержки находится на отметке 76.46, и мы можем ожидать пробоя этого уровня вниз. Кроме того, новости о Solana не являются очень позитивными, что может способствовать снижению цены. [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'SELL', 'entry_price': 76.46, 'take_profit': 75.79999999999998, 'stop_loss': 76.9, 'signal_title': 'Пробой поддержки', 'strategy_name': 'Neuro-Scalper (1m Micro)'}
+INFO:ai_agent:\U0001f680 AI SIGNAL found: SELL SOLUSDT (Conf: 70%)
+INFO:ai_agent:\u26a1 AI AUTO-TRADE TRIGGERED: SOLUSDT SELL
+INFO:Dashboard:\u26a1 AI Agent requested execution for SOLUSDT Sell
+WARNING:ai_agent:\u274c AI AUTO-TRADE REJECTED: SOLUSDT - Auto-trade not enabled in Web Controller yet
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:bybit_client:\U0001f4b0 Balance (UNIFIED): $121.52
+INFO:bybit_client:\U0001f50d DEBUG POSITIONS RAW (ALL): {"nextPageCursor": "", "category": "linear", "list": []}
+ERROR:asyncio:Exception in callback _ProactorBasePipeTransport._call_connection_lost()
+handle: <Handle _ProactorBasePipeTransport._call_connection_lost()>
+Traceback (most recent call last):
+  File "C:\Python314\Lib\asyncio\events.py", line 94, in _run
+    self._context.run(self._callback, *self._args)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\asyncio\proactor_events.py", line 165, in _call_connection_lost
+    self._sock.shutdown(socket.SHUT_RDWR)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [WinError 10054] Удаленный хост принудительно разорвал существующее подключение
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:bybit_client:\U0001f4b0 Balance (UNIFIED): $121.52
+INFO:bybit_client:\U0001f50d DEBUG POSITIONS RAW (ALL): {"nextPageCursor": "", "category": "linear", "list": []}
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:310: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  config_data = config.dict()
+C:\Projects\Trading\Trading-fin\web_ui\server.py:626: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  BOT_START_TIME = datetime.utcnow().isoformat() + "Z"
+INFO:ai_agent:\U0001f9e0 AI Sentinel Cycle: ZECUSDT
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing ZECUSDT...
+INFO:ai_agent:\U0001f4b2 Real-time Price for ZECUSDT: 205.25
+INFO:ai_agent:\U0001f4ca MTF RSI: 1m=61.4, 15m=58.6, 1H=32.2, 4H=16.4
+INFO:ai_agent:\U0001f50e Searching Brave: ZECUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:\u26a0\ufe0f AI generated weak RR (1.00) for strategy Neuro-Scalper (1m Micro). Adjusting TP to 1:1.5.
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 70, 'reasoning': 'На графике ZECUSDT наблюдается отскок от зоны поддержки на дневном графике, что может указывать на потенциальное продолжение тренда. \U0001f680 RSI на 1-минутном графике составляет 61,4, что является сигналом для входа в лонг. \U0001f4c8 Однако, RSI на 1-часовом и 4-часовом графиках все еще находятся в зоне перепродажи, что может указывать на наличие потенциала для роста. \U0001f4ca Уровни поддержки и сопротивления также подтверждают потенциал для роста. \U0001f4c8 [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 205.25, 'take_profit': 212.375, 'stop_loss': 200.5, 'signal_title': 'Отскок от поддержки', 'strategy_name': 'Neuro-Scalper (1m Micro)'}
+INFO:ai_agent:\U0001f680 AI SIGNAL found: BUY ZECUSDT (Conf: 70%)
+INFO:ai_agent:\u26a1 AI AUTO-TRADE TRIGGERED: ZECUSDT BUY
+INFO:Dashboard:\u26a1 AI Agent requested execution for ZECUSDT Buy
+WARNING:ai_agent:\u274c AI AUTO-TRADE REJECTED: ZECUSDT - Auto-trade not enabled in Web Controller yet
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:bybit_client:\U0001f4b0 Balance (UNIFIED): $121.52
+INFO:bybit_client:\U0001f50d DEBUG POSITIONS RAW (ALL): {"nextPageCursor": "", "category": "linear", "list": []}
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:ai_agent:\U0001f9e0 AI Sentinel Cycle: ENAUSDT
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing ENAUSDT...
+INFO:ai_agent:\U0001f4b2 Real-time Price for ENAUSDT: 0.11224
+INFO:ai_agent:\U0001f4ca MTF RSI: 1m=64.9, 15m=55.1, 1H=24.0, 4H=18.4
+INFO:ai_agent:\U0001f50e Searching Brave: ENAUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:\u26a0\ufe0f AI generated weak RR (0.97) for strategy Neuro-Scalper (1m Micro). Adjusting TP to 1:1.5.
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'BEARISH', 'confidence': 60, 'reasoning': "Мы видим, что RSI на 1м графике находится на уровне 64,9, что является сигналом для SCALPING. Однако, RSI на других таймфреймах (15м, 1ч, 4ч) находится ниже 50, что не соответствует нашему правилу для LONG. Кроме того, цена находится в\u718aишной структуре и продолжает формировать ni\u017eшие максимумы и минимумы. Поэтому мы выбираем стратегию 'Neuro-Scalper (1m Micro)' для быстрой сделки на 1-минутном графике. [RR Adjusted to 1:3]", 'suggested_risk': 1.0, 'action': 'SELL', 'entry_price': 0.11224, 'take_profit': 0.1111, 'stop_loss': 0.113, 'signal_title': 'Продажа на 1-минутном графике', 'strategy_name': 'Neuro-Scalper (1m Micro)'}
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:bybit_client:\U0001f4b0 Balance (UNIFIED): $121.52
+INFO:bybit_client:\U0001f50d DEBUG POSITIONS RAW (ALL): {"nextPageCursor": "", "category": "linear", "list": []}
+INFO:ai_agent:\u2705 Sentinel Cycle Complete. Sleeping for 15m
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:bybit_client:\U0001f4b0 Balance (UNIFIED): $121.52
+INFO:bybit_client:\U0001f50d DEBUG POSITIONS RAW (ALL): {"nextPageCursor": "", "category": "linear", "list": []}
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:bybit_client:\U0001f4b0 Balance (UNIFIED): $121.52
+INFO:bybit_client:\U0001f50d DEBUG POSITIONS RAW (ALL): {"nextPageCursor": "", "category": "linear", "list": []}
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:bybit_client:\U0001f4b0 Balance (UNIFIED): $121.52
+INFO:bybit_client:\U0001f50d DEBUG POSITIONS RAW (ALL): {"nextPageCursor": "", "category": "linear", "list": []}
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:bybit_client:\U0001f4b0 Balance (UNIFIED): $121.52
+INFO:bybit_client:\U0001f50d DEBUG POSITIONS RAW (ALL): {"nextPageCursor": "", "category": "linear", "list": []}
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:bybit_client:\U0001f4b0 Balance (UNIFIED): $121.52
+INFO:bybit_client:\U0001f50d DEBUG POSITIONS RAW (ALL): {"nextPageCursor": "", "category": "linear", "list": []}
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:bybit_client:\U0001f4b0 Balance (UNIFIED): $121.52
+INFO:bybit_client:\U0001f50d DEBUG POSITIONS RAW (ALL): {"nextPageCursor": "", "category": "linear", "list": []}
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:bybit_client:\U0001f4b0 Balance (UNIFIED): $121.52
+INFO:bybit_client:\U0001f50d DEBUG POSITIONS RAW (ALL): {"nextPageCursor": "", "category": "linear", "list": []}
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:bybit_client:\U0001f4b0 Balance (UNIFIED): $121.52
+INFO:bybit_client:\U0001f50d DEBUG POSITIONS RAW (ALL): {"nextPageCursor": "", "category": "linear", "list": []}
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:bybit_client:\U0001f4b0 Balance (UNIFIED): $121.52
+INFO:bybit_client:\U0001f50d DEBUG POSITIONS RAW (ALL): {"nextPageCursor": "", "category": "linear", "list": []}
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:bybit_client:\U0001f4b0 Balance (UNIFIED): $121.52
+INFO:bybit_client:\U0001f50d DEBUG POSITIONS RAW (ALL): {"nextPageCursor": "", "category": "linear", "list": []}

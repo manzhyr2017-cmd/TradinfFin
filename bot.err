@@ -1,0 +1,1062 @@
+C:\Projects\Trading\Trading-fin\web_ui\server.py:634: DeprecationWarning: 
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+        
+  @app.on_event("startup")
+INFO:     Started server process [4336]
+INFO:     Waiting for application startup.
+INFO:Database:Database initialized: trading_bot.db
+INFO:ai_agent:🧠 AI Agent: Using GROQ (Llama 3.3)
+INFO:ai_agent:🧠 AI Agent (Neuro-Bot) Initialized
+INFO:Dashboard:Telegram Bot started in background
+INFO:ai_agent:🧠 AI Agent: Using GROQ (Llama 3.3)
+INFO:ai_agent:🧠 AI Agent (Neuro-Bot) Initialized
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:Dashboard:🧠 AI Agent initialized for Web UI (With Market Access & Telegram)
+INFO:Dashboard:🛡️ AI Sentinel Loop STARTED
+INFO:ai_agent:🛡️ Sentinel Loop STARTED (Interval: 15m)
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:trade_logger:📦 Trade Logger initialized: c:\Projects\Trading\Trading-fin\trades.db
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:ai_agent:📊 Sentinel using Top 20 symbols by volume: 20 found
+INFO:ai_agent:🧠 AI Sentinel Cycle: BTCUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing BTCUSDT...
+INFO:ai_agent:💲 Real-time Price for BTCUSDT: 70907.8
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getMe "HTTP/1.1 200 OK"
+INFO:telegram.ext.Application:Application started
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/deleteWebhook "HTTP/1.1 200 OK"
+INFO:telegram_bot:🤖 Telegram бот запущен (Polling)
+INFO:ai_agent:📊 MTF RSI: 15m=41.5, 1H=30.9, 4H=16.4
+INFO:ai_agent:🔎 Searching Brave: BTCUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:⚠️ AI generated weak RR (2.66). Adjusting TP to 1:3.
+INFO:ai_agent:🧠 Analysis Result: {'sentiment': 'BEARISH', 'confidence': 80, 'reasoning': 'Цена протестировала уровень 70907.8 и отскочила назад. Рассматриваем вход на короткую позицию с тейк-профитом на следующем сильном уровне поддержки и стоп-лоссом чуть ниже текущего уровня. [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'SELL', 'entry_price': 70907.8, 'take_profit': 67631.20000000001, 'stop_loss': 72000, 'signal_title': 'Продажа после отскока', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:🚀 AI SIGNAL found: SELL BTCUSDT (Conf: 80%)
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:Dashboard:📨 AI Signal Sent to -1003842003511: BTCUSDT
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: ETHUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing ETHUSDT...
+INFO:ai_agent:💲 Real-time Price for ETHUSDT: 2092.4
+INFO:ai_agent:📊 MTF RSI: 15m=43.0, 1H=40.7, 4H=26.5
+INFO:ai_agent:🔎 Searching Brave: ETHUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 80, 'reasoning': 'Цена протестировала уровень поддержки 2092.4, после чего произошел отскок. Это говорит о том, что данная поддержка сильная и может стать основой для дальнейшего роста цены. Мы ждем закрепления выше этого уровня и последующего теста следующего уровня сопротивления.', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 2095, 'take_profit': 2700, 'stop_loss': 2050, 'signal_title': 'Отскок от 2092$', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:🚀 AI SIGNAL found: BUY ETHUSDT (Conf: 80%)
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:Dashboard:📨 AI Signal Sent to -1003842003511: ETHUSDT
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: SOLUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing SOLUSDT...
+INFO:ai_agent:💲 Real-time Price for SOLUSDT: 90.35
+INFO:ai_agent:📊 MTF RSI: 15m=47.4, 1H=42.9, 4H=16.2
+INFO:ai_agent:🔎 Searching Brave: SOLUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:⚠️ AI generated weak RR (1.80). Adjusting TP to 1:3.
+INFO:ai_agent:🧠 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 80, 'reasoning': 'Цена протестировала уровень поддержки 90$ и отскочила от него, указывая на сильную поддержку на этом уровне. Рассматривая мульти-таймфреймовую подтверждение и отсутствие сигналов к продаже на всех таймфреймах, мы видим возможность для продолжения роста. Таким образом, вход в покупку у уровня 90$ с целью достижения следующего уровня сопротивления является перспективным. [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 90.35, 'take_profit': 106.39999999999998, 'stop_loss': 85, 'signal_title': 'Отскок от 90$', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:🚀 AI SIGNAL found: BUY SOLUSDT (Conf: 80%)
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:Dashboard:📨 AI Signal Sent to -1003842003511: SOLUSDT
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: XRPUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing XRPUSDT...
+INFO:ai_agent:💲 Real-time Price for XRPUSDT: 1.4302
+INFO:ai_agent:📊 MTF RSI: 15m=38.7, 1H=21.0, 4H=18.7
+INFO:ai_agent:🔎 Searching Brave: XRPUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:⚠️ AI generated weak RR (2.58). Adjusting TP to 1:3.
+INFO:ai_agent:🧠 Analysis Result: {'sentiment': 'BEARISH', 'confidence': 80, 'reasoning': 'Цена протестировала уровень 1.4302 и отскочила вниз, указывая на сильное сопротивление. Все три таймфрейма (15m, 1H, 4H) имеют RSI < 50, что подтверждает нашу SHORT-позицию. Кроме того, последние новости говорят о продолжении текущей тенденции и формировании медвежьей свечи на ключевом уровне сопротивления. [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'SELL', 'entry_price': 1.4302, 'take_profit': 1.2207999999999997, 'stop_loss': 1.5, 'signal_title': 'Продажа при отклонении от 1.43', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:🚀 AI SIGNAL found: SELL XRPUSDT (Conf: 80%)
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:Dashboard:📨 AI Signal Sent to -1003842003511: XRPUSDT
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: HYPEUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing HYPEUSDT...
+INFO:ai_agent:💲 Real-time Price for HYPEUSDT: 33.753
+INFO:ai_agent:📊 MTF RSI: 15m=54.9, 1H=43.2, 4H=51.6
+INFO:ai_agent:🔎 Searching Brave: HYPEUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:⚠️ AI generated weak RR (2.69). Adjusting TP to 1:3.
+INFO:ai_agent:🧠 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 80, 'reasoning': 'Цена протестировала уровень поддержки около 33.5 и отскочила вверх, что указывает на возможное продолжение восходящего движения. РСИ на всех таймфреймах не соответствует правилу входа, но уровни поддержки и сопротивления являются основными для входа. Уровень поддержки прошел проверку и мы можем рассматривать возможность входа в длинную позицию. [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 33.753, 'take_profit': 38.711999999999996, 'stop_loss': '32.1', 'signal_title': 'Отскок от 33.5$', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:🚀 AI SIGNAL found: BUY HYPEUSDT (Conf: 80%)
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:Dashboard:📨 AI Signal Sent to -1003842003511: HYPEUSDT
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: XAUTUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing XAUTUSDT...
+INFO:ai_agent:💲 Real-time Price for XAUTUSDT: 4904.5
+INFO:ai_agent:📊 MTF RSI: 15m=72.3, 1H=50.6, 4H=58.7
+INFO:ai_agent:🔎 Searching Brave: XAUTUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 Analysis Result: {'sentiment': 'BEARISH', 'confidence': 70, 'reasoning': 'Цена протестировала уровень 4951 и может продолжить снижение до 4500 points. Несмотря на общий восходящий тренд и недавний ATH на 5610 пунктах, текущая цена 4904.5 близка к уровню 4951 и может стать опасной для продолжения роста. Мы наблюдаем снижение импульса покупателей и возможное формирование дивергенции на дне.', 'suggested_risk': 1.0, 'action': 'SELL', 'entry_price': 4904.5, 'take_profit': 4500, 'stop_loss': 5000, 'signal_title': 'Отскок вниз от 4951', 'strategy_name': 'Level Trader (S&R)'}
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: DOGEUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing DOGEUSDT...
+INFO:ai_agent:💲 Real-time Price for DOGEUSDT: 0.10146
+INFO:ai_agent:📊 MTF RSI: 15m=40.1, 1H=40.6, 4H=37.1
+INFO:ai_agent:🔎 Searching Brave: DOGEUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 80, 'reasoning': 'Цена протестировала уровень 0.10000 и отскочила от него, что указывает на сильную поддержку. При этом, все три тайм-фрейма (15m, 1H, 4H) показывают RSI ниже 50, что соответствует нашему правилу для LONG позиций. Кроме того, цена отскочила от уровня и сейчас находится gần 0.10146, что соответствует нашему критическому правилу для входа.', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 0.10146, 'take_profit': 0.11, 'stop_loss': 0.099, 'signal_title': 'Отскок от 100', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:🚀 AI SIGNAL found: BUY DOGEUSDT (Conf: 80%)
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:Dashboard:📨 AI Signal Sent to -1003842003511: DOGEUSDT
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: RIVERUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing RIVERUSDT...
+INFO:ai_agent:💲 Real-time Price for RIVERUSDT: 13.236
+INFO:ai_agent:📊 MTF RSI: 15m=25.0, 1H=19.7, 4H=29.8
+INFO:ai_agent:🔎 Searching Brave: RIVERUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:⚠️ AI generated weak RR (1.45). Adjusting TP to 1:3.
+INFO:ai_agent:🧠 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 80, 'reasoning': 'Цена протестировала уровень поддержки 12.3611 и отскочила, что указывает на возможность продолжения роста. Индикаторы RSI на всех таймфреймах указывают на перекупленность, что может быть хорошей основой для долгосрочного роста. Цена сейчас находится вблизи ключевого уровня 13.236, что является хорошей точкой входа. [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 13.236, 'take_profit': 16.044, 'stop_loss': 12.3, 'signal_title': 'Отскок от 12.36$', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:🚀 AI SIGNAL found: BUY RIVERUSDT (Conf: 80%)
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:Dashboard:📨 AI Signal Sent to -1003842003511: RIVERUSDT
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: 1000PEPEUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing 1000PEPEUSDT...
+INFO:ai_agent:💲 Real-time Price for 1000PEPEUSDT: 0.004058
+INFO:ai_agent:📊 MTF RSI: 15m=43.7, 1H=48.6, 4H=43.0
+INFO:ai_agent:🔎 Searching Brave: 1000PEPEUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:⚠️ AI generated weak RR (1.71). Adjusting TP to 1:3.
+INFO:ai_agent:🧠 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 85, 'reasoning': 'Цена протестировала уровень поддержки и отскочила вверх, указывая на потенциальную длинную позицию. Индикаторы RSI на всех таймфреймах ниже 50, что подтверждает бычью тенденцию. Также наблюдается увеличение интереса к рынку и активность покупателей, что говорит о возможности дальнейшего роста. [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 0.004058, 'take_profit': 0.0048319999999999995, 'stop_loss': 0.0038, 'signal_title': 'Отскок от поддержки', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:🚀 AI SIGNAL found: BUY 1000PEPEUSDT (Conf: 85%)
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:Dashboard:📨 AI Signal Sent to -1003842003511: 1000PEPEUSDT
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: ADAUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing ADAUSDT...
+INFO:ai_agent:💲 Real-time Price for ADAUSDT: 0.2807
+INFO:ai_agent:📊 MTF RSI: 15m=39.4, 1H=40.7, 4H=35.5
+INFO:ai_agent:🔎 Searching Brave: ADAUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:⚠️ AI generated weak RR (1.90). Adjusting TP to 1:3.
+INFO:ai_agent:🧠 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 80, 'reasoning': 'Цена протестировала уровень 0.2800 и отскочила, что указывает на сильную поддержку. При текущей цене 0.2807 и учитывая мульти-таймфреймовую確認цию, мы ожидаем продолжение роста. [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 0.2807, 'take_profit': 0.3428, 'stop_loss': 0.26, 'signal_title': 'Отскок от 28 центов', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:🚀 AI SIGNAL found: BUY ADAUSDT (Conf: 80%)
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:Dashboard:📨 AI Signal Sent to -1003842003511: ADAUSDT
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: ARCUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing ARCUSDT...
+INFO:ai_agent:💲 Real-time Price for ARCUSDT: 0.07048
+INFO:ai_agent:📊 MTF RSI: 15m=66.9, 1H=40.2, 4H=69.1
+INFO:ai_agent:🔎 Searching Brave: ARCUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:⚠️ AI generated weak RR (2.65). Adjusting TP to 1:3.
+INFO:ai_agent:🧠 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 80, 'reasoning': 'Цена протестировала уровень поддержки 0.065 и отскочила до текущего уровня 0.07048. Длинные свечи указывают на силу покупателей, а показания RSI на разных таймфреймах свидетельствуют о потенциале продолжения роста. Мы ищем уровень сопротивления как цель прибыли. [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 0.07048, 'take_profit': 0.08692, 'stop_loss': 0.065, 'signal_title': 'Отскок от 0.065$', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:🚀 AI SIGNAL found: BUY ARCUSDT (Conf: 80%)
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:Dashboard:📨 AI Signal Sent to -1003842003511: ARCUSDT
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:ai_agent:🧠 AI Sentinel Cycle: SUIUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing SUIUSDT...
+INFO:ai_agent:💲 Real-time Price for SUIUSDT: 1.0451
+INFO:ai_agent:📊 MTF RSI: 15m=33.9, 1H=39.3, 4H=29.9
+INFO:ai_agent:🔎 Searching Brave: SUIUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:⚠️ AI generated weak RR (2.86). Adjusting TP to 1:3.
+INFO:ai_agent:🧠 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 80, 'reasoning': 'Цена протестировала уровень поддержки 1.0451, при этом на всех таймфреймах RSI ниже 50, что подтверждает возможность роста. Кроме того, ценовой график демонстрирует потенциальную формуации поддержки, позволяя нам ожидать отскок. [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 1.0451, 'take_profit': 1.1354, 'stop_loss': 1.015, 'signal_title': 'Отскок от 1.045$', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:🚀 AI SIGNAL found: BUY SUIUSDT (Conf: 80%)
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:Dashboard:📨 AI Signal Sent to -1003842003511: SUIUSDT
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: BNBUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing BNBUSDT...
+INFO:ai_agent:💲 Real-time Price for BNBUSDT: 692.7
+INFO:ai_agent:📊 MTF RSI: 15m=45.1, 1H=23.8, 4H=20.1
+INFO:ai_agent:🔎 Searching Brave: BNBUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 Analysis Result: {'sentiment': 'BEARISH', 'confidence': 80, 'reasoning': 'Цена протестировала уровень 692.7 и отскочила вниз, что может говорить о начале нисходящего движения. При этом на более высоких временных интервалах (1H, 4H) RSI ниже 50, что подтверждает возможность продолжения снижения. В связи с этим стоит рассмотреть возможность продажи по текущей цене.', 'suggested_risk': 1.0, 'action': 'SELL', 'entry_price': 692.7, 'take_profit': 640, 'stop_loss': 710, 'signal_title': 'Продажа после откота от 692.7', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:🚀 AI SIGNAL found: SELL BNBUSDT (Conf: 80%)
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:Dashboard:📨 AI Signal Sent to -1003842003511: BNBUSDT
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: LINKUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing LINKUSDT...
+INFO:ai_agent:💲 Real-time Price for LINKUSDT: 9.058
+INFO:ai_agent:📊 MTF RSI: 15m=42.5, 1H=43.9, 4H=31.7
+INFO:ai_agent:🔎 Searching Brave: LINKUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 85, 'reasoning': 'Цена протестировала уровень 9.058 и отскочила от него, указывая на сильную поддержку. Кроме того, на 8-часовом графике наблюдается треугольная модель разворота, что потенциально может привести к росту цены до следующего уровня сопротивления. Учитывая это и тот факт, что все таймфреймы находятся ниже 50 по RSI, можно сделать вывод о том, что цена готова к росту.', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 9.058, 'take_profit': 11.89, 'stop_loss': 8.5, 'signal_title': 'Отскок от 9$', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:🚀 AI SIGNAL found: BUY LINKUSDT (Conf: 85%)
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:Dashboard:📨 AI Signal Sent to -1003842003511: LINKUSDT
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: FARTCOINUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing FARTCOINUSDT...
+INFO:ai_agent:💲 Real-time Price for FARTCOINUSDT: 0.20843
+INFO:ai_agent:📊 MTF RSI: 15m=31.4, 1H=44.3, 4H=35.9
+INFO:ai_agent:🔎 Searching Brave: FARTCOINUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 80, 'reasoning': 'Цена протестировала уровень 0.20843, сформировав восходящий треугольник, что говорит о积累ющемся давлении. Цена отскочила от этого уровня, что указывает на потенциальный отскок.', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 0.20843, 'take_profit': 0.22, 'stop_loss': 0.206, 'signal_title': 'Отскок от 0.208$', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:🚀 AI SIGNAL found: BUY FARTCOINUSDT (Conf: 80%)
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:Dashboard:📨 AI Signal Sent to -1003842003511: FARTCOINUSDT
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: ZECUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing ZECUSDT...
+INFO:ai_agent:💲 Real-time Price for ZECUSDT: 244.44
+INFO:ai_agent:📊 MTF RSI: 15m=46.6, 1H=23.1, 4H=19.2
+INFO:ai_agent:🔎 Searching Brave: ZECUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 Analysis Result: {'sentiment': 'BEARISH', 'confidence': 70, 'reasoning': 'Цена протестировала уровень 244.44, что является сильным сопротивлением. На данный момент наблюдается формирование медвежьей волны, и мы ожидаем tiếp tục снижения цены. Раньше был отскок от этой зоны, но сейчас цена возвращается к ней, что говорит о слабости покупателей.', 'suggested_risk': 1.0, 'action': 'SELL', 'entry_price': 244.44, 'take_profit': 220.0, 'stop_loss': 250.0, 'signal_title': 'Продажа при отскоке от 244$', 'strategy_name': 'Level Trader (S&R)'}
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: PAXGUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing PAXGUSDT...
+INFO:ai_agent:💲 Real-time Price for PAXGUSDT: 4934.3
+INFO:ai_agent:📊 MTF RSI: 15m=70.1, 1H=51.3, 4H=59.1
+INFO:ai_agent:🔎 Searching Brave: PAXGUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 Analysis Result: {'sentiment': 'BEARISH', 'confidence': 80, 'reasoning': 'Цена протестировала уровень 4934.3 и отскочила вниз. Обратите внимание, что мульти-таймфреймовая конфи rmация (Phase 4) показывает, что только 15m RSI выше 50, а остальные таймфреймы находятся ниже 50, что может означать возможность начала коррекции. Также следует учитывать новостную и контекстную информацию, где наблюдается образование «головы и плеч» на дневном графике, и цена теряет поддержку 50MA. Это говорит о том, что цена может направиться к уровню 200MA поддержки после пробоя шеи. Таким образом, есть основание для входа в короткую позицию.', 'suggested_risk': 1.0, 'action': 'SELL', 'entry_price': 4934.3, 'take_profit': 4500.0, 'stop_loss': 5000.0, 'signal_title': 'Продажа у 4934.3', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:🚀 AI SIGNAL found: SELL PAXGUSDT (Conf: 80%)
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:Dashboard:📨 AI Signal Sent to -1003842003511: PAXGUSDT
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: ZILUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing ZILUSDT...
+INFO:ai_agent:💲 Real-time Price for ZILUSDT: 0.004996
+INFO:ai_agent:📊 MTF RSI: 15m=38.1, 1H=29.3, 4H=46.9
+INFO:ai_agent:🔎 Searching Brave: ZILUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 80, 'reasoning': 'Цена протестировала уровень поддержки 0.0048 и отскочила вверх, что указывает на наличие покупателей на этом уровне. Технические индикаторы также указывают на восходящий тренд, а новостной контекст предполагает повышение интереса к монете и накопление крупными игроками.', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 0.004996, 'take_profit': 0.0062, 'stop_loss': 0.0046, 'signal_title': 'Отскок от 0.005', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:🚀 AI SIGNAL found: BUY ZILUSDT (Conf: 80%)
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:Dashboard:📨 AI Signal Sent to -1003842003511: ZILUSDT
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: LTCUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing LTCUSDT...
+INFO:ai_agent:💲 Real-time Price for LTCUSDT: 57.46
+INFO:ai_agent:📊 MTF RSI: 15m=37.2, 1H=46.4, 4H=36.9
+INFO:ai_agent:🔎 Searching Brave: LTCUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:⚠️ AI generated weak RR (2.43). Adjusting TP to 1:3.
+INFO:ai_agent:🧠 Analysis Result: {'sentiment': 'BEARISH', 'confidence': 80, 'reasoning': 'Цена протестировала уровень 57.46 и отскочила. На фоне общей негативной тенденции на рынке и учитывая, что все временные рамки имеют RSI > 50, мы ожидаем продолжения нисходящего движения. [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'SELL', 'entry_price': 57.46, 'take_profit': 42.34, 'stop_loss': 62.5, 'signal_title': 'Продажа у 57$', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:🚀 AI SIGNAL found: SELL LTCUSDT (Conf: 80%)
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:Dashboard:📨 AI Signal Sent to -1003842003511: LTCUSDT
+INFO:ai_agent:🧠 AI Sentinel Cycle: ZKPUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing ZKPUSDT...
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:💲 Real-time Price for ZKPUSDT: 0.08518
+INFO:ai_agent:📊 MTF RSI: 15m=43.3, 1H=31.7, 4H=47.6
+INFO:ai_agent:🔎 Searching Brave: ZKPUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 Analysis Result: {'sentiment': 'BEARISH', 'confidence': 70, 'reasoning': 'Цена протестировала уровень 0.08518 и отскочила от него, что указывает на слабость покупателей и потенциальный спад. Все временные интервалы RSI находятся ниже 50, что подтверждает данную тенденцию.', 'suggested_risk': 1.0, 'action': 'SELL', 'entry_price': 0.085, 'take_profit': 0.075, 'stop_loss': 0.088, 'signal_title': 'Продажа после отскока', 'strategy_name': 'Level Trader (S&R)'}
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:ai_agent:✅ Sentinel Cycle Complete. Sleeping for 15m
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+WARNING:bybit_client:⚠️ Network/Proxy Error (Attempt 1/3): HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=25)
+ERROR:bybit_client:Bybit API Error: invalid request, please check your server timestamp or recv_window param: req_timestamp[1770274769100],server_timestamp[1770274798694],recv_window[5000] (Code: 10002)
+ERROR:Dashboard:Balance fetch error: Bybit API Error: invalid request, please check your server timestamp or recv_window param: req_timestamp[1770274769100],server_timestamp[1770274798694],recv_window[5000]
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:📊 Sentinel using Top 20 symbols by volume: 20 found
+INFO:ai_agent:🧠 AI Sentinel Cycle: BTCUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing BTCUSDT...
+INFO:ai_agent:💲 Real-time Price for BTCUSDT: 71385.9
+INFO:ai_agent:📊 MTF RSI: 15m=49.6, 1H=41.1, 4H=18.3
+INFO:ai_agent:🔎 Searching Brave: BTCUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 Analysis Result: {'sentiment': 'BEARISH', 'confidence': 80, 'reasoning': 'Цена протестировала уровень 71385.9 и отскочила вверх, однако все времяframes RSI указывают на то, что цена должна уйти ниже 71k - 72k. Кроме того, технический анализ показывает, что цена находится в нисходящем канале и-controlled консолидации после предыдущего восходящего движения. Это является хорошим сигналом для входа в короткую позицию.', 'suggested_risk': 1.0, 'action': 'SELL', 'entry_price': 71385.9, 'take_profit': 68000, 'stop_loss': 72000, 'signal_title': 'Продавать от 71k', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:🚀 AI SIGNAL found: SELL BTCUSDT (Conf: 80%)
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:Dashboard:📨 AI Signal Sent to -1003842003511: BTCUSDT
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: ETHUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing ETHUSDT...
+INFO:ai_agent:💲 Real-time Price for ETHUSDT: 2114.63
+INFO:ai_agent:📊 MTF RSI: 15m=50.0, 1H=47.8, 4H=28.0
+INFO:ai_agent:🔎 Searching Brave: ETHUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:⚠️ AI generated weak RR (2.49). Adjusting TP to 1:3.
+INFO:ai_agent:🧠 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 80, 'reasoning': 'Цена протестировала уровень 2100$ и отскочила, что является признаком сильного поддержки. РСИ на всех таймфреймах не поднимается выше 50, что также подтверждает нашу длинную позицию. Поэтому мы ожидаем продолжения роста до следующего уровня сопротивления 2400$. [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 2114.63, 'take_profit': 2458.5200000000004, 'stop_loss': 2000, 'signal_title': 'Отскок от 2100$', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:🚀 AI SIGNAL found: BUY ETHUSDT (Conf: 80%)
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:Dashboard:📨 AI Signal Sent to -1003842003511: ETHUSDT
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: SOLUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing SOLUSDT...
+INFO:ai_agent:💲 Real-time Price for SOLUSDT: 91.27
+INFO:ai_agent:📊 MTF RSI: 15m=51.4, 1H=49.7, 4H=17.6
+INFO:ai_agent:🔎 Searching Brave: SOLUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:⚠️ AI generated weak RR (2.99). Adjusting TP to 1:3.
+INFO:ai_agent:🧠 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 80, 'reasoning': 'Цена протестировала уровень 90.00 и отскочила обратно, мы увидели подтверждение уровня поддержки и готовимся к отскоку. Поскольку все таймфреймы Multi-TIMEFRAME CONFIRMATION (Phase 4) не удовлетворяют правилу для LONG, мы ищем подтверждение в форме отскока от уровня поддержки. [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 91.27, 'take_profit': 110.07999999999998, 'stop_loss': 85.0, 'signal_title': 'Отскок от 90$', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:🚀 AI SIGNAL found: BUY SOLUSDT (Conf: 80%)
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:Dashboard:📨 AI Signal Sent to -1003842003511: SOLUSDT
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: XRPUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing XRPUSDT...
+INFO:ai_agent:💲 Real-time Price for XRPUSDT: 1.444
+INFO:ai_agent:📊 MTF RSI: 15m=50.3, 1H=29.3, 4H=20.3
+INFO:ai_agent:🔎 Searching Brave: XRPUSDT price analysis technical news today
+ERROR:ai_agent:Search error: HTTPSConnectionPool(host='api.search.brave.com', port=443): Max retries exceeded with url: /res/v1/web/search?q=XRPUSDT+price+analysis+technical+news+today&count=3 (Caused by ProxyError('Unable to connect to proxy', ConnectTimeoutError(<HTTPSConnection(host='156.246.213.194', port=62956) at 0x244783ea990>, 'Connection to 156.246.213.194 timed out. (connect timeout=None)')))
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 Analysis Result: {'sentiment': 'NEUTRAL', 'confidence': 60, 'reasoning': 'Цена протестировала уровень 1.444, но не смогла закрепиться выше. На графике观察ается дивергенция RSI на разных таймфреймах, что указывает на потенциальную коррекцию. Однако в настоящий момент не наблюдается явного ре теста или отката цены от сильных уровней поддержки или resistance.', 'suggested_risk': 1.0, 'action': 'WAIT', 'entry_price': 'Market', 'take_profit': 1.6, 'stop_loss': 1.3, 'signal_title': 'Нет сигнала к покупке или продаже', 'strategy_name': 'Level Trader (S&R)'}
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: HYPEUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing HYPEUSDT...
+INFO:ai_agent:💲 Real-time Price for HYPEUSDT: 34.427
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:📊 MTF RSI: 15m=72.6, 1H=50.0, 4H=53.5
+INFO:ai_agent:🔎 Searching Brave: HYPEUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:⚠️ AI generated weak RR (2.89). Adjusting TP to 1:3.
+INFO:ai_agent:🧠 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 80, 'reasoning': 'Цена протестировала уровень поддержки 34.0 и отскочила вверх, что указывает на сильный интерес покупателей. Кроме того, на уровне 34.0 наблюдается высокая ликвидность и объем сделок, что делает его ключевым уровнем. РSI на 15-минутном интервале показывает значение 72.6, что указывает на перепроданность и потенциал для коррекции вверх. Мы входили в покупку на уровне 34.427, с целью достижения следующего сильного уровня сопротивления на уровне 40.0. [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 34.427, 'take_profit': 40.208, 'stop_loss': 32.5, 'signal_title': 'Отскок от 34$', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:🚀 AI SIGNAL found: BUY HYPEUSDT (Conf: 80%)
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:Dashboard:📨 AI Signal Sent to -1003842003511: HYPEUSDT
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: XAUTUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing XAUTUSDT...
+INFO:ai_agent:💲 Real-time Price for XAUTUSDT: 4904.7
+INFO:ai_agent:📊 MTF RSI: 15m=67.0, 1H=51.2, 4H=58.7
+INFO:ai_agent:🔎 Searching Brave: XAUTUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 Analysis Result: {'sentiment': 'BEARISH', 'confidence': 70, 'reasoning': 'Цена протестировала уровень 4951 и имеет nguycoat rejecting этого уровня. Кроме того, все таймфреймы (15м, 1ч, 4ч) показывают, что RSI находится выше 50, что говорит о потенциальной продаже. Следовательно, мы ищем возможность продать с тейк-профитом на следующем сильном уровне поддержки и стоп-лоссом позади текущего уровня.', 'suggested_risk': 1.0, 'action': 'SELL', 'entry_price': 4904.7, 'take_profit': 4500, 'stop_loss': 4951, 'signal_title': 'Продажа после отскока от 4951', 'strategy_name': 'Level Trader (S&R)'}
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: DOGEUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing DOGEUSDT...
+INFO:ai_agent:💲 Real-time Price for DOGEUSDT: 0.10218
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:📊 MTF RSI: 15m=46.2, 1H=46.9, 4H=38.3
+INFO:ai_agent:🔎 Searching Brave: DOGEUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 Analysis Result: {'sentiment': 'BEARISH', 'confidence': 70, 'reasoning': 'Цена протестировала уровень 0.10218 и отскочила вверх, но все тайм-фреймы RSI находятся ниже 50, что указывает на возможность дальнейшего снижения. При этом цена формирует восходящий канал на крупных тайм-фреймах, что может стать сильным уровнем поддержки.', 'suggested_risk': 1.0, 'action': 'SELL', 'entry_price': 0.10218, 'take_profit': 0.088, 'stop_loss': 0.106, 'signal_title': 'Продажа после отскока', 'strategy_name': 'Level Trader (S&R)'}
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: RIVERUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing RIVERUSDT...
+INFO:ai_agent:💲 Real-time Price for RIVERUSDT: 13.439
+INFO:ai_agent:📊 MTF RSI: 15m=38.3, 1H=23.1, 4H=30.3
+INFO:ai_agent:🔎 Searching Brave: RIVERUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:⚠️ AI generated weak RR (2.76). Adjusting TP to 1:3.
+INFO:ai_agent:🧠 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 80, 'reasoning': 'Цена протестировала уровень поддержки и отскочила вверх. Наиблежайший уровень сопротивления находится на отметке 15.20, что потенциально может стать целью роста. Цена в настоящее время торгуется вблизи уровня 13.439, что соответствует критериям для входа в длинную позицию по стратегии отскока от уровня поддержки. [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 13.439, 'take_profit': 15.355999999999998, 'stop_loss': 12.8, 'signal_title': 'Отскок от 13.44$', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:🚀 AI SIGNAL found: BUY RIVERUSDT (Conf: 80%)
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:Dashboard:📨 AI Signal Sent to -1003842003511: RIVERUSDT
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: 1000PEPEUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing 1000PEPEUSDT...
+INFO:ai_agent:💲 Real-time Price for 1000PEPEUSDT: 0.004061
+INFO:ai_agent:📊 MTF RSI: 15m=44.4, 1H=45.4, 4H=43.1
+INFO:ai_agent:🔎 Searching Brave: 1000PEPEUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:⚠️ AI generated weak RR (2.73). Adjusting TP to 1:3.
+INFO:ai_agent:🧠 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 85, 'reasoning': 'Цена протестировала уровень поддержки и отскочила, подтверждая сильную поддержку на уровне 0.004. Данные из TradingView говорят об увеличении интереса рынка и входе покупателей. Технический анализ показывает, что импульс тенденции направлен вверх, а киты дают намеки на накопление. Цена готова к росту! [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 0.004061, 'take_profit': 0.004544000000000002, 'stop_loss': 0.0039, 'signal_title': 'Отскок от поддержки', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:🚀 AI SIGNAL found: BUY 1000PEPEUSDT (Conf: 85%)
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:Dashboard:📨 AI Signal Sent to -1003842003511: 1000PEPEUSDT
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: ADAUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing ADAUSDT...
+INFO:ai_agent:💲 Real-time Price for ADAUSDT: 0.2822
+INFO:ai_agent:📊 MTF RSI: 15m=47.1, 1H=44.5, 4H=36.7
+INFO:ai_agent:🔎 Searching Brave: ADAUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:⚠️ AI generated weak RR (2.15). Adjusting TP to 1:3.
+INFO:ai_agent:🧠 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 80, 'reasoning': 'Цена протестировала уровень поддержки и отскочила вверх, что указывает на возможность продолжения роста. На 4-часовом графике observes IFVG и OB, что является сильным сигналом для покупки. Кроме того, мульти-таймфреймовая конфирмация RSI показывает, что все таймфреймы находятся ниже 50, что подтверждает нашему сигналу на LONG. [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 0.2822, 'take_profit': 0.3488, 'stop_loss': 0.26, 'signal_title': 'Отскок от_supporta', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:🚀 AI SIGNAL found: BUY ADAUSDT (Conf: 80%)
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:Dashboard:📨 AI Signal Sent to -1003842003511: ADAUSDT
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: ARCUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing ARCUSDT...
+INFO:ai_agent:💲 Real-time Price for ARCUSDT: 0.07107
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:ai_agent:📊 MTF RSI: 15m=65.9, 1H=40.5, 4H=69.4
+INFO:ai_agent:🔎 Searching Brave: ARCUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:⚠️ AI generated weak RR (1.80). Adjusting TP to 1:3.
+INFO:ai_agent:🧠 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 85, 'reasoning': 'Цена протестировала уровень 0.065 и отскочила вверх, что говорит о сильной поддержке на этом уровне. Рост цен продолжается, и мы ожидаем дальнейшего роста до следующего уровня сопротивления 0.082. [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 0.07107, 'take_profit': 0.08927999999999997, 'stop_loss': 0.065, 'signal_title': 'Отскок от 0.065', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:🚀 AI SIGNAL found: BUY ARCUSDT (Conf: 85%)
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:Dashboard:📨 AI Signal Sent to -1003842003511: ARCUSDT
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: SUIUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing SUIUSDT...
+INFO:ai_agent:💲 Real-time Price for SUIUSDT: 1.0505
+INFO:ai_agent:📊 MTF RSI: 15m=40.8, 1H=42.5, 4H=30.5
+INFO:ai_agent:🔎 Searching Brave: SUIUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:⚠️ AI generated weak RR (1.14). Adjusting TP to 1:3.
+INFO:ai_agent:🧠 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 80, 'reasoning': 'Цена протестировала уровень поддержки около 1.0500 и отскочила, указывая на потенциальную возможность продолжения роста. Индикатор RSI на всех таймфреймах находится ниже 50, что подтверждает нашу стратегию. Мы ищем возможность купить около текущего уровня и продать на следующем уровне сопротивления. [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 1.0505, 'take_profit': 1.262, 'stop_loss': 0.98, 'signal_title': 'Отскок от 1.05$', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:🚀 AI SIGNAL found: BUY SUIUSDT (Conf: 80%)
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:Dashboard:📨 AI Signal Sent to -1003842003511: SUIUSDT
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: BNBUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing BNBUSDT...
+INFO:ai_agent:💲 Real-time Price for BNBUSDT: 693.4
+INFO:ai_agent:📊 MTF RSI: 15m=48.4, 1H=30.9, 4H=20.2
+INFO:ai_agent:🔎 Searching Brave: BNBUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 Analysis Result: {'sentiment': 'BEARISH', 'confidence': 70, 'reasoning': 'Цена протестировала уровень 905-910 и отскочила вниз, что указывает на потенциальную силу медвежьих тенденций. На всех таймфреймах RSI находится ниже 50, что также подтверждает возможность дальнейшего снижения. Однако, учитывая уровень поддержки рядом с 693.4 и отсутствие сильных сигналов к продолжению движения вниз, решение принимается с осторожностью.', 'suggested_risk': 1.0, 'action': 'SELL', 'entry_price': 693.4, 'take_profit': 580, 'stop_loss': 720, 'signal_title': 'Продажа после отката от 905-910', 'strategy_name': 'Level Trader (S&R)'}
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:ai_agent:🧠 AI Sentinel Cycle: LINKUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing LINKUSDT...
+INFO:ai_agent:💲 Real-time Price for LINKUSDT: 9.056
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:📊 MTF RSI: 15m=45.1, 1H=42.9, 4H=31.7
+INFO:ai_agent:🔎 Searching Brave: LINKUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 80, 'reasoning': 'Цена протестировала уровень поддержки 9.056 и отскочила от него. Также мы видим, что LINKUSDT находится в зоне сильной поддержки, и при этом 15-минутный, 1-часовой и 4-часовой RSI указывают на возможность дальнейшего роста. Это говорит о том, что мы можем ожидать продолжения движения вверх.', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 9.056, 'take_profit': 12.2, 'stop_loss': 8.5, 'signal_title': 'Отскок от поддержки 9$', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:🚀 AI SIGNAL found: BUY LINKUSDT (Conf: 80%)
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:Dashboard:📨 AI Signal Sent to -1003842003511: LINKUSDT
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: FARTCOINUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing FARTCOINUSDT...
+INFO:ai_agent:💲 Real-time Price for FARTCOINUSDT: 0.21061
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:📊 MTF RSI: 15m=39.5, 1H=48.2, 4H=37.4
+INFO:ai_agent:🔎 Searching Brave: FARTCOINUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+ERROR:ai_agent:Analysis failed: Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kgm271x7fztrtjabh6jbjxdw` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99857, Requested 909. Please try again in 11m1.824s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: ZECUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing ZECUSDT...
+INFO:ai_agent:💲 Real-time Price for ZECUSDT: 245.65
+INFO:ai_agent:📊 MTF RSI: 15m=52.1, 1H=28.8, 4H=20.5
+INFO:ai_agent:🔎 Searching Brave: ZECUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+ERROR:ai_agent:Analysis failed: Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kgm271x7fztrtjabh6jbjxdw` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99836, Requested 887. Please try again in 10m24.672s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: PAXGUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing PAXGUSDT...
+INFO:ai_agent:💲 Real-time Price for PAXGUSDT: 4939.0
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:ai_agent:📊 MTF RSI: 15m=69.0, 1H=52.5, 4H=59.4
+INFO:ai_agent:🔎 Searching Brave: PAXGUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+ERROR:ai_agent:Analysis failed: Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kgm271x7fztrtjabh6jbjxdw` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99813, Requested 898. Please try again in 10m14.304s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: ZILUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing ZILUSDT...
+INFO:ai_agent:💲 Real-time Price for ZILUSDT: 0.005119
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:📊 MTF RSI: 15m=52.1, 1H=40.3, 4H=48.1
+INFO:ai_agent:🔎 Searching Brave: ZILUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+ERROR:ai_agent:Analysis failed: Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kgm271x7fztrtjabh6jbjxdw` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99793, Requested 898. Please try again in 9m57.024s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: LTCUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing LTCUSDT...
+INFO:ai_agent:💲 Real-time Price for LTCUSDT: 57.88
+INFO:ai_agent:📊 MTF RSI: 15m=44.5, 1H=51.2, 4H=38.7
+INFO:ai_agent:🔎 Searching Brave: LTCUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+ERROR:ai_agent:Analysis failed: Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kgm271x7fztrtjabh6jbjxdw` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99773, Requested 842. Please try again in 8m51.36s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: ZKPUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing ZKPUSDT...
+INFO:ai_agent:💲 Real-time Price for ZKPUSDT: 0.0844
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:📊 MTF RSI: 15m=40.2, 1H=32.4, 4H=46.9
+INFO:ai_agent:🔎 Searching Brave: ZKPUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+ERROR:ai_agent:Analysis failed: Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kgm271x7fztrtjabh6jbjxdw` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99752, Requested 871. Please try again in 8m58.272s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:✅ Sentinel Cycle Complete. Sleeping for 15m
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:📊 Sentinel using Top 20 symbols by volume: 20 found
+INFO:ai_agent:🧠 AI Sentinel Cycle: BTCUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing BTCUSDT...
+INFO:ai_agent:💲 Real-time Price for BTCUSDT: 71377.4
+INFO:ai_agent:📊 MTF RSI: 15m=52.6, 1H=41.1, 4H=18.2
+INFO:ai_agent:🔎 Searching Brave: BTCUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 Analysis Result: {'sentiment': 'BEARISH', 'confidence': 80, 'reasoning': 'Цена протестировала уровень 71377.4, после чего произошел отскок. При этом все таймфреймы RSI находятся ниже 50 не подтверждают длинную позицию, но наличие поддержки на уровне 71377.4 и наличие канала вниз позволяет рассматривать возможность продажи после подтверждения отскока от этого уровня.', 'suggested_risk': 1.0, 'action': 'SELL', 'entry_price': 71377.4, 'take_profit': 68000, 'stop_loss': 72000, 'signal_title': 'Продажа после отскока от 71377.4', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:🚀 AI SIGNAL found: SELL BTCUSDT (Conf: 80%)
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:Dashboard:📨 AI Signal Sent to -1003842003511: BTCUSDT
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: ETHUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing ETHUSDT...
+INFO:ai_agent:💲 Real-time Price for ETHUSDT: 2117.25
+INFO:ai_agent:📊 MTF RSI: 15m=52.2, 1H=48.4, 4H=28.5
+INFO:ai_agent:🔎 Searching Brave: ETHUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+ERROR:ai_agent:Analysis failed: Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kgm271x7fztrtjabh6jbjxdw` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99752, Requested 860. Please try again in 8m48.767999999s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: SOLUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing SOLUSDT...
+INFO:ai_agent:💲 Real-time Price for SOLUSDT: 91.36
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:📊 MTF RSI: 15m=51.4, 1H=50.1, 4H=18.0
+INFO:ai_agent:🔎 Searching Brave: SOLUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+ERROR:ai_agent:Analysis failed: Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kgm271x7fztrtjabh6jbjxdw` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99732, Requested 901. Please try again in 9m6.911999999s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: XRPUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing XRPUSDT...
+INFO:ai_agent:💲 Real-time Price for XRPUSDT: 1.442
+INFO:ai_agent:📊 MTF RSI: 15m=49.7, 1H=28.5, 4H=19.5
+INFO:ai_agent:🔎 Searching Brave: XRPUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 Analysis Result: {'sentiment': 'BEARISH', 'confidence': 80, 'reasoning': 'Цена протестировала уровень 1.442, после чего произошел отскок. На основе данных RSI на различных таймфреймах, а также анализа новостей и контекста, становится ясно, что цена не смогла пробить ключевое сопротивление и теперь направляется вниз. Это говорит о том, что мы должны войти в шорт-позицию.', 'suggested_risk': 1.0, 'action': 'SELL', 'entry_price': 1.442, 'take_profit': 1.2, 'stop_loss': 1.5, 'signal_title': 'Продажа при 1.442$', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:🚀 AI SIGNAL found: SELL XRPUSDT (Conf: 80%)
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:Dashboard:📨 AI Signal Sent to -1003842003511: XRPUSDT
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: HYPEUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing HYPEUSDT...
+INFO:ai_agent:💲 Real-time Price for HYPEUSDT: 34.465
+INFO:ai_agent:📊 MTF RSI: 15m=72.1, 1H=50.3, 4H=53.7
+INFO:ai_agent:🔎 Searching Brave: HYPEUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+ERROR:ai_agent:Analysis failed: Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kgm271x7fztrtjabh6jbjxdw` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99838, Requested 846. Please try again in 9m50.976s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: XAUTUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing XAUTUSDT...
+INFO:ai_agent:💲 Real-time Price for XAUTUSDT: 4915.7
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:📊 MTF RSI: 15m=66.7, 1H=52.3, 4H=59.3
+INFO:ai_agent:🔎 Searching Brave: XAUTUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+ERROR:ai_agent:Analysis failed: Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kgm271x7fztrtjabh6jbjxdw` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99818, Requested 886. Please try again in 10m8.256s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: DOGEUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing DOGEUSDT...
+INFO:ai_agent:💲 Real-time Price for DOGEUSDT: 0.10257
+INFO:ai_agent:📊 MTF RSI: 15m=50.2, 1H=48.7, 4H=38.9
+INFO:ai_agent:🔎 Searching Brave: DOGEUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+ERROR:ai_agent:Analysis failed: Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kgm271x7fztrtjabh6jbjxdw` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99647, Requested 919. Please try again in 8m9.024s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: RIVERUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing RIVERUSDT...
+INFO:ai_agent:💲 Real-time Price for RIVERUSDT: 13.456
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:📊 MTF RSI: 15m=41.5, 1H=23.6, 4H=30.4
+INFO:ai_agent:🔎 Searching Brave: RIVERUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+ERROR:ai_agent:Analysis failed: Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kgm271x7fztrtjabh6jbjxdw` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99778, Requested 849. Please try again in 9m1.728s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: 1000PEPEUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing 1000PEPEUSDT...
+INFO:ai_agent:💲 Real-time Price for 1000PEPEUSDT: 0.004051
+INFO:ai_agent:📊 MTF RSI: 15m=42.9, 1H=44.5, 4H=42.8
+INFO:ai_agent:🔎 Searching Brave: 1000PEPEUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+ERROR:ai_agent:Analysis failed: Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kgm271x7fztrtjabh6jbjxdw` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99607, Requested 917. Please try again in 7m32.736s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: ADAUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing ADAUSDT...
+INFO:ai_agent:💲 Real-time Price for ADAUSDT: 0.2824
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:ai_agent:📊 MTF RSI: 15m=49.5, 1H=44.9, 4H=36.4
+INFO:ai_agent:🔎 Searching Brave: ADAUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+ERROR:ai_agent:Analysis failed: Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kgm271x7fztrtjabh6jbjxdw` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99582, Requested 890. Please try again in 6m47.808s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: ARCUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing ARCUSDT...
+INFO:ai_agent:💲 Real-time Price for ARCUSDT: 0.07126
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:📊 MTF RSI: 15m=62.2, 1H=40.7, 4H=69.5
+INFO:ai_agent:🔎 Searching Brave: ARCUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+ERROR:ai_agent:Analysis failed: Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kgm271x7fztrtjabh6jbjxdw` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99713, Requested 910. Please try again in 8m58.272s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:🧠 AI Sentinel Cycle: SUIUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing SUIUSDT...
+INFO:ai_agent:💲 Real-time Price for SUIUSDT: 1.0567
+INFO:ai_agent:📊 MTF RSI: 15m=46.5, 1H=44.9, 4H=31.2
+INFO:ai_agent:🔎 Searching Brave: SUIUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+ERROR:ai_agent:Analysis failed: Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kgm271x7fztrtjabh6jbjxdw` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99510, Requested 821. Please try again in 4m45.984s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+C:\Projects\Trading\Trading-fin\web_ui\server.py:311: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": load_config().dict(),
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:ai_agent:🧠 AI Sentinel Cycle: BNBUSDT
+INFO:ai_agent:🧠 AI Sentinel: Analyzing BNBUSDT...
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/getUpdates "HTTP/1.1 200 OK"
+INFO:ai_agent:💲 Real-time Price for BNBUSDT: 698.0
+INFO:ai_agent:📊 MTF RSI: 15m=59.4, 1H=36.0, 4H=22.6
+INFO:ai_agent:🔎 Searching Brave: BNBUSDT price analysis technical news today

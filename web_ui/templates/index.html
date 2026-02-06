@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Панель Управления Trading AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="/static/style.css?v=3" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+
+<body class="dark-theme">
+    <div class="app-container">
+        <!-- Sidebar / Topbar -->
+        <header class="top-bar glass">
+            <div class="logo">
+                <i class="fa-solid fa-robot"></i> TRADING AI
+            </div>
+
+            <!-- Live Stats -->
+            <div style="display: flex; gap: 15px; font-size: 0.85em;">
+                <div
+                    style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); padding: 4px 12px; border-radius: 6px;">
+                    <span style="color: #888;">WR:</span> <span id="statWinRate"
+                        style="color: #22c55e; font-weight: 600;">--%</span>
+                </div>
+                <div
+                    style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); padding: 4px 12px; border-radius: 6px;">
+                    <span style="color: #888;">Сегодня:</span> <span id="statTodayPnl"
+                        style="color: #60a5fa; font-weight: 600;">$0.00</span>
+                </div>
+                <div
+                    style="background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.3); padding: 4px 12px; border-radius: 6px;">
+                    <span style="color: #888;">Open:</span> <span id="statOpenPos"
+                        style="color: #a855f7; font-weight: 600;">0</span>
+                </div>
+            </div>
+
+            <div id="kamchatkaTime"
+                style="font-family: monospace; font-size: 1.1em; color: #60a5fa; background: rgba(59, 130, 246, 0.1); padding: 5px 15px; border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.3);">
+                <i class="fa-solid fa-clock"></i> <span id="liveTime">--:--:--</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <a href="/history" class="btn"
+                    style="background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid #60a5fa; padding: 5px 15px; border-radius: 6px; text-decoration: none; font-size: 0.9em;">
+                    <i class="fa-solid fa-clock-rotate-left"></i> История
+                </a>
+                <button class="btn" onclick="openHelp()"
+                    style="background: rgba(99, 102, 241, 0.2); color: #818cf8; border: 1px solid #818cf8; padding: 5px 15px; border-radius: 6px; font-size: 0.9em;">
+                    <i class="fa-solid fa-circle-question"></i> Помощь
+                </button>
+                <div class="status-indicator" id="connectionStatus">
+                    <span class="dot"></span> <span id="statusText">Отключено</span>
+                </div>
+                <a href="/logout" class="btn"
+                    style="background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #f87171; padding: 5px 15px; border-radius: 6px; text-decoration: none; font-size: 0.9em;">
+                    <i class="fa-solid fa-right-from-bracket"></i> Выход
+                </a>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <!-- Control Panel -->
+            <section class="control-panel glass">
+                <div class="main-controls">
+                    <button id="btnStart" class="btn btn-primary btn-large glow" onclick="startBot()">
+                        <i class="fa-solid fa-play"></i> ЗАПУСТИТЬ
+                    </button>
+                    <button id="btnStop" class="btn btn-danger btn-large hidden" onclick="stopBot()">
+                        <i class="fa-solid fa-stop"></i> ОСТАНОВИТЬ
+                    </button>
+
+                    <div class="mode-switch">
+                        <label class="switch-label">РЕЖИМ:</label>
+                        <select id="modeSelect" class="dropdown">
+                            <option value="demo">ДЕМО (Симуляция)</option>
+                            <option value="testnet">BYBIT TESTNET (Тест-сеть)</option>
+                            <option value="real">РЕАЛЬНАЯ ТОРГОВЛЯ ⚠️</option>
+                        </select>
+                    </div>
+
+                    <div class="setting-group" style="margin-bottom: 0;">
+                        <label><i class="fa-solid fa-chess-knight"></i> Стратегия</label>
+                        <select id="strategySelect" class="dropdown">
+                            <option value="auto">🤖 AUTO (AI выбирает)</option>
+                            <option value="mean_reversion">Mean Reversion (Отскок)</option>
+                            <option value="trend">Trend Following (Тренд)</option>
+                            <option value="breakout">Breakout (Пробой)</option>
+                            <option value="acceleration">🚀 Acceleration (Разгон $50-100)</option>
+                            <option value="scalping">🎯 SCALPING (AI Micro-торги)</option>
+                        </select>
+                    </div>
+
+                    <div class="setting-group" style="margin-bottom: 0;">
+                        <label><i class="fa-solid fa-bullseye"></i> Мин. вероятность %</label>
+                        <input type="number" id="minProbability" class="input-field" value="85" min="50" max="100"
+                            style="padding: 4px; width: 60px;">
+                    </div>
+                </div>
+
+                <div class="live-stats">
+                    <div class="stat-card">
+                        <span class="label">Время Работы</span>
+                        <span class="value" id="runningTime">00:00:00</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Single Column Dashboard - No Gaps -->
+            <div style="display: flex; flex-direction: column; gap: 12px; max-width: 1000px; margin: 0 auto;">
+
+                <!-- Row 0: LLM Provider Status -->
+                <div class="card glass" style="padding: 10px;">
+                    <div
+                        style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <i class="fa-solid fa-robot" style="color: #a855f7; font-size: 1.2em;"></i>
+                            <span style="font-weight: 600;">AI Provider:</span>
+                            <span id="llmProviderName" style="color: #22c55e; font-weight: bold;">Loading...</span>
+                            <span id="llmProviderModel" style="color: #888; font-size: 0.85em;"></span>
+                        </div>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <select id="llmProviderSelect" class="dropdown"
+                                style="padding: 4px 8px; font-size: 0.85em;">
+                                <option value="GROQ_PRIMARY">GROQ Primary</option>
+                                <option value="GROQ_BACKUP">GROQ Backup</option>
+                                <option value="OpenRouter">OpenRouter (Paid)</option>
+                                <option value="DISABLED">❌ DISABLED (Tech Only)</option>
+                            </select>
+                            <button class="btn btn-secondary" onclick="switchLLMProvider()"
+                                style="padding: 4px 10px; font-size: 0.85em;">
+                                <i class="fa-solid fa-exchange-alt"></i> Switch
+                            </button>
+                            <button class="btn" onclick="resetLLMProviders()"
+                                style="padding: 4px 10px; font-size: 0.85em; background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #f87171;">
+                                <i class="fa-solid fa-rotate"></i> Reset
+                            </button>
+                        </div>
+                        <div id="llmExhaustedWarning" style="display: none; color: #ef4444; font-size: 0.85em;">
+                            <i class="fa-solid fa-exclamation-triangle"></i> <span id="exhaustedList"></span>
+                        </div>
+                    </div>
+                </div>
+
+
+
+                <!-- Row 1: Sentiment + Risk -->
+                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 12px;">
+                    <div class="card glass" style="padding: 12px;">
+                        <h3 style="margin-bottom: 8px;"><i class="fa-solid fa-earth-americas"></i> Sentiment</h3>
+                        <div class="status-box" id="sentimentBox" style="font-size: 0.9em;">
+                            <i class="fa-solid fa-circle-notch fa-spin"></i> Loading...
+                        </div>
+                        <p id="sentimentReason" style="font-size: 0.75em; color: #888; margin-top: 5px;"></p>
+                    </div>
+
+                    <div class="card glass" style="padding: 12px;">
+                        <h3 style="margin-bottom: 8px;"><i class="fa-solid fa-shield-halved"></i> Риск</h3>
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; font-size: 0.85em;">
+                            <div>
+                                <label>Риск %</label>
+                                <input type="number" id="riskPercent" class="input-field" step="0.5" value="4"
+                                    style="width: 100%; padding: 4px;">
+                            </div>
+                            <div>
+                                <label>Max Loss $</label>
+                                <input type="number" id="maxDailyLoss" class="input-field" value="20"
+                                    style="width: 100%; padding: 4px;">
+                            </div>
+                            <div>
+                                <label>TP Ratio</label>
+                                <input type="number" id="takeProfitRatio" class="input-field" step="0.5" value="4"
+                                    style="width: 100%; padding: 4px;">
+                            </div>
+                            <div>
+                                <label>SL (ATR)</label>
+                                <input type="number" id="stopLossAtr" class="input-field" step="0.5" value="2"
+                                    style="width: 100%; padding: 4px;">
+                            </div>
+                        </div>
+                        <div style="margin-top: 8px; display: flex; gap: 10px; align-items: center;">
+                            <input type="checkbox" id="autoTradeCheck">
+                            <label for="autoTradeCheck" style="font-size: 0.8em;">Авто</label>
+                            <button class="btn btn-secondary" onclick="saveConfig()"
+                                style="padding: 4px 12px; margin-left: auto;">Сохранить</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- AI Self-Correction Insights -->
+                <div class="card glass" style="padding: 12px; margin-top: 12px;">
+                    <h3 style="color: #a855f7; font-size: 0.9em; margin-bottom: 8px;">
+                        <i class="fa-solid fa-brain"></i> Neuro-Insights (Самообучение)
+                    </h3>
+                    <div id="aiLearnings"
+                        style="font-size: 0.75em; color: #cbd5e1; line-height: 1.4; font-style: italic;">
+                        Бот еще не завершил первый цикл самообучения...
+                    </div>
+                </div>
+
+                <!-- Row 1.5: ADVANCED ANALYTICS & GUARDIAN STATUS -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="card glass" style="padding: 12px; background: rgba(30, 41, 59, 0.4);">
+                        <h3 style="margin-bottom: 8px; font-size: 0.9em; color: #38bdf8;">
+                            <i class="fa-solid fa-chart-line"></i> Advanced Analytics
+                        </h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.85em;">
+                            <div class="stat-item">
+                                <span style="color: #64748b;">Profit Factor:</span>
+                                <span id="statProfitFactor"
+                                    style="float: right; font-weight: bold; color: #22c55e;">0.00</span>
+                            </div>
+                            <div class="stat-item">
+                                <span style="color: #64748b;">Expectancy:</span>
+                                <span id="statExpectancy" style="float: right; font-weight: bold;">$0.00</span>
+                            </div>
+                            <div class="stat-item">
+                                <span style="color: #64748b;">Avg Win:</span>
+                                <span id="statAvgWin" style="float: right; color: #22c55e;">$0.00</span>
+                            </div>
+                            <div class="stat-item">
+                                <span style="color: #64748b;">Avg Loss:</span>
+                                <span id="statAvgLoss" style="float: right; color: #ef4444;">$0.00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card glass" style="padding: 12px; border: 1px solid rgba(56, 189, 248, 0.2);">
+                        <h3 style="margin-bottom: 8px; font-size: 0.9em; color: #fbbf24;">
+                            <i class="fa-solid fa-shield-virus"></i> Guardian Services
+                        </h3>
+                        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.8em;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span><i class="fa-solid fa-newspaper" style="width: 15px;"></i> News Shield:</span>
+                                <span id="newsShieldStatus" class="badge"
+                                    style="background: rgba(34, 197, 94, 0.2); color: #4ade80;">ACTIVE</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span><i class="fa-solid fa-vault" style="width: 15px;"></i> Portfolio Hedge:</span>
+                                <span id="hedgeStatus" class="badge"
+                                    style="background: rgba(251, 191, 36, 0.2); color: #fbbf24;">INACTIVE</span>
+                            </div>
+                            <div id="pnlTargetDisplay"
+                                style="font-size: 0.75em; color: #888; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 5px;">
+                                Total exposure protection: <span id="totalExposure" style="color: #fff;">$0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 12px;">
+                    <div class="card glass" style="padding: 12px;">
+                        <details>
+                            <summary style="cursor: pointer; font-weight: bold;"><i class="fa-solid fa-gear"></i> API/TG
+                            </summary>
+                            <div style="margin-top: 8px; display: grid; gap: 4px; font-size: 0.8em;">
+                                <input type="password" id="apiKey" class="input-field" placeholder="API Key"
+                                    style="padding: 4px;">
+                                <input type="password" id="apiSecret" class="input-field" placeholder="API Secret"
+                                    style="padding: 4px;">
+                                <input type="password" id="telegramToken" class="input-field" placeholder="TG Token"
+                                    style="padding: 4px;">
+                                <input type="text" id="telegramChannel" class="input-field" placeholder="@channel"
+                                    style="padding: 4px;">
+                                <button class="btn btn-secondary full-width" onclick="saveConfig()"
+                                    style="padding: 4px;">OK</button>
+                            </div>
+                        </details>
+                    </div>
+
+                    <div class="card glass" style="padding: 12px;">
+                        <h3 style="margin-bottom: 8px;"><i class="fa-solid fa-list-check"></i> Топ Монеты (AI Selector)
+                        </h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <div>
+                                <h4 style="color: #22c55e; margin-bottom: 5px; font-size: 0.9em;"><i
+                                        class="fa-solid fa-arrow-trend-up"></i> LONGS</h4>
+                                <ul id="topLongsList"
+                                    style="list-style: none; padding: 0; font-size: 0.85em; max-height: 100px; overflow-y: auto;">
+                                    <li style="color: #888;">Ожидание выборки...</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 style="color: #ef4444; margin-bottom: 5px; font-size: 0.9em;"><i
+                                        class="fa-solid fa-arrow-trend-down"></i> SHORTS</h4>
+                                <ul id="topShortsList"
+                                    style="list-style: none; padding: 0; font-size: 0.85em; max-height: 100px; overflow-y: auto;">
+                                    <li style="color: #888;">Ожидание выборки...</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Neuro-Chat -->
+                <div class="card glass">
+                    <h3><i class="fa-solid fa-comments"></i> Neuro-Chat</h3>
+                    <div id="chatWindow" class="console-output"
+                        style="height: 300px; overflow-y: auto; margin-bottom: 15px;">
+                        <div class="chat-message bot">
+                            <span class="prefix">🤖 Neuro-Bot:</span>
+                            <span class="text">Привет! Я готов анализировать рынок. Спрашивайте что угодно!</span>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="chatInput" class="input-field" placeholder="Напишите сообщение..."
+                            onkeypress="handleChatEnter(event)">
+                        <button class="btn btn-accent" onclick="sendChatMessage()">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Console Logs (Full Width, Collapsible) -->
+                <div class="card glass" style="padding: 0;">
+                    <details>
+                        <summary
+                            style="cursor: pointer; font-weight: bold; padding: 12px 16px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                            <i class="fa-solid fa-terminal"></i> Логи в реальном времени
+                        </summary>
+                        <div id="logConsole" class="console-output"
+                            style="white-space: pre-wrap; word-wrap: break-word; overflow-x: hidden; padding: 12px; max-height: 250px; overflow-y: auto;">
+                            <div class="log-line">Ожидание бота...</div>
+                        </div>
+                    </details>
+                </div>
+
+                <!-- Active Positions -->
+                <div class="card glass">
+                    <h3><i class="fa-solid fa-chart-line"></i> Открытые Позиции</h3>
+                    <div class="table-container">
+                        <table id="positionsTable">
+                            <thead>
+                                <tr>
+                                    <th>Актив</th>
+                                    <th>Тип</th>
+                                    <th>Размер</th>
+                                    <th>Вход</th>
+                                    <th>Цена</th>
+                                    <th>Профит</th>
+                                </tr>
+                            </thead>
+                            <tbody id="activePositionsList">
+                                <tr>
+                                    <td colspan="6" style="text-align:center; padding: 20px; color: #888;">Загрузка...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Trade History -->
+                <div class="card glass">
+                    <h3>
+                        <i class="fa-solid fa-list-check"></i> История Сделок
+                        <button class="btn btn-secondary" onclick="syncHistory()"
+                            style="float: right; padding: 4px 10px; font-size: 0.8em;">
+                            <i class="fa-solid fa-rotate"></i> Синхронизация
+                        </button>
+                    </h3>
+                    <div class="table-container">
+                        <table id="historyTable">
+                            <thead>
+                                <tr>
+                                    <th>Время</th>
+                                    <th>Пара</th>
+                                    <th>Тип</th>
+                                    <th>Цена</th>
+                                    <th>Кол-во</th>
+                                    <th>PnL</th>
+                                    <th>Статус</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Rows will be here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+    </div>
+    </main>
+    </div>
+
+    <!-- Help Modal -->
+    <div class="modal-overlay" id="helpModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-circle-question"></i> Справка по настройкам</h2>
+                <button class="close-modal" onclick="closeHelp()">&times;</button>
+            </div>
+            <div class="modal-body">
+
+                <div class="help-section">
+                    <h3>🕹️ Режимы и Стратегии</h3>
+                    <div class="help-item">
+                        <strong>Режим работы</strong>
+                        <p><b>ДЕМО:</b> Полная симуляция. Сделки виртуальные, баланс не тратится.<br>
+                            <b>TESTNET:</b> Торговля в тестовой сети Bybit (нужны Testnet API ключи).<br>
+                            <b>REAL:</b> Реальная торговля на ваши деньги. ⚠️ Будьте осторожны.
+                        </p>
+                    </div>
+                    <div class="help-item">
+                        <strong>Стратегии</strong>
+                        <p><b>🤖 AUTO:</b> AI автоматически выбирает лучшую стратегию для текущего рынка.<br>
+                            <b>Mean Reversion:</b> Торговля на отскок (разворот). Лучше работает во флэте.<br>
+                            <b>Trend Following:</b> Торговля по тренду (SuperTrend). Лучше на сильных движениях.<br>
+                            <b>Breakout:</b> Торговля пробоев уровней волатильности.<br>
+                            <b>Acceleration:</b> Вход на ускорении движения с подтверждением объёма.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="help-section">
+                    <h3>🛡️ Риск-Менеджмент</h3>
+                    <div class="help-item">
+                        <strong>Риск на сделку (%)</strong>
+                        <p>Какой % от депозита бот может потерять в одной сделке при срабатывании стоп-лосса.</p>
+                    </div>
+                    <div class="help-item">
+                        <strong>Макс. Дневной Убыток ($)</strong>
+                        <p>Если бот потеряет эту сумму за день, он остановит торговлю до следующего дня.</p>
+                    </div>
+                    <div class="help-item">
+                        <strong>Take Profit (Коэфф)</strong>
+                        <p>Отношение прибыли к риску. 2.5 означает, что на $1 риска мы хотим получить $2.5 прибыли.</p>
+                    </div>
+                    <div class="help-item">
+                        <strong>Stop Loss (ATR)</strong>
+                        <p>Расстояние до стоп-лосса в единицах волатильности (ATR). Чем больше, тем дальше стоп.</p>
+                    </div>
+                </div>
+
+                <div class="help-section">
+                    <h3>🔑 Подключение</h3>
+                    <div class="help-item">
+                        <strong>Telegram</strong>
+                        <p>Укажите Token бота и ID канала, чтобы получать красивые уведомления о сделках.</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+
+</html>

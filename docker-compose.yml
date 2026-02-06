@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  trading-bot:
+    build: .
+    container_name: trading-bot
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data # Для сохранения БД (trades.db)
+      - ./bot_config.json:/app/bot_config.json # Конфиг
+      - ./bot.log:/app/bot.log # Логи
+    environment:
+      - PYTHONUNBUFFERED=1
+      # Можно задать ключи здесь или в .env файле
+      # - BYBIT_API_KEY=your_key
+      # - BYBIT_API_SECRET=your_secret
+      # - TELEGRAM_BOT_TOKEN=your_token
+      # - TELEGRAM_CHANNEL=@your_channel
