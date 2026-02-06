@@ -26,9 +26,9 @@ logger = logging.getLogger(__name__)
 class RiskLimits:
     """Ограничения рисков"""
     max_daily_loss_usd: float = 100.0       # Макс. дневной убыток
-    max_open_positions: int = 10            # Макс. кол-во открытых позиций
-    max_leverage: float = 5.0              # Макс. плечо
-    risk_per_trade_percent: float = 2.0    # Smaller lots as requested
+    max_open_positions: int = 3             # Reduced from 10 to 3 for small balances
+    max_leverage: float = 5.0              # Макс. плечо (ограничение снайпера)
+    risk_per_trade_percent: float = 1.0    # 1.0% risk per trade for stability
     
     # Capital Accelerator (Step 1)
     compounding_enabled: bool = True       # Реинвест прибыли
@@ -426,12 +426,27 @@ class ExecutionManager:
                 logger.warning(msg)
                 return False, msg
 
-            # 2. Получаем актуальный баланс (Total Equity для правильного реинвеста)
+            # 2. Получаем актуальный баланс
             balance = self.client.get_total_equity()
             available_balance = self.client.get_wallet_balance('USDT', available_only=True)
             
-            if balance <= 0 or available_balance <= 0:
-                msg = f"Ошибка: Недостаточно средств (Equity: {balance}, Available: {available_balance})"
+            # --- MARGIN RECOVERY (Phase 10) ---
+            # If we have equity but NO available margin, it's usually because of open LIMIT orders.
+            if balance > 10 and available_balance <= 1.0:
+                logger.warning(f"⚠️ Low margin (Avail: ${available_balance:.2f}). Attempting recovery by cancelling open orders...")
+                try:
+                    self.client.cancel_all_orders() # Cancel global USDT orders
+                    import time
+                    time.sleep(1) # Give Bybit a second to update
+                    available_balance = self.client.get_wallet_balance('USDT', available_only=True)
+                    logger.info(f"🔄 Recovered available margin: ${available_balance:.2f}")
+                except Exception as e:
+                    logger.error(f"Failed to recover margin: {e}")
+
+            if balance <= 0 or (available_balance <= 0 and balance > 0):
+                msg = f"Ошибка: Недостаточно средств для маржи (Equity: {balance:.2f}, Available: {available_balance:.2f})"
+                if available_balance <= 0 and balance > 0:
+                    msg += " | Подсказка: Проверьте, не занята ли маржа другими позициями или ордерами."
                 logger.error(msg)
                 return False, msg
                 

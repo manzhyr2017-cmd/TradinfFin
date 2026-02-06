@@ -304,28 +304,46 @@ class BybitClient:
         
         # 1. Try UNIFIED (UTA)
         try:
+            # IMPORTANT: Do not filter by coin to get account-level totals (totalAvailableMargin)
             data = self._request('/v5/account/wallet-balance', {
-                'accountType': 'UNIFIED',
-                'coin': coin
+                'accountType': 'UNIFIED'
             }, signed=True)
             
             if data and data.get('list'):
                 account = data['list'][0]
                 
-                # UTA: Available margin is usually at the account level
+                # UTA: Priority is global available margin
                 if available_only:
+                    # totalAvailableMargin - how much we can use for new trades
                     total_avail = account.get('totalAvailableMargin')
-                    if total_avail is not None:
+                    if total_avail is not None and float(total_avail) > 0:
                         bal = float(total_avail)
                         logger.info(f"💰 Balance (UNIFIED totalAvailableMargin): ${bal:.2f}")
                         return bal
+                    
+                    # Fallback for availableToWithdraw of specific coin
+                    for asset in account.get('coin', []):
+                        if asset['coin'] == coin:
+                            bal = float(asset.get('availableToWithdraw', 0))
+                            if bal > 0:
+                                logger.info(f"💰 Balance (UNIFIED {coin} availableToWithdraw): ${bal:.2f}")
+                                return bal
 
-                # Fallback to specific coin asset
+                # Priority for total value
+                else:
+                    total_equity = account.get('totalEquity')
+                    if total_equity is not None and float(total_equity) > 0:
+                        bal = float(total_equity)
+                        logger.info(f"💰 Balance (UNIFIED totalEquity): ${bal:.2f}")
+                        return bal
+
+                # Final fallback: find the specific coin in the list
                 for asset in account.get('coin', []):
                     if asset['coin'] == coin:
-                        field = 'availableToWithdraw' if available_only else 'walletBalance'
-                        bal = float(asset.get(field, asset.get('walletBalance', 0)))
-                        logger.info(f"💰 Balance (UNIFIED {coin} {field}): ${bal:.2f}")
+                        # If we want available but it's 0, we still might be able to trade if totalAvailableMargin > 0
+                        # but we already checked that above.
+                        bal = float(asset.get('walletBalance', 0))
+                        logger.info(f"💰 Balance (UNIFIED {coin} walletBalance): ${bal:.2f}")
                         return bal
         except Exception as e:
             logger.debug(f"UTA balance check failed: {e}")
