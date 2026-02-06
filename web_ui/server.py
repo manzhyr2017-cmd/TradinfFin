@@ -315,6 +315,26 @@ async def lifespan(app: FastAPI):
             # Init AI Agent
             from ai_agent import TradingAgent
             ai_agent = TradingAgent(controller)
+            
+            # --- START SERVICES (Phase 5: Global Sentiment & Selector) ---
+            try:
+                from services.sentiment_service import SentimentService
+                from services.selector_service import SelectorService
+                
+                sentiment = SentimentService(ai_agent)
+                selector = SelectorService(ai_agent, controller.client)
+                
+                _services['sentiment'] = sentiment
+                _services['selector'] = selector
+                
+                # Start background tasks for services
+                asyncio.create_task(sentiment.start(interval_hours=2.0))
+                asyncio.create_task(selector.start(interval_hours=4.0))
+                
+                logger.info("🌍 Sentiment & 🕵️ Selector Services initialized and started.")
+            except Exception as se:
+                logger.error(f"Failed to start base services: {se}")
+
             asyncio.create_task(ai_agent.run_autonomous_cycle(interval_minutes=15))
 
         except Exception as e:

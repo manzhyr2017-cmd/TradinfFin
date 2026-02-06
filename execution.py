@@ -28,7 +28,7 @@ class RiskLimits:
     max_daily_loss_usd: float = 100.0       # Макс. дневной убыток
     max_open_positions: int = 10            # Макс. кол-во открытых позиций
     max_leverage: float = 5.0              # Макс. плечо
-    risk_per_trade_percent: float = 4.0    # Sniper Mode: 4% risk per trade
+    risk_per_trade_percent: float = 2.0    # Smaller lots as requested
     
     # Capital Accelerator (Step 1)
     compounding_enabled: bool = True       # Реинвест прибыли
@@ -475,6 +475,10 @@ class ExecutionManager:
             # Дистанция до стопа %
             stop_loss_pct = abs(signal.entry_price - signal.stop_loss) / signal.entry_price
             
+            if stop_loss_pct < 0.005:
+                logger.info(f"🛡️ Трейд слишком рискованный (SL {stop_loss_pct*100:.2f}% < 0.5%). Корректировка сайзинга.")
+                stop_loss_pct = 0.005
+                
             if stop_loss_pct == 0:
                 msg = "Ошибка: Стоп-лосс равен цене входа"
                 logger.error(msg)
@@ -526,6 +530,12 @@ class ExecutionManager:
                 
             qty = float(qty_final)
             
+            # 4. Исполнение (Настройка + Ордер)
+            side = 'Buy' if signal.signal_type == SignalType.LONG else 'Sell'
+            
+            # --- SNIPER: ENTRY OPTIMIZATION ---
+            final_entry = self._optimize_entry_price(signal.symbol, side, signal.entry_price)
+
             # --- MARGIN CHECK & AUTO-SCALING ---
             # Determine leverage BEFORE placing order for margin check
             leverage = self.risk_limits.get_dynamic_leverage(atr_pct)
@@ -546,12 +556,6 @@ class ExecutionManager:
                 logger.warning(f"⚠️ Недостаточно маржи (${required_margin:.2f} > ${available_balance:.2f}). Масштабирование: {old_qty} -> {qty}")
 
             logger.info(f"🚀 Итоговый расчет: Кол-во={qty}, Плечо={leverage}x, Маржа=${(qty*final_entry/leverage):.2f}")
-            
-            # 4. Исполнение (Настройка + Ордер)
-            side = 'Buy' if signal.signal_type == SignalType.LONG else 'Sell'
-            
-            # --- SNIPER: ENTRY OPTIMIZATION ---
-            final_entry = self._optimize_entry_price(signal.symbol, side, signal.entry_price)
             
             if self.dry_run:
                 logger.info("[DRY RUN] Ордер бы был отправлен:")

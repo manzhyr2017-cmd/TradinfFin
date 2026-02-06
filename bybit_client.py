@@ -310,14 +310,25 @@ class BybitClient:
             }, signed=True)
             
             if data and data.get('list'):
-                for account in data['list']:
-                    for asset in account.get('coin', []):
-                        if asset['coin'] == coin:
-                            field = 'availableToWithdraw' if available_only else 'walletBalance'
-                            bal = float(asset.get(field, asset.get('walletBalance', 0)))
-                            logger.info(f"💰 Balance (UNIFIED {field}): ${bal:.2f}")
-                            return bal
+                account = data['list'][0]
+                
+                # UTA: Available margin is usually at the account level
+                if available_only:
+                    total_avail = account.get('totalAvailableMargin')
+                    if total_avail is not None:
+                        bal = float(total_avail)
+                        logger.info(f"💰 Balance (UNIFIED totalAvailableMargin): ${bal:.2f}")
+                        return bal
+
+                # Fallback to specific coin asset
+                for asset in account.get('coin', []):
+                    if asset['coin'] == coin:
+                        field = 'availableToWithdraw' if available_only else 'walletBalance'
+                        bal = float(asset.get(field, asset.get('walletBalance', 0)))
+                        logger.info(f"💰 Balance (UNIFIED {coin} {field}): ${bal:.2f}")
+                        return bal
         except Exception as e:
+            logger.debug(f"UTA balance check failed: {e}")
             pass
 
         # 2. Try CONTRACT (Derivatives - Classic Account)
