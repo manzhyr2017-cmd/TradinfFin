@@ -429,12 +429,9 @@ class ExecutionManager:
             balance = self.client.get_total_equity()
             available_balance = self.client.get_wallet_balance('USDT', available_only=True)
             
-            # --- API GLITCH WORKAROUND (Phase 10) ---
-            # If API reports 0 available but we have equity and NO positions, 
-            # we assume it's a reporting glitch or Standard account behavior.
             if available_balance <= 1.0 and balance > 10 and len(positions) == 0:
-                logger.info(f"ℹ️ Available margin reported as ${available_balance:.2f}, but Equity is ${balance:.2f} and NO open positions. Using Equity as available.")
-                available_balance = balance * 0.98 # 2% buffer for fees/slippage
+                logger.info(f"ℹ️ Use Equity as available margin (Correction for UTA reporting glitch): Avail=${available_balance:.2f} -> ${balance*0.98:.2f}")
+                available_balance = balance * 0.98 
             
             # --- MARGIN RECOVERY (Phase 10) ---
             # If we have equity but NO available margin, it's usually because of open LIMIT orders.

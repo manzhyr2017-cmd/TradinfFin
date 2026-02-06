@@ -1453,3 +1453,53 @@ INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing ZECUSDT...
 INFO:ai_agent:\U0001f4b2 Real-time Price for ZECUSDT: 214.91
 INFO:ai_agent:\U0001f4ca MTF RSI: 1m=39.5, 15m=72.3, 1H=42.1, 4H=23.5
 INFO:ai_agent:\U0001f50e Searching Brave: ZECUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:\u26a0\ufe0f AI generated weak RR (0.86) for strategy Mean Reversion (RSI). Adjusting TP to 1:3.0.
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 70, 'reasoning': 'На данный момент мы наблюдаем за ценой ZECUSDT, которая отскочила от зоны поддержки на дневном графике и движется в сторону нисходящего сопротивления и дневного SMA50. Это поведение цены отражает сильное доминирование покупателей в прошлом, за которым следует фаза охлаждения перед потенциальным продолжением тренда. \U0001f4c8\U0001f4b0 [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 214.91, 'take_profit': 232.64, 'stop_loss': 209.0, 'signal_title': 'Отскок от поддержки', 'strategy_name': 'Mean Reversion (RSI)'}
+INFO:ai_agent:\U0001f680 AI SIGNAL found: BUY ZECUSDT (Conf: 70%)
+INFO:ai_agent:\u26a1 AI AUTO-TRADE TRIGGERED: ZECUSDT BUY
+INFO:Dashboard:\u26a1 AI Agent requested execution for ZECUSDT Buy
+WARNING:ai_agent:\u274c AI AUTO-TRADE REJECTED: ZECUSDT - Auto-trade not enabled in Web Controller yet
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:ai_agent:\U0001f9e0 AI Sentinel Cycle: FARTCOINUSDT
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing FARTCOINUSDT...
+WARNING:bybit_client:\u26a0\ufe0f Network/Proxy Error (Attempt 1/3): HTTPSConnectionPool(host='api.bybit.com', port=443): Max retries exceeded with url: /v5/market/tickers?category=linear&symbol=FARTCOINUSDT (Caused by ProxyError('Unable to connect to proxy', ConnectionResetError(10054, 'Удаленный хост принудительно разорвал существующее подключение', None, 10054, None)))
+INFO:bybit_client:Retrying in 3s...
+INFO:ai_agent:\U0001f4b2 Real-time Price for FARTCOINUSDT: 0.18529
+INFO:ai_agent:\U0001f4ca MTF RSI: 1m=66.9, 15m=54.1, 1H=44.7, 4H=24.0
+INFO:ai_agent:\U0001f50e Searching Brave: FARTCOINUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:\u26a0\ufe0f AI generated weak RR (1.00) for strategy Level Trader (S&R). Adjusting TP to 1:3.0.
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'BEARISH', 'confidence': 80, 'reasoning': 'На данный момент мы видим, что RSI на всех таймфреймах, кроме 1 минуты, находится ниже 50. Однако, согласно нашим правилам, мы не можем открывать длинную позицию, если все таймфреймы не находятся ниже 50. Поскольку 1-минутный RSI находится выше 50, мы не можем открывать длинную позицию. Кроме того, цена находится около поддержки, и мы видим формирование восходящего треугольника, но без явного подтверждения пробоя. \U0001f4c9\U0001f4a1 [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'SELL', 'entry_price': 0.18529, 'take_profit': 0.17929, 'stop_loss': 0.18729, 'signal_title': 'Продажа от поддержки', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:\U0001f680 AI SIGNAL found: SELL FARTCOINUSDT (Conf: 80%)
+INFO:ai_agent:\u26a1 AI AUTO-TRADE TRIGGERED: FARTCOINUSDT SELL
+INFO:Dashboard:\u26a1 AI Agent requested execution for FARTCOINUSDT Sell
+WARNING:ai_agent:\u274c AI AUTO-TRADE REJECTED: FARTCOINUSDT - Auto-trade not enabled in Web Controller yet
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:ai_agent:\U0001f9e0 AI Sentinel Cycle: SOLUSDT
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing SOLUSDT...
+INFO:ai_agent:\U0001f4b2 Real-time Price for SOLUSDT: 79.15
+INFO:ai_agent:\U0001f4ca MTF RSI: 1m=63.3, 15m=52.0, 1H=41.6, 4H=15.5
+INFO:ai_agent:\U0001f50e Searching Brave: SOLUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:\u26a0\ufe0f AI generated weak RR (1.22) for strategy Trend Follower (EMA). Adjusting TP to 1:3.0.
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'BEARISH', 'confidence': 80, 'reasoning': 'На данный момент мы видим, что цена SOLUSDT находится в нисходящем тренде. 1-минутный RSI находится на уровне 63,3, что выше 50, но другие таймфреймы (15м, 1ч, 4ч) показывают значения RSI ниже 50 или сильно ниже 50, что указывает на потенциальное продолжение нисходящего движения. Уровни поддержки и сопротивления не являются явными, но общая картина указывает на продолжение нисходящего тренда. \U0001f4c9 [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'SELL', 'entry_price': 79.15, 'take_profit': 75.10000000000002, 'stop_loss': 80.5, 'signal_title': 'Продолжение нисходящего тренда', 'strategy_name': 'Trend Follower (EMA)'}
+INFO:ai_agent:\U0001f680 AI SIGNAL found: SELL SOLUSDT (Conf: 80%)
+INFO:ai_agent:\u26a1 AI AUTO-TRADE TRIGGERED: SOLUSDT SELL
+INFO:Dashboard:\u26a1 AI Agent requested execution for SOLUSDT Sell
+WARNING:ai_agent:\u274c AI AUTO-TRADE REJECTED: SOLUSDT - Auto-trade not enabled in Web Controller yet
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:ai_agent:\U0001f9e0 AI Sentinel Cycle: LTCUSDT
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing LTCUSDT...
+INFO:ai_agent:\U0001f4b2 Real-time Price for LTCUSDT: 50.87
+INFO:ai_agent:\U0001f4ca MTF RSI: 1m=62.5, 15m=42.6, 1H=38.5, 4H=15.6
+INFO:ai_agent:\U0001f50e Searching Brave: LTCUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:\u26a0\ufe0f AI generated weak RR (1.21) for strategy Mean Reversion (RSI). Adjusting TP to 1:3.0.
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'BEARISH', 'confidence': 70, 'reasoning': "На данный момент мы видим, что RSI на всех таймфреймах, кроме 1-минутного, находится ниже 50. Это указывает на потенциальное продолжение нисходящего тренда. Однако, поскольку 1-минутный RSI находится выше 50 и составляет 62,5, мы не можем войти в шорт по нашему основному правилу. Но мы можем использовать стратегию 'Mean Reversion (RSI)', чтобы воспользоваться потенциальным движением вниз. \U0001f4c9 [RR Adjusted to 1:3]", 'suggested_risk': 1.0, 'action': 'SELL', 'entry_price': 50.87, 'take_profit': 47.47999999999999, 'stop_loss': 52.0, 'signal_title': 'Продажа на RSI', 'strategy_name': 'Mean Reversion (RSI)'}
+INFO:ai_agent:\U0001f680 AI SIGNAL found: SELL LTCUSDT (Conf: 70%)
+INFO:ai_agent:\u26a1 AI AUTO-TRADE TRIGGERED: LTCUSDT SELL
+INFO:Dashboard:\u26a1 AI Agent requested execution for LTCUSDT Sell
+WARNING:ai_agent:\u274c AI AUTO-TRADE REJECTED: LTCUSDT - Auto-trade not enabled in Web Controller yet
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:ai_agent:\u2705 Sentinel Cycle Complete. Sleeping for 15m

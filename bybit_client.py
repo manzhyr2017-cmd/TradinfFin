@@ -364,7 +364,9 @@ class BybitClient:
                             if bal > 0:
                                 logger.info(f"💰 Balance (CONTRACT): ${bal:.2f}")
                                 return bal
-        except:
+        except Exception as e:
+            if "10001" in str(e):
+                logger.debug("Skipping CONTRACT balance check: account is UNIFIED")
             pass
             
         # 3. Try SPOT (Just in case, though we trade Linear)
@@ -382,7 +384,9 @@ class BybitClient:
                             if bal > 0:
                                 logger.warning(f"⚠️ Balance found on SPOT (${bal:.2f}), but trading Futures! Please transfer to Derivatives.")
                                 return bal
-        except:
+        except Exception as e:
+            if "10001" in str(e):
+                logger.debug("Skipping SPOT balance check: account is UNIFIED")
             pass
 
         logger.warning(f"⚠️ Balance check failed. Found $0.00 for {coin}. Check account type.")
@@ -436,8 +440,13 @@ class BybitClient:
             }, method='POST', signed=True)
             logger.info(f"Режим маржи {'ISOLATED' if is_isolated else 'CROSS'} установлен для {symbol}")
         except Exception as e:
-             if "not modified" not in str(e).lower():
-                logger.warning(f"Ошибка смены режима маржи для {symbol}: {e}")
+            err_msg = str(e).lower()
+            if "110043" in err_msg or "not modified" in err_msg:
+                return True
+            if "100028" in err_msg or "unified account is forbidden" in err_msg:
+                logger.debug(f"ℹ️ Margin mode switch skipped for {symbol} (UTA manages modes automatically)")
+                return True
+            logger.warning(f"Ошибка смены режима маржи для {symbol}: {e}")
 
     def cancel_all_orders(self, symbol: str = "") -> bool:
         """Отменяет все ордера. Если symbol пуст, отменяет по settleCoin=USDT"""
