@@ -632,7 +632,7 @@ class ExecutionManager:
                 logger.error(f"Unified Log Error: {e}")
             # ------------------
             
-            return True, f"Order placed successfully: {order_id}"
+            return True, str(order_id)
             
         except Exception as e:
             msg = f"❌ Ошибка исполнения: {e}"

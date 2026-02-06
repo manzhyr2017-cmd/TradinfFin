@@ -165,7 +165,7 @@ class ScannerService:
                             sentiment=sentiment, 
                             sector=sector,
                             is_executed=execution_success,
-                            order_id="AUTO-FILL" if execution_success else None
+                            order_id=exec_msg if execution_success else None
                         )
                     elif self.bot.telegram:
                          # Fallback to simple notifier
