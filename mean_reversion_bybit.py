@@ -1137,6 +1137,7 @@ class AdvancedMeanReversionEngine:
         warnings = []
         
         current = df_15m.iloc[-1]
+        atr_val = float(self.ind.atr(df_15m['high'], df_15m['low'], df_15m['close']).iloc[-1])
         
         # RSI
         rsi = tf_15m['rsi']
