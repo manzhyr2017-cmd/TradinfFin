@@ -320,25 +320,6 @@ class BybitClient:
         except Exception as e:
             pass
 
-    def get_total_equity(self) -> float:
-        """Получает полную стоимость аккаунта (Total Equity) для UTA"""
-        try:
-            data = self._request('/v5/account/wallet-balance', {
-                'accountType': 'UNIFIED',
-                'coin': 'USDT'
-            }, signed=True)
-            
-            if data and data.get('list'):
-                # Bybit returns totalEquity at the account level for UTA
-                equity = float(data['list'][0].get('totalEquity', 0))
-                if equity > 0:
-                    return equity
-        except Exception as e:
-            logger.error(f"Failed to fetch total equity: {e}")
-            
-        # Fallback to wallet balance
-        return self.get_wallet_balance('USDT')
-
         # 2. Try CONTRACT (Derivatives - Classic Account)
         try:
             data = self._request('/v5/account/wallet-balance', {
@@ -376,7 +357,26 @@ class BybitClient:
             pass
 
         logger.warning(f"⚠️ Balance check failed. Found $0.00 for {coin}. Check account type.")
-        return 0.0           
+        return 0.0
+
+    def get_total_equity(self) -> float:
+        """Получает полную стоимость аккаунта (Total Equity) для UTA"""
+        try:
+            data = self._request('/v5/account/wallet-balance', {
+                'accountType': 'UNIFIED',
+                'coin': 'USDT'
+            }, signed=True)
+            
+            if data and data.get('list'):
+                # Bybit returns totalEquity at the account level for UTA
+                equity = float(data['list'][0].get('totalEquity', 0))
+                if equity > 0:
+                    return equity
+        except Exception as e:
+            logger.error(f"Failed to fetch total equity: {e}")
+            
+        # Fallback to wallet balance
+        return self.get_wallet_balance('USDT')
         
 
     def set_leverage(self, symbol: str, leverage: float):

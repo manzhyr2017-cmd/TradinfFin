@@ -398,7 +398,9 @@ class TradingTelegramBot:
                 [InlineKeyboardButton("📊 Статус позиции", callback_data=f"status_{signal.symbol}")]
             ]
         elif execution_error:
-            msg += f"\n\n❌ <b>AUTO-TRADE ERROR</b>\n⚠️ <code>{execution_error}</code>"
+            import html
+            safe_error = html.escape(str(execution_error))
+            msg += f"\n\n❌ <b>AUTO-TRADE ERROR</b>\n⚠️ <code>{safe_error}</code>"
             # Keep manual entry buttons even if auto failed
             keyboard = [
                 [
