@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import json
+import os
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 
@@ -16,8 +17,10 @@ class NewsService:
         self.agent = agent
         self.events: List[Dict] = []
         self.last_update = None
-        self.is_running = False
         self.risk_off_active = False
+        self.cryptopanic_key = os.getenv("CRYPTOPANIC_KEY", "35054daf8a39a0d6d1d53f08ce298ab9ba111d4c")
+        import requests
+        self.requests = requests
         
         # --- NEW: FinBERT Sentiment ---
         self.sentiment_analyzer = None
@@ -158,10 +161,56 @@ class NewsService:
 
     async def get_symbol_sentiment(self, symbol: str) -> Dict:
         """Fetch and analyze news sentiment for a specific symbol"""
-        currency = symbol.replace("USDT", "")
-        # Use CryptoPanic API if key available, else fallback to web search via Agent
-        # For now, let's stick to the Agent search to avoid requiring another API Key immediately
+        currency = symbol.replace("USDT", "").replace("USDC", "")
         
+        # 1. Try CryptoPanic API First
+        if self.cryptopanic_key:
+            try:
+                logger.info(f"🔎 Fetching CryptoPanic news for {currency}...")
+                url = f"https://cryptopanic.com/api/v1/posts/?auth_token={self.cryptopanic_key}&currencies={currency}&kind=news&filter=important"
+                
+                loop = asyncio.get_running_loop()
+                response = await loop.run_in_executor(None, lambda: self.requests.get(url, timeout=10))
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    results = data.get('results', [])
+                    if results:
+                        scores = []
+                        for post in results[:7]: # Analyze top 7 news
+                            title = post.get('title', '')
+                            votes = post.get('votes', {})
+                            
+                            # Analyze title sentiment via FinBERT
+                            res = self.analyze_sentiment(title)
+                            sentiment_score = res['score'] if res['label'] == 'positive' else (-res['score'] if res['label'] == 'negative' else 0.0)
+                            
+                            # Factor in community votes
+                            positive_votes = votes.get('positive', 0) + votes.get('bullish', 0)
+                            negative_votes = votes.get('negative', 0) + votes.get('bearish', 0)
+                            
+                            vote_score = 0
+                            if (positive_votes + negative_votes) > 0:
+                                vote_score = (positive_votes - negative_votes) / (positive_votes + negative_votes)
+                            
+                            # Combined score: 70% model, 30% community
+                            combined = (sentiment_score * 0.7) + (vote_score * 0.3)
+                            scores.append(combined)
+                            
+                        avg_score = sum(scores) / len(scores) if scores else 0.0
+                        label = "positive" if avg_score > 0.15 else ("negative" if avg_score < -0.15 else "neutral")
+                        
+                        logger.info(f"✅ CryptoPanic Sentiment for {symbol}: {label} ({avg_score:.2f})")
+                        return {
+                            "score": avg_score,
+                            "label": label,
+                            "count": len(scores),
+                            "source": "CryptoPanic"
+                        }
+            except Exception as e:
+                logger.error(f"CryptoPanic API error for {symbol}: {e}")
+
+        # 2. Fallback to Web Search via Agent
         try:
             query = f"latest {currency} crypto news price prediction sentiment"
             loop = asyncio.get_running_loop()
@@ -185,7 +234,8 @@ class NewsService:
             return {
                 "score": avg_score,
                 "label": "positive" if avg_score > 0.2 else ("negative" if avg_score < -0.2 else "neutral"),
-                "count": len(scores)
+                "count": len(scores),
+                "source": "WebSearch"
             }
         except Exception as e:
             logger.error(f"Symbol sentiment check failed for {symbol}: {e}")
