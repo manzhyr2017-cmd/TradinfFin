@@ -85,9 +85,8 @@ async def lifespan(app: FastAPI):
 
             tg_conf = TelegramConfig(bot_token=config.telegram_token)
             tg_bot = TradingTelegramBot(tg_conf, controller=ServerController())
-            await tg_bot.app.initialize()
-            await tg_bot.app.start()
-            logger.info("Telegram Bot SEND-ONLY instance started")
+            await tg_bot.start()
+            logger.info("Telegram Bot instance started (with Polling for buttons)")
         except Exception as e:
             logger.error(f"Failed to start Telegram: {e}")
 
@@ -326,6 +325,13 @@ async def lifespan(app: FastAPI):
     # Shutdown logic
     if bot_process:
         bot_process.terminate()
+    if tg_bot:
+        try:
+            await tg_bot.app.updater.stop()
+            await tg_bot.app.stop()
+            await tg_bot.app.shutdown()
+        except:
+            pass
 
 app = FastAPI(title="Trading Bot Dashboard", lifespan=lifespan)
 
