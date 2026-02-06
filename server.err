@@ -1341,3 +1341,31 @@ INFO:ai_agent:\U0001f680 AI SIGNAL found: BUY ZECUSDT (Conf: 70%)
 INFO:ai_agent:\u26a1 AI AUTO-TRADE TRIGGERED: ZECUSDT BUY
 INFO:Dashboard:\u26a1 AI Agent requested execution for ZECUSDT Buy
 WARNING:ai_agent:\u274c AI AUTO-TRADE REJECTED: ZECUSDT - Auto-trade not enabled in Web Controller yet
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:ai_agent:\U0001f9e0 AI Sentinel Cycle: SOLUSDT
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing SOLUSDT...
+INFO:ai_agent:\U0001f4b2 Real-time Price for SOLUSDT: 80.36
+INFO:ai_agent:\U0001f4ca MTF RSI: 1m=32.7, 15m=71.8, 1H=39.6, 4H=21.6
+INFO:ai_agent:\U0001f50e Searching Brave: SOLUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:\u26a0\ufe0f AI generated weak RR (0.98) for strategy Mean Reversion (RSI). Adjusting TP to 1:3.0.
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 70, 'reasoning': 'В данный момент мы видим, что RSI на 1-минутном графике находится на уровне 32.7, что является сигналом для покупки. Однако, на 15-минутном графике RSI находится на уровне 71.8, что выше 50. Но, поскольку на 1-часовом и 4-часовом графиках RSI находится ниже 50 (39.6 и 21.6 соответственно), мы можем считать, что это хорошая возможность для покупки. Кроме того, цена находится вблизи уровня поддержки 80.36. [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 80.36, 'take_profit': 82.94, 'stop_loss': 79.5, 'signal_title': 'Отскок от поддержки', 'strategy_name': 'Mean Reversion (RSI)'}
+INFO:ai_agent:\U0001f680 AI SIGNAL found: BUY SOLUSDT (Conf: 70%)
+INFO:ai_agent:\u26a1 AI AUTO-TRADE TRIGGERED: SOLUSDT BUY
+INFO:Dashboard:\u26a1 AI Agent requested execution for SOLUSDT Buy
+WARNING:ai_agent:\u274c AI AUTO-TRADE REJECTED: SOLUSDT - Auto-trade not enabled in Web Controller yet
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:ai_agent:\U0001f9e0 AI Sentinel Cycle: AVAXUSDT
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing AVAXUSDT...
+INFO:ai_agent:\U0001f4b2 Real-time Price for AVAXUSDT: 8.522
+INFO:ai_agent:\U0001f4ca MTF RSI: 1m=32.5, 15m=66.0, 1H=37.0, 4H=24.6
+INFO:ai_agent:\U0001f50e Searching Brave: AVAXUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:\u26a0\ufe0f AI generated weak RR (1.00) for strategy Mean Reversion (RSI). Adjusting TP to 1:3.0.
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 70, 'reasoning': 'На данный момент мы видим, что RSI на всех таймфреймах находится в зоне покупки (< 50). На 1-минутном графике RSI равно 32,5, что является сигналом для входа в длинную позицию. Кроме того, цена находится в зоне поддержки, что подтверждает нашу гипотезу о росте цены. \U0001f4c8\U0001f4b0 [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 8.522, 'take_profit': 9.122000000000003, 'stop_loss': 8.322, 'signal_title': 'Вход в длинную позицию на AVAXUSDT', 'strategy_name': 'Mean Reversion (RSI)'}
+INFO:ai_agent:\U0001f680 AI SIGNAL found: BUY AVAXUSDT (Conf: 70%)
+INFO:ai_agent:\u26a1 AI AUTO-TRADE TRIGGERED: AVAXUSDT BUY
+INFO:Dashboard:\u26a1 AI Agent requested execution for AVAXUSDT Buy
+WARNING:ai_agent:\u274c AI AUTO-TRADE REJECTED: AVAXUSDT - Auto-trade not enabled in Web Controller yet
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:ai_agent:\u2705 Sentinel Cycle Complete. Sleeping for 15m
