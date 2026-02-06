@@ -78,15 +78,15 @@ class TradeLogger:
         row = cursor.fetchone()
         conn.close()
         
-        count = row[0] if row else 0
-        remaining = self.max_trades_per_day - count
+        # count = row[0] if row else 0
+        # remaining = self.max_trades_per_day - count
         
-        if remaining <= 0:
-            logger.warning(f"🎯 Sniper Mode: Daily limit reached ({self.max_trades_per_day} trades). Wait for tomorrow.")
-            return False
+        # if remaining <= 0:
+        #     logger.warning(f"🎯 Sniper Mode: Daily limit reached ({self.max_trades_per_day} trades). Wait for tomorrow.")
+        #     return False
             
-        logger.info(f"🎯 Sniper Mode: {remaining} trades remaining today.")
-        return True
+        # logger.info(f"🎯 Sniper Mode: {remaining} trades remaining today.")
+        return True # Limit disabled by user request
     
     def log_trade_open(
         self,

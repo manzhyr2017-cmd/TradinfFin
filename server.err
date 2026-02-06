@@ -1236,3 +1236,25 @@ INFO:Dashboard:\u26a1 AI Agent requested execution for ZECUSDT Buy
 WARNING:ai_agent:\u274c AI AUTO-TRADE REJECTED: ZECUSDT - Auto-trade not enabled in Web Controller yet
 INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
 INFO:ai_agent:\u2705 Sentinel Cycle Complete. Sleeping for 15m
+INFO:bybit_client:\U0001f50d DEBUG POSITIONS RAW (ALL): {"nextPageCursor": "", "category": "linear", "list": []}
+INFO:ai_agent:\U0001f4ca Sentinel selected top 5 MOVE-MAKERS (from top 20 volume): ['SUIUSDT', 'AAVEUSDT', 'FARTCOINUSDT', 'ZECUSDT', 'SOLUSDT']
+INFO:ai_agent:\U0001f9e0 AI Sentinel Cycle: SUIUSDT
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing SUIUSDT...
+INFO:ai_agent:\U0001f4b2 Real-time Price for SUIUSDT: 0.9353
+INFO:ai_agent:\U0001f4ca MTF RSI: 1m=65.8, 15m=72.0, 1H=43.2, 4H=27.0
+INFO:ai_agent:\U0001f50e Searching Brave: SUIUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:\u26a0\ufe0f AI generated weak RR (1.31) for strategy Trend Follower (EMA). Adjusting TP to 1:3.0.
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'BEARISH', 'confidence': 70, 'reasoning': 'На данный момент мы видим разнонаправленные сигналы от RSI на разных таймфреймах. 1m RSI = 65.8 (выше 50), 15m RSI = 72.0 (выше 50), но 1H RSI = 43.2 и 4H RSI = 27.0 (ниже 50). Это говорит о том, что рынок находится в стадии консолидации. Однако, поскольку не все таймфреймы показывают значения RSI < 50, мы не можем открыть длинную позицию. Кроме того, цена упала на -11.76% за последние 24 часа, что указывает на потенциальное продолжение нисходящего тренда. \U0001f4c9 [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'SELL', 'entry_price': 0.9353, 'take_profit': 0.8312000000000002, 'stop_loss': 0.97, 'signal_title': 'Продолжение нисходящего тренда', 'strategy_name': 'Trend Follower (EMA)'}
+INFO:ai_agent:\U0001f680 AI SIGNAL found: SELL SUIUSDT (Conf: 70%)
+INFO:ai_agent:\u26a1 AI AUTO-TRADE TRIGGERED: SUIUSDT SELL
+INFO:Dashboard:\u26a1 AI Agent requested execution for SUIUSDT Sell
+WARNING:ai_agent:\u274c AI AUTO-TRADE REJECTED: SUIUSDT - Auto-trade not enabled in Web Controller yet
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:ai_agent:\U0001f9e0 AI Sentinel Cycle: AAVEUSDT
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing AAVEUSDT...
+INFO:ai_agent:\U0001f4b2 Real-time Price for AAVEUSDT: 107.33
+INFO:ai_agent:\U0001f4ca MTF RSI: 1m=51.0, 15m=68.9, 1H=37.1, 4H=28.4
+INFO:ai_agent:\U0001f50e Searching Brave: AAVEUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'NEUTRAL', 'confidence': 60, 'reasoning': 'На данный момент рынок AAVEUSDT находится в состоянии неопределенности. Индикаторы RSI на разных таймфреймах дают смешанные сигналы: 1m RSI = 51,0 (нейтрально), 15m RSI = 68,9 (перекупленность), 1H RSI = 37,1 (перепроданность) и 4H RSI = 28,4 (перепроданность). Это говорит о том, что рынок не имеет четкого направления. Однако, учитывая общую картину рынка и отсутствие сильных сигналов на покупку или продажу, мы можем ожидать возможного разворота в сторону покупателей. \U0001f914', 'suggested_risk': 1.0, 'action': 'WAIT', 'entry_price': 'Market', 'take_profit': 110.0, 'stop_loss': 105.0, 'signal_title': 'Ожидание разворота', 'strategy_name': 'Level Trader (S&R)'}

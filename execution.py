@@ -362,14 +362,16 @@ class ExecutionManager:
             bool: True если ордер отправлен успешно
         """
         if not self.can_trade():
-            return False
+            return False, "Daily loss limit or Cooldown/News protection"
         
         # --- SNIPER MODE: Daily Trade Limit ---
         try:
             from trade_logger import get_trade_logger
             trade_logger = get_trade_logger()
-            if not trade_logger.can_trade_today():
-                return False
+            # Check daily trade limit (Currently disabled by User)
+            # if not trade_logger.can_trade_today():
+            #     return False
+            pass
         except ImportError:
             pass  # Logger not available, continue
         
@@ -396,29 +398,36 @@ class ExecutionManager:
             # 1. Проверяем открытые позиции
             positions = self.client.get_open_positions()
             if len(positions) >= self.risk_limits.max_open_positions:
-                logger.warning(f"Пропуск: достигнут лимит позиций ({len(positions)})")
-                return False
+                msg = f"Пропуск: достигнут лимит позиций ({len(positions)}/{self.risk_limits.max_open_positions})"
+                logger.warning(msg)
+                return False, msg
             
             # Если уже есть позиция по этому символу - пропускаем
             for pos in positions:
                 if pos['symbol'] == signal.symbol:
-                    logger.warning(f"Пропуск: уже есть позиция по {signal.symbol}")
-                    return False
+                    msg = f"Пропуск: уже есть позиция по {signal.symbol}"
+                    logger.warning(msg)
+                    return False, msg
 
             # --- CORRELATION FILTER (Phase 2) ---
             side = 'Buy' if signal.signal_type == SignalType.LONG else 'Sell'
             if not self.check_correlation(signal.symbol, side, positions):
-                return False
+                msg = "Conflict with existing positions (Correlation/Concentration)"
+                logger.warning(msg)
+                return False, msg
             
             # --- FUNDING RATE FILTER (Phase 4) ---
             if not self.check_funding_rate_bias(signal.symbol, side, signal.funding_rate):
-                return False
+                msg = "Extreme Funding Rate (Crowded Side)"
+                logger.warning(msg)
+                return False, msg
 
             # 2. Получаем актуальный баланс (Total Equity для правильного реинвеста)
             balance = self.client.get_total_equity()
             if balance <= 0:
-                logger.error("Ошибка: Баланс 0 или недоступен")
-                return False
+                msg = "Ошибка: Баланс 0 или недоступен"
+                logger.error(msg)
+                return False, msg
                 
             logger.info(f"💰 Актуальный баланс (Equity): ${balance:.2f}")
             
