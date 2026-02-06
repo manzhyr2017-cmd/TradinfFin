@@ -29,6 +29,10 @@ from typing import Optional, Dict, Any, List, Tuple
 from enum import Enum
 from datetime import datetime, timedelta
 import logging
+import requests
+import json
+import os
+from collections import deque
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -71,10 +75,38 @@ class SupportResistanceLevel:
     last_touch: datetime
 
 
+class StrategyType(Enum):
+    MEAN_REVERSION = "MEAN_REVERSION"
+    MOMENTUM = "MOMENTUM"
+    BREAKOUT = "BREAKOUT"
+    GRID = "GRID"
+    SCALPING = "SCALPING"
+
+
+@dataclass
+class Trade:
+    """Trade record для Performance Tracker"""
+    entry_time: datetime
+    exit_time: Optional[datetime] = None
+    symbol: str = ""
+    strategy: StrategyType = StrategyType.MEAN_REVERSION
+    signal_type: SignalType = SignalType.LONG
+    entry_price: float = 0.0
+    exit_price: float = 0.0
+    stop_loss: float = 0.0
+    take_profit: float = 0.0
+    position_size: float = 0.0
+    pnl: float = 0.0
+    pnl_percent: float = 0.0
+    confluence_score: float = 0.0
+    is_winner: bool = False
+    exit_reason: str = ""
+
+
 @dataclass
 class ConfluenceScore:
     total_score: int = 0
-    max_possible: int = 100
+    max_possible: int = 135  # Повышено до 135 (Ultimate v3)
     factors: Dict[str, Tuple[int, int]] = field(default_factory=dict)  # name: (score, max)
     
     def add_factor(self, name: str, score: int, max_score: int):
@@ -103,6 +135,128 @@ class ConfluenceScore:
             bar = '█' * int(score / max_score * 10) + '░' * (10 - int(score / max_score * 10))
             lines.append(f"  {name:25} [{bar}] {score}/{max_score}")
         return '\n'.join(lines)
+
+
+# ============================================================
+# ULTIMATE MODULES
+# ============================================================
+
+class NewsEngine:
+    """Новостной движок с Sentiment Analysis"""
+    def __init__(self, api_key: str, use_finbert: bool = False):
+        self.api_key = api_key
+        self.base_url = "https://cryptopanic.com/api/v1"
+        self.cache = {}
+        self.cache_ttl = 300
+        self.use_finbert = use_finbert
+        self.sentiment_model = None
+        
+        if use_finbert:
+            try:
+                from transformers import pipeline
+                self.sentiment_model = pipeline("sentiment-analysis", model="ProsusAI/finbert")
+                logger.info("✅ FinBERT loaded successfully")
+            except Exception as e:
+                logger.warning(f"⚠️ FinBERT not available: {e}. Using simple sentiment.")
+                self.use_finbert = False
+
+    def get_market_sentiment(self, currency: str) -> Dict[str, Any]:
+        """Полный анализ market sentiment через CryptoPanic"""
+        if not self.api_key:
+            return {'score': 0.0, 'news_count': 0, 'critical_events': []}
+            
+        try:
+            url = f"{self.base_url}/posts/"
+            params = {'auth_token': self.api_key, 'currencies': currency, 'kind': 'news', 'filter': 'hot'}
+            response = requests.get(url, params=params, timeout=10)
+            data = response.json()
+            news = data.get('results', [])[:15]
+            
+            sentiments = []
+            critical_events = []
+            
+            for item in news:
+                title = item.get('title', '')
+                if any(k in title.lower() for k in ['hack', 'delist', 'scam', 'halt']):
+                    critical_events.append(title)
+                
+                score = self._analyze_text(title)
+                sentiments.append(score)
+            
+            avg_score = sum(sentiments) / len(sentiments) if sentiments else 0.0
+            return {
+                'score': float(avg_score),
+                'news_count': len(news),
+                'critical_events': critical_events
+            }
+        except Exception as e:
+            logger.error(f"NewsEngine error: {e}")
+            return {'score': 0.0, 'news_count': 0, 'critical_events': []}
+
+    def _analyze_text(self, text: str) -> float:
+        if self.use_finbert and self.sentiment_model:
+            try:
+                res = self.sentiment_model(text[:512])[0]
+                label = res['label'].lower()
+                score = res['score']
+                return score if label == 'positive' else (-score if label == 'negative' else 0.0)
+            except: pass
+        
+        # Simple keywords
+        text = text.lower()
+        pos = sum(1 for w in ['bull', 'pump', 'surge', 'rally', 'profit', 'up'] if w in text)
+        neg = sum(1 for w in ['bear', 'dump', 'crash', 'fall', 'loss', 'down'] if w in text)
+        return (pos - neg) / (pos + neg + 1)
+
+
+class RiskManager:
+    """Управление рисками и Circuit Breaker"""
+    def __init__(self, total_capital: float = 10000, daily_loss_limit: float = 0.05):
+        self.total_capital = total_capital
+        self.starting_capital = total_capital
+        self.daily_loss_limit = daily_loss_limit
+        self.daily_pnl = 0.0
+        self.last_reset = datetime.now().date()
+        self.circuit_breaker_active = False
+
+    def check_circuit_breaker(self) -> bool:
+        if datetime.now().date() > self.last_reset:
+            self.daily_pnl = 0.0
+            self.last_reset = datetime.now().date()
+            self.circuit_breaker_active = False
+            
+        loss_pct = (self.daily_pnl / self.starting_capital)
+        if loss_pct <= -self.daily_loss_limit:
+            self.circuit_breaker_active = True
+            return True
+        return False
+
+    def calculate_kelly_size(self, win_rate: float, p_ratio: float) -> float:
+        """Kelly Criterion: f* = (bp - q) / b"""
+        if win_rate <= 0 or p_ratio <= 0: return 0.01
+        kelly = (p_ratio * win_rate - (1 - win_rate)) / p_ratio
+        return max(0.005, min(kelly * 0.25, 0.05)) # Conservative 1/4 Kelly, max 5% risk, min 0.5%
+
+
+class PerformanceTracker:
+    """Отслеживание результатов торгов"""
+    def __init__(self, max_history: int = 1000):
+        self.trades = deque(maxlen=max_history)
+        self.equity_curve = [10000.0]
+
+    def add_trade(self, trade: Trade):
+        self.trades.append(trade)
+        self.equity_curve.append(self.equity_curve[-1] + trade.pnl)
+
+    def get_stats(self) -> Dict:
+        if not self.trades: return {'win_rate': 0.5, 'profit_factor': 1.0, 'avg_win': 100, 'avg_loss': 100}
+        wins = [t for t in self.trades if t.is_winner]
+        losses = [t for t in self.trades if not t.is_winner]
+        wr = len(wins) / len(self.trades)
+        total_win = sum(t.pnl for t in wins)
+        total_loss = abs(sum(t.pnl for t in losses))
+        pf = total_win / total_loss if total_loss > 0 else 2.0
+        return {'win_rate': wr, 'profit_factor': pf, 'avg_win': total_win/max(1, len(wins)), 'avg_loss': total_loss/max(1, len(losses))}
 
 
 @dataclass
@@ -1252,6 +1406,142 @@ def generate_test_data(periods: int = 500) -> pd.DataFrame:
         'close': prices * (1 + np.random.randn(periods) * 0.002),
         'volume': np.random.randint(100, 1000, periods) * 1000
     })
+
+
+# ============================================================
+# 🔥 ULTIMATE TRADING ENGINE (10/10!)
+# ============================================================
+
+class UltimateTradingEngine:
+    """
+    Ultimate Trading Engine v3.0
+    
+    Объединяет:
+    - Продвинутый Mean Reversion движок
+    - Momentum стратегию
+    - Фильтр новостей (FinBERT)
+    - Circuit Breaker & Kelly Sizing
+    """
+    def __init__(self, cryptopanic_key: str = None, total_capital: float = 10000, min_confluence: int = 75):
+        self.mr_engine = AdvancedMeanReversionEngine(min_confluence=min_confluence)
+        # Use torch check for FinBERT
+        use_finbert = False
+        try:
+             import torch
+             use_finbert = torch.cuda.is_available()
+        except: pass
+        
+        self.news_engine = NewsEngine(cryptopanic_key or os.getenv('CRYPTOPANIC_KEY'), use_finbert=use_finbert)
+        self.risk_manager = RiskManager(total_capital=total_capital)
+        self.performance_tracker = PerformanceTracker()
+        
+    def analyze(self, df_15m, df_1h, df_4h, symbol, funding_rate=None, orderbook_imbalance=None) -> Optional[AdvancedSignal]:
+        # 1. Circuit Breaker
+        if self.risk_manager.check_circuit_breaker():
+            logger.warning("🚨 Circuit Breaker ACTIVE - Trading Paused")
+            return None
+            
+        # 2. Market Regime & Strategy Routing
+        ind = TechnicalIndicators()
+        adx, _, _ = ind.adx(df_4h['high'], df_4h['low'], df_4h['close'])
+        current_adx = adx.iloc[-1]
+        
+        # 3. Strategy Selection
+        if current_adx > 30:
+            # TRENDING: Use Momentum
+            signal = self._analyze_momentum(df_15m, symbol)
+        else:
+            # RANGING: Use Mean Reversion
+            signal = self.mr_engine.analyze(df_15m, df_1h, df_4h, symbol, funding_rate, orderbook_imbalance)
+            
+        if not signal: return None
+        
+        # 4. News Sentiment Filter (Extra Confluence)
+        if self.news_engine.api_key:
+            sentiment = self.news_engine.get_market_sentiment(symbol[:3])
+            if sentiment['critical_events']:
+                logger.warning(f"⚠️ {symbol}: Critical news events detected: {sentiment['critical_events']}")
+                return None
+            if sentiment['score'] < -0.4:
+                logger.info(f"⚠️ {symbol}: Very bearish news sentiment ({sentiment['score']:.2f})")
+                return None
+                
+            # Add News Bonus to Confluence
+            if sentiment['score'] > 0.3 and signal.signal_type == SignalType.LONG:
+                signal.confluence.add_factor("News Alpha", 15, 15)
+                signal.reasoning.append(f"📰 Positive News Alpha (+15) score={sentiment['score']:.2f}")
+            elif sentiment['score'] < -0.3 and signal.signal_type == SignalType.SHORT:
+                signal.confluence.add_factor("News Alpha", 15, 15)
+                signal.reasoning.append(f"📰 Negative News Alpha (+15) score={sentiment['score']:.2f}")
+                
+        # 5. Kelly position sizing (based on performance history)
+        stats = self.performance_tracker.get_stats()
+        p_ratio = stats['avg_win'] / stats['avg_loss'] if stats['avg_loss'] > 0 else 2.0
+        kelly_risk = self.risk_manager.calculate_kelly_size(stats['win_rate'], p_ratio)
+        signal.position_size_percent = kelly_risk * 100
+        
+        return signal
+
+    def _analyze_momentum(self, df, symbol) -> Optional[AdvancedSignal]:
+        """Simple Momentum Strategy (port from Ultuma)"""
+        ind = TechnicalIndicators()
+        ema9 = ind.ema(df['close'], 9)
+        ema21 = ind.ema(df['close'], 21)
+        adx, plus_di, minus_di = ind.adx(df['high'], df['low'], df['close'])
+        
+        curr = df.iloc[-1]
+        c_ema9 = ema9.iloc[-1]
+        c_ema21 = ema21.iloc[-1]
+        c_adx = adx.iloc[-1]
+        
+        if c_ema9 > c_ema21 and plus_di.iloc[-1] > minus_di.iloc[-1] and c_adx > 25:
+            # LONG MOMENTUM
+            conf = ConfluenceScore(max_possible=135)
+            conf.add_factor("MTM EMA Trend", 30, 30)
+            conf.add_factor("MTM ADX Power", 20, 20)
+            
+            entry = float(curr['close'])
+            atr = ind.atr(df['high'], df['low'], df['close']).iloc[-1]
+            return AdvancedSignal(
+                signal_type=SignalType.LONG,
+                symbol=symbol,
+                entry_price=entry,
+                stop_loss=entry - 2*atr,
+                take_profit_1=entry + 3*atr,
+                take_profit_2=entry + 5*atr,
+                confluence=conf,
+                probability=75,
+                market_regime=MarketRegime.STRONG_TREND_UP,
+                reasoning=["Momentum Long: EMA 9/21 cross + ADX Confirmation"],
+                indicators={'adx': c_adx, 'ema_diff': c_ema9 - c_ema21}
+            )
+        elif c_ema9 < c_ema21 and minus_di.iloc[-1] > plus_di.iloc[-1] and c_adx > 25:
+            # SHORT MOMENTUM
+            conf = ConfluenceScore(max_possible=135)
+            conf.add_factor("MTM EMA Trend", 30, 30)
+            conf.add_factor("MTM ADX Power", 20, 20)
+            
+            entry = float(curr['close'])
+            atr = ind.atr(df['high'], df['low'], df['close']).iloc[-1]
+            return AdvancedSignal(
+                signal_type=SignalType.SHORT,
+                symbol=symbol,
+                entry_price=entry,
+                stop_loss=entry + 2*atr,
+                take_profit_1=entry - 3*atr,
+                take_profit_2=entry - 5*atr,
+                confluence=conf,
+                probability=75,
+                market_regime=MarketRegime.STRONG_TREND_DOWN,
+                reasoning=["Momentum Short: EMA 9/21 cross + ADX Confirmation"],
+                indicators={'adx': c_adx, 'ema_diff': c_ema21 - c_ema9}
+            )
+        return None
+
+    def record_trade(self, trade: Trade):
+        self.performance_tracker.add_trade(trade)
+        self.risk_manager.daily_pnl += trade.pnl
+        self.risk_manager.total_capital += trade.pnl
 
 
 if __name__ == "__main__":

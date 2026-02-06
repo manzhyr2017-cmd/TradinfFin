@@ -26,7 +26,13 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 
 # Внутренние модули
-from mean_reversion_bybit import AdvancedMeanReversionEngine, AdvancedSignal, format_signal
+from mean_reversion_bybit import (
+    AdvancedMeanReversionEngine, 
+    AdvancedSignal, 
+    format_signal,
+    UltimateTradingEngine,
+    Trade
+)
 from bybit_client import BybitClient, BybitScanner, BybitCategory
 from backtesting import Backtester
 from execution import ExecutionManager, RiskLimits
@@ -87,11 +93,10 @@ class TradingBot:
         elif self.strategy_name == "acceleration":
             self.engine = AccelerationStrategy()
         elif self.strategy_name == "scalping":
-            # Scalping Mode: Lower RR (1.5), Higher Confluence
-            self.engine = AdvancedMeanReversionEngine(min_confluence=80, min_rr=1.5)
+            self.engine = UltimateTradingEngine(min_confluence=80) 
         else:
             # Sniper Mode: Extreme signals only (85%+), R:R 1:4 minimum
-            self.engine = AdvancedMeanReversionEngine(min_confluence=85, min_rr=4.0)
+            self.engine = UltimateTradingEngine(min_confluence=85)
 
         # 2. Client & Analytics (Needed for execution)
         self.analytics_service = AnalyticsService(db)
@@ -198,9 +203,9 @@ class TradingBot:
         elif new_strategy == "acceleration":
             self.engine = AccelerationStrategy()
         elif new_strategy == "scalping":
-            self.engine = AdvancedMeanReversionEngine(min_confluence=80, min_rr=1.5)
+            self.engine = UltimateTradingEngine(min_confluence=80)
         else:
-            self.engine = AdvancedMeanReversionEngine(min_confluence=85, min_rr=4.0)
+            self.engine = UltimateTradingEngine(min_confluence=85)
 
 
     async def run_continuous_async(self, interval_seconds: int = 60):
