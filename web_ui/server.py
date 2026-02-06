@@ -138,7 +138,8 @@ async def lifespan(app: FastAPI):
                         if channel_id:
                             await self.tg_bot.app.bot.send_message(chat_id=channel_id, text=data["message"], parse_mode="HTML")
                         return
-
+                    # ТОРГОВЫЙ СИГНАЛ: Используем расширенный форматер
+                    try:
                         from mean_reversion_bybit import AdvancedSignal, SignalType, SignalStrength, MarketRegime
                         from telegram_bot import SignalFormatter
                         from datetime import datetime, timedelta

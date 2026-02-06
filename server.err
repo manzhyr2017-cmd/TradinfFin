@@ -1067,3 +1067,17 @@ INFO:bybit_client:  Proxy: Configured
 INFO:bybit_client:  Category: linear
 INFO:bybit_client:\U0001f4b0 Balance (UNIFIED): $121.52
 INFO:bybit_client:\U0001f50d DEBUG POSITIONS RAW (ALL): {"nextPageCursor": "", "category": "linear", "list": []}
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:bybit_client:\U0001f4b0 Balance (UNIFIED): $121.52
+INFO:bybit_client:\U0001f50d DEBUG POSITIONS RAW (ALL): {"nextPageCursor": "", "category": "linear", "list": []}
+INFO:bybit_client:BybitClient Initialized
+INFO:bybit_client:  URL: https://api.bybit.com
+INFO:bybit_client:  Proxy: Configured
+INFO:bybit_client:  Category: linear
+INFO:bybit_client:\U0001f4b0 Balance (UNIFIED): $121.52
+INFO:bybit_client:\U0001f50d DEBUG POSITIONS RAW (ALL): {"nextPageCursor": "", "category": "linear", "list": []}
+C:\Projects\Trading\Trading-fin\web_ui\server.py:310: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  config_data = config.dict()
