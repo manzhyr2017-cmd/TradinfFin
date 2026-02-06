@@ -1591,3 +1591,55 @@ INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing AAVEUSDT...
 INFO:ai_agent:\U0001f4b2 Real-time Price for AAVEUSDT: 102.95
 INFO:ai_agent:\U0001f4ca MTF RSI: 1m=71.5, 15m=21.8, 1H=37.2, 4H=16.5
 INFO:ai_agent:\U0001f50e Searching Brave: AAVEUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 70, 'reasoning': 'На данный момент наблюдаем разворот на графике AAVEUSDT. 1-минутный RSI находится на уровне 71,5, что является сигналом для входа в лонг по стратегии Neuro-Scalper (1m Micro). Однако, остальные таймфреймы (15м, 1ч, 4ч) показывают низкие значения RSI, что соответствует условиям для входа в лонг. Уровень поддержки находится на отметке 100.65, что является дополнительным аргументом в пользу входа в лонг.', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 102.95, 'take_profit': 104.2, 'stop_loss': 102.2, 'signal_title': 'Отскок от поддержки', 'strategy_name': 'Neuro-Scalper (1m Micro)'}
+INFO:ai_agent:\U0001f680 AI SIGNAL found: BUY AAVEUSDT (Conf: 70%)
+INFO:ai_agent:\u26a1 AI AUTO-TRADE TRIGGERED: AAVEUSDT BUY
+INFO:Dashboard:\u26a1 AI Agent requested execution for AAVEUSDT Buy
+WARNING:ai_agent:\u274c AI AUTO-TRADE REJECTED: AAVEUSDT - Auto-trade not enabled in Web Controller yet
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:ai_agent:\U0001f9e0 AI Sentinel Cycle: SOLUSDT
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing SOLUSDT...
+INFO:ai_agent:\U0001f4b2 Real-time Price for SOLUSDT: 79.66
+INFO:ai_agent:\U0001f4ca MTF RSI: 1m=66.3, 15m=34.9, 1H=45.6, 4H=16.2
+INFO:ai_agent:\U0001f50e Searching Brave: SOLUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'NEUTRAL', 'confidence': 60, 'reasoning': "На данный момент рынок SOLUSDT находится в неопределенном состоянии. 1-минутный RSI находится на уровне 66,3, что указывает на возможный отскок от уровня поддержки. Однако, 15-минутный, 1-часовой и 4-часовой RSI находятся ниже уровня 50, что не подтверждает бычий сигнал. Кроме того, рынок не показывает явного тренда или пробоя уровней. Следовательно, я выбираю стратегию 'Neuro-Scalper (1m Micro)' для микро-сделок на 1-минутном графике.", 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 79.66, 'take_profit': 80.13, 'stop_loss': 79.38, 'signal_title': 'Микро-сделка на отскоке', 'strategy_name': 'Neuro-Scalper (1m Micro)'}
+INFO:ai_agent:\U0001f9e0 AI Sentinel Cycle: ZECUSDT
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing ZECUSDT...
+INFO:ai_agent:\U0001f4b2 Real-time Price for ZECUSDT: 215.29
+INFO:ai_agent:\U0001f4ca MTF RSI: 1m=65.8, 15m=46.5, 1H=54.2, 4H=16.3
+INFO:ai_agent:\U0001f50e Searching Brave: ZECUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 70, 'reasoning': "На данный момент наблюдается потенциальная возможность для длинной позиции, так как цена отскочила от зоны поддержки на дневном графике и движется в сторону нисходящего сопротивления и дневного SMA50. Кроме того, на 1-минутном графике RSI составляет 65,8, что может быть сигналом для скальпинга. Однако, на других таймфреймах RSI не подтверждает сигнал для длинной позиции, поэтому я выбираю стратегию 'Neuro-Scalper (1m Micro)' для быстрого скальпинга.", 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 215.29, 'take_profit': 216.5, 'stop_loss': 214.5, 'signal_title': 'Скальпинг на отскоке', 'strategy_name': 'Neuro-Scalper (1m Micro)'}
+INFO:ai_agent:\U0001f680 AI SIGNAL found: BUY ZECUSDT (Conf: 70%)
+INFO:ai_agent:\u26a1 AI AUTO-TRADE TRIGGERED: ZECUSDT BUY
+INFO:Dashboard:\u26a1 AI Agent requested execution for ZECUSDT Buy
+WARNING:ai_agent:\u274c AI AUTO-TRADE REJECTED: ZECUSDT - Auto-trade not enabled in Web Controller yet
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:ai_agent:\U0001f9e0 AI Sentinel Cycle: FARTCOINUSDT
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing FARTCOINUSDT...
+INFO:ai_agent:\U0001f4b2 Real-time Price for FARTCOINUSDT: 0.1838
+INFO:ai_agent:\U0001f4ca MTF RSI: 1m=52.8, 15m=36.5, 1H=45.0, 4H=22.2
+INFO:ai_agent:\U0001f50e Searching Brave: FARTCOINUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:\u26a0\ufe0f AI generated weak RR (1.12) for strategy Neuro-Scalper (1m Micro). Adjusting TP to 1:1.5.
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 70, 'reasoning': 'На графике FARTCOINUSDT наблюдается формирование восходящего треугольника, что говорит о накоплении давления на покупку. Уровень поддержки находится в районе 0.1838. RSI на 1-минутном графике составляет 52.8, что является сигналом для входа в лонг. Однако, на других таймфреймах RSI ниже 50, что соответствует нашему правилу входа в лонг только если все таймфреймы находятся ниже 50. Итак, мы имеем подтверждение на вход в лонг. [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 0.1838, 'take_profit': 0.18874999999999997, 'stop_loss': 0.1805, 'signal_title': 'Пробой восходящего треугольника', 'strategy_name': 'Neuro-Scalper (1m Micro)'}
+INFO:ai_agent:\U0001f680 AI SIGNAL found: BUY FARTCOINUSDT (Conf: 70%)
+INFO:ai_agent:\u26a1 AI AUTO-TRADE TRIGGERED: FARTCOINUSDT BUY
+INFO:Dashboard:\u26a1 AI Agent requested execution for FARTCOINUSDT Buy
+WARNING:ai_agent:\u274c AI AUTO-TRADE REJECTED: FARTCOINUSDT - Auto-trade not enabled in Web Controller yet
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:ai_agent:\U0001f9e0 AI Sentinel Cycle: LTCUSDT
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing LTCUSDT...
+INFO:ai_agent:\U0001f4b2 Real-time Price for LTCUSDT: 51.26
+INFO:ai_agent:\U0001f4ca MTF RSI: 1m=75.6, 15m=34.7, 1H=44.5, 4H=17.5
+INFO:ai_agent:\U0001f50e Searching Brave: LTCUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'BEARISH', 'confidence': 70, 'reasoning': 'На данный момент LTCUSDT находится в медвежьем тренде. \U0001f43b\u200d\u2642\ufe0f 1-минутный RSI составляет 75,6, что является сигналом для продажи в рамках стратегии scalping. Однако, в соответствии с правилом, мы не можем открывать короткую позицию, поскольку не все таймфреймы имеют RSI выше 50. \U0001f440 15-минутный RSI составляет 34,7, 1-часовой RSI - 44,5, а 4-часовой RSI - 17,5, что указывает на потенциал для роста. \U0001f525 Но учитывая общий медвежий тренд и сигнал от 1-минутного RSI, я выбираю стратегию scalping и рекомендую продажу. \U0001f4b8', 'suggested_risk': 1.0, 'action': 'SELL', 'entry_price': 51.26, 'take_profit': 50.83, 'stop_loss': 51.53, 'signal_title': 'Продажа на scalping-сигнале', 'strategy_name': 'Neuro-Scalper (1m Micro)'}
+INFO:ai_agent:\U0001f680 AI SIGNAL found: SELL LTCUSDT (Conf: 70%)
+INFO:ai_agent:\u26a1 AI AUTO-TRADE TRIGGERED: LTCUSDT SELL
+INFO:Dashboard:\u26a1 AI Agent requested execution for LTCUSDT Sell
+WARNING:ai_agent:\u274c AI AUTO-TRADE REJECTED: LTCUSDT - Auto-trade not enabled in Web Controller yet
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:ai_agent:\u2705 Sentinel Cycle Complete. Sleeping for 15m

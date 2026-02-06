@@ -25,10 +25,10 @@ logger = logging.getLogger(__name__)
 @dataclass
 class RiskLimits:
     """Ограничения рисков"""
-    max_daily_loss_usd: float = 100.0       # Макс. дневной убыток
-    max_open_positions: int = 5             # Increased for flexibility
-    max_leverage: float = 5.0              # Макс. плечо (ограничение снайпера)
-    risk_per_trade_percent: float = 2.0    # Back to 2.0% as requested
+    max_daily_loss_usd: float = 200.0       # Increased daily loss buffer
+    max_open_positions: int = 15            # XP Mode: Allow many positions
+    max_leverage: float = 10.0             # Allow higher leverage for small positions
+    risk_per_trade_percent: float = 1.5    # Moderate risk per trade
     
     # Capital Accelerator (Step 1)
     compounding_enabled: bool = True       # Реинвест прибыли
