@@ -85,20 +85,7 @@ class TradingBot:
         self.auto_trade = kwargs.get('auto_trade', False)
         self.use_binance_data = kwargs.get('use_binance_data', False)
         
-        # 1. Engine
-        if self.strategy_name == "trend":
-            self.engine = TrendFollowingStrategy()
-        elif self.strategy_name == "breakout":
-            self.engine = BreakoutStrategy()
-        elif self.strategy_name == "acceleration":
-            self.engine = AccelerationStrategy()
-        elif self.strategy_name == "scalping":
-            self.engine = UltimateTradingEngine(min_confluence=80) 
-        else:
-            # Sniper Mode: Extreme signals only (85%+), R:R 1:4 minimum
-            self.engine = UltimateTradingEngine(min_confluence=85)
-
-        # 2. Client & Analytics (Needed for execution)
+        # 1. Base Setup
         self.analytics_service = AnalyticsService(db)
         self.client = BybitClient(
             category=self.category, 
@@ -109,21 +96,36 @@ class TradingBot:
             proxy=kwargs.get('proxy'),
             use_binance_data=self.use_binance_data
         )
+
+        # Get initial equity for Risk Management
+        equity = 1000.0
+        self.keys_valid = False
+        try:
+            val = self.client.get_total_equity()
+            if val and val > 0:
+                equity = val
+                self.keys_valid = True
+        except: pass
+
+        # 2. Engine Initialization (Now with Equity and News Key)
+        cryptopanic_key = os.getenv('CRYPTOPANIC_KEY')
         
-        # 3. Execution
+        if self.strategy_name == "trend":
+            self.engine = TrendFollowingStrategy()
+        elif self.strategy_name == "breakout":
+            self.engine = BreakoutStrategy()
+        elif self.strategy_name == "acceleration":
+            self.engine = AccelerationStrategy()
+        elif self.strategy_name == "scalping":
+            self.engine = UltimateTradingEngine(cryptopanic_key=cryptopanic_key, total_capital=equity, min_confluence=80) 
+        else:
+            # Sniper Mode: Extreme signals only (85%+), R:R 1:4 minimum
+            self.engine = UltimateTradingEngine(cryptopanic_key=cryptopanic_key, total_capital=equity, min_confluence=85)
+
+        # 3. Execution Manager
         self.execution = None
         if self.client:
             risk_limits = RiskLimits(risk_per_trade_percent=kwargs.get('risk_per_trade', 1.0))
-            
-            # Helper to check keys
-            self.keys_valid = False
-            try:
-                equity = self.client.get_total_equity()
-                if equity > 0:
-                    self.keys_valid = True
-            except Exception as e:
-                logger.debug(f"Initial key check failed: {e}")
-            
             dry_run = not self.auto_trade or self.demo_mode or (not self.keys_valid)
             try:
                 self.execution = ExecutionManager(
@@ -279,6 +281,12 @@ class TradingBot:
         while self.is_active:
             try:
                 start_ts = time.time()
+                
+                # --- SYNC ENGINE RISK WITH EXECUTION ---
+                if self.execution and hasattr(self.engine, 'risk_manager'):
+                    # Pass current PnL to engine so Circuit Breaker can trigger
+                    self.engine.risk_manager.daily_pnl = self.execution.daily_pnl
+
                 await self.run_once()
                 
                 # --- POSITION MAINTENANCE ---

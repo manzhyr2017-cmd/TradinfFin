@@ -142,7 +142,7 @@ class ConfluenceScore:
 # ============================================================
 
 class NewsEngine:
-    """Новостной движок с Sentiment Analysis"""
+    """Новостной движок с Sentiment Analysis и Детектором Критических Событий"""
     def __init__(self, api_key: str, use_finbert: bool = False):
         self.api_key = api_key
         self.base_url = "https://cryptopanic.com/api/v1"
@@ -155,10 +155,22 @@ class NewsEngine:
             try:
                 from transformers import pipeline
                 self.sentiment_model = pipeline("sentiment-analysis", model="ProsusAI/finbert")
-                logger.info("✅ FinBERT loaded successfully")
+                logger.info("✅ NewsEngine: FinBERT loaded successfully")
             except Exception as e:
-                logger.warning(f"⚠️ FinBERT not available: {e}. Using simple sentiment.")
+                logger.warning(f"⚠️ NewsEngine: FinBERT not available: {e}. Using simple sentiment.")
                 self.use_finbert = False
+
+    def _is_critical_event(self, text: str) -> bool:
+        """Детектор критических событий (Hack, Delist, Scam и т.д.)"""
+        text_lower = text.lower()
+        critical_keywords = [
+            'hack', 'hacked', 'exploit', 'vulnerability',
+            'delist', 'delisting', 'suspend', 'halt',
+            'regulation', 'sec', 'lawsuit', 'fraud',
+            'bankruptcy', 'insolvent', 'collapse',
+            'emergency', 'critical', 'urgent', 'alert'
+        ]
+        return any(keyword in text_lower for keyword in critical_keywords)
 
     def get_market_sentiment(self, currency: str) -> Dict[str, Any]:
         """Полный анализ market sentiment через CryptoPanic"""
@@ -177,7 +189,7 @@ class NewsEngine:
             
             for item in news:
                 title = item.get('title', '')
-                if any(k in title.lower() for k in ['hack', 'delist', 'scam', 'halt']):
+                if self._is_critical_event(title):
                     critical_events.append(title)
                 
                 score = self._analyze_text(title)
@@ -187,7 +199,8 @@ class NewsEngine:
             return {
                 'score': float(avg_score),
                 'news_count': len(news),
-                'critical_events': critical_events
+                'critical_events': critical_events,
+                'sentiment_label': "Bullish" if avg_score > 0.2 else ("Bearish" if avg_score < -0.2 else "Neutral")
             }
         except Exception as e:
             logger.error(f"NewsEngine error: {e}")
@@ -204,38 +217,72 @@ class NewsEngine:
         
         # Simple keywords
         text = text.lower()
-        pos = sum(1 for w in ['bull', 'pump', 'surge', 'rally', 'profit', 'up'] if w in text)
-        neg = sum(1 for w in ['bear', 'dump', 'crash', 'fall', 'loss', 'down'] if w in text)
-        return (pos - neg) / (pos + neg + 1)
+        pos_words = ['bull', 'pump', 'surge', 'rally', 'profit', 'up', 'buy', 'growth', 'listing']
+        neg_words = ['bear', 'dump', 'crash', 'fall', 'loss', 'down', 'sell', 'scam', 'drop']
+        
+        pos = sum(1 for w in pos_words if w in text)
+        neg = sum(1 for w in neg_words if w in text)
+        
+        if (pos + neg) == 0: return 0.0
+        return (pos - neg) / (pos + neg)
 
 
 class RiskManager:
-    """Управление рисками и Circuit Breaker"""
-    def __init__(self, total_capital: float = 10000, daily_loss_limit: float = 0.05):
+    """Продвинутое управление рисками и Circuit Breaker (ULTIMA Grade)"""
+    def __init__(self, total_capital: float = 10000, daily_loss_limit: float = 0.05, max_positions: int = 3):
         self.total_capital = total_capital
         self.starting_capital = total_capital
-        self.daily_loss_limit = daily_loss_limit
+        self.daily_loss_limit = daily_loss_limit # 0.05 = 5%
+        self.max_positions = max_positions
+        
         self.daily_pnl = 0.0
+        self.current_positions = 0
         self.last_reset = datetime.now().date()
         self.circuit_breaker_active = False
 
-    def check_circuit_breaker(self) -> bool:
-        if datetime.now().date() > self.last_reset:
+    def reset_daily_stats(self):
+        today = datetime.now().date()
+        if today > self.last_reset:
             self.daily_pnl = 0.0
-            self.last_reset = datetime.now().date()
+            self.last_reset = today
             self.circuit_breaker_active = False
-            
+            logger.info("📊 RiskManager: Daily stats reset")
+
+    def check_circuit_breaker(self) -> bool:
+        self.reset_daily_stats()
+        
         loss_pct = (self.daily_pnl / self.starting_capital)
         if loss_pct <= -self.daily_loss_limit:
-            self.circuit_breaker_active = True
+            if not self.circuit_breaker_active:
+                logger.critical(f"🚨 CIRCUIT BREAKER TRIGGERED! Daily loss: {loss_pct*100:.2f}%")
+                self.circuit_breaker_active = True
             return True
         return False
 
-    def calculate_kelly_size(self, win_rate: float, p_ratio: float) -> float:
-        """Kelly Criterion: f* = (bp - q) / b"""
-        if win_rate <= 0 or p_ratio <= 0: return 0.01
-        kelly = (p_ratio * win_rate - (1 - win_rate)) / p_ratio
-        return max(0.005, min(kelly * 0.25, 0.05)) # Conservative 1/4 Kelly, max 5% risk, min 0.5%
+    def can_open_position(self) -> bool:
+        if self.circuit_breaker_active: return False
+        if self.current_positions >= self.max_positions:
+            return False
+        return True
+
+    def calculate_kelly_size_usd(self, win_rate: float, avg_win: float, avg_loss: float, stop_loss_pct: float) -> float:
+        """
+        Calculates position size in USD using Kelly Criterion (Conservative 1/4 Kelly)
+        """
+        if win_rate <= 0 or avg_win <= 0 or avg_loss <= 0:
+            return self.total_capital * 0.01 / stop_loss_pct if stop_loss_pct > 0 else 0
+            
+        loss_rate = 1 - win_rate
+        # Kelly % = (Win% * AvgWin - Loss% * AvgLoss) / AvgWin
+        kelly_pct = (win_rate * avg_win - loss_rate * avg_loss) / avg_win
+        
+        # Quarter Kelly for safety
+        kelly_pct = max(0, min(kelly_pct * 0.25, 0.05)) # Max 5% risk per trade
+        
+        risk_amount = self.total_capital * kelly_pct
+        position_usd = risk_amount / stop_loss_pct if stop_loss_pct > 0 else 0
+        
+        return float(position_usd)
 
 
 class PerformanceTracker:
@@ -1436,17 +1483,33 @@ class UltimateTradingEngine:
         self.performance_tracker = PerformanceTracker()
         
     def analyze(self, df_15m, df_1h, df_4h, symbol, funding_rate=None, orderbook_imbalance=None) -> Optional[AdvancedSignal]:
-        # 1. Circuit Breaker
+        # 1. Circuit Breaker & Limits
         if self.risk_manager.check_circuit_breaker():
-            logger.warning("🚨 Circuit Breaker ACTIVE - Trading Paused")
+            logger.warning(f"🚨 {symbol}: Circuit Breaker ACTIVE - Trading Paused")
             return None
+        
+        if not self.risk_manager.can_open_position() and hasattr(self.mr_engine, 'demo_mode') and not self.mr_engine.demo_mode:
+            # Skip if max positions reached (in non-demo)
+            pass
+
+        # 2. News Sentiment Filter (ULTIMA Phase)
+        if self.news_engine.api_key:
+            currency = symbol.replace("USDT", "").replace("USDC", "")[:3]
+            news = self.news_engine.get_market_sentiment(currency)
             
-        # 2. Market Regime & Strategy Routing
+            if news.get('critical_events'):
+                logger.warning(f"🛑 {symbol}: Critical news detected! {news['critical_events'][0]}")
+                return None
+                
+            if news.get('score', 0) < -0.5:
+                logger.info(f"⚠️ {symbol}: Extreme negative sentiment ({news['score']:.2f}). Skipping.")
+                return None
+
+        # 3. Market Regime & Strategy Routing
         ind = TechnicalIndicators()
         adx, _, _ = ind.adx(df_4h['high'], df_4h['low'], df_4h['close'])
         current_adx = adx.iloc[-1]
         
-        # 3. Strategy Selection
         if current_adx > 30:
             # TRENDING: Use Momentum
             signal = self._analyze_momentum(df_15m, symbol)
@@ -1456,29 +1519,31 @@ class UltimateTradingEngine:
             
         if not signal: return None
         
-        # 4. News Sentiment Filter (Extra Confluence)
+        # 4. Integrate News Bonus
         if self.news_engine.api_key:
-            sentiment = self.news_engine.get_market_sentiment(symbol[:3])
-            if sentiment['critical_events']:
-                logger.warning(f"⚠️ {symbol}: Critical news events detected: {sentiment['critical_events']}")
-                return None
-            if sentiment['score'] < -0.4:
-                logger.info(f"⚠️ {symbol}: Very bearish news sentiment ({sentiment['score']:.2f})")
-                return None
-                
-            # Add News Bonus to Confluence
-            if sentiment['score'] > 0.3 and signal.signal_type == SignalType.LONG:
-                signal.confluence.add_factor("News Alpha", 15, 15)
-                signal.reasoning.append(f"📰 Positive News Alpha (+15) score={sentiment['score']:.2f}")
-            elif sentiment['score'] < -0.3 and signal.signal_type == SignalType.SHORT:
-                signal.confluence.add_factor("News Alpha", 15, 15)
-                signal.reasoning.append(f"📰 Negative News Alpha (+15) score={sentiment['score']:.2f}")
-                
-        # 5. Kelly position sizing (based on performance history)
+            news_score = news.get('score', 0)
+            if signal.signal_type == SignalType.LONG and news_score > 0.2:
+                signal.confluence.add_factor("News Sentiment", 15, 15)
+                signal.reasoning.append(f"📰 Positive News (+15) score={news_score:.2f}")
+            elif signal.signal_type == SignalType.SHORT and news_score < -0.2:
+                signal.confluence.add_factor("News Sentiment", 15, 15)
+                signal.reasoning.append(f"📰 Negative News (+15) score={news_score:.2f}")
+
+        # 5. Kelly position sizing
         stats = self.performance_tracker.get_stats()
-        p_ratio = stats['avg_win'] / stats['avg_loss'] if stats['avg_loss'] > 0 else 2.0
-        kelly_risk = self.risk_manager.calculate_kelly_size(stats['win_rate'], p_ratio)
-        signal.position_size_percent = kelly_risk * 100
+        
+        if stats.get('total_trades', 0) >= 10:
+            # Dynamic Kelly risk % based on performance
+            win_rate = stats['win_rate']
+            p_ratio = stats['avg_win'] / stats['avg_loss'] if stats['avg_loss'] > 0 else 2.0
+            
+            # Conservative Kelly %
+            loss_rate = 1 - win_rate
+            k_pct = (win_rate * p_ratio - loss_rate) / p_ratio
+            k_pct = max(0.01, min(k_pct * 0.25, 0.03)) # Max 3% risk per trade
+            
+            signal.position_size_percent = k_pct * 100
+            signal.reasoning.append(f"💰 Kelly Size: {signal.position_size_percent:.1f}% risk")
         
         return signal
 
