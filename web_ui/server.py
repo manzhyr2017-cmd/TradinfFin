@@ -835,7 +835,7 @@ async def start_bot():
     except:
         pass
         
-    cmd = [sys.executable, "main_bybit.py", "scan", "--continuous"]
+    cmd = [sys.executable, "main_bybit.py", "scan", "--continuous", "--no-telegram-bot"]
     
     if config.symbols:
         cmd.extend(["--symbols"] + config.symbols)

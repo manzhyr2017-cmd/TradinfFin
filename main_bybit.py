@@ -128,19 +128,24 @@ class TradingBot:
         # 4. Telegram (Notifier for sending + Bot for receiving/AI chat)
         self.telegram = None
         self.telegram_bot = None  # For receiving messages and AI chat
+        self.polling_enabled = not kwargs.get('disable_telegram_polling', False)
+        
         if TELEGRAM_AVAILABLE and kwargs.get('telegram_token') and kwargs.get('telegram_channel'):
             self.telegram = TelegramNotifier(kwargs.get('telegram_token'), kwargs.get('telegram_channel'))
             
             # Create TradingTelegramBot for interactive features (polling)
-            try:
-                config = TelegramConfig(
-                    bot_token=kwargs.get('telegram_token'),
-                    channel_gold=kwargs.get('telegram_channel')
-                )
-                self.telegram_bot = TradingTelegramBot(config, controller=None)  # Controller set later
-                logger.info("📱 Telegram Bot (Interactive) configured")
-            except Exception as e:
-                logger.error(f"Failed to create TradingTelegramBot: {e}")
+            if self.polling_enabled:
+                try:
+                    config = TelegramConfig(
+                        bot_token=kwargs.get('telegram_token'),
+                        channel_gold=kwargs.get('telegram_channel')
+                    )
+                    self.telegram_bot = TradingTelegramBot(config, controller=None)  # Controller set later
+                    logger.info("📱 Telegram Bot (Interactive) configured")
+                except Exception as e:
+                    logger.error(f"Failed to create TradingTelegramBot: {e}")
+            else:
+                logger.info("📱 Telegram Polling DISABLED (Main Controller active)")
             
         # 5. State & Stats
         self.signals_history: List[AdvancedSignal] = []
@@ -372,7 +377,8 @@ def cmd_scan(args):
         use_binance_data=args.use_binance,
         strategy=args.strategy or file_config.get('strategy', 'mean_reversion'),
         api_key=api_key,
-        api_secret=api_secret
+        api_secret=api_secret,
+        disable_telegram_polling=args.no_telegram_bot
     )
     
     try:
@@ -457,6 +463,7 @@ def main():
     scan_parser.add_argument('--auto-trade', action='store_true')
     scan_parser.add_argument('--risk', type=float, default=1.0)
     scan_parser.add_argument('--use-binance', action='store_true')
+    scan_parser.add_argument('--no-telegram-bot', action='store_true', help='Disable interactive Telegram bot polling')
     
     bt_parser = subparsers.add_parser('backtest', help='Бэктестинг')
     bt_parser.add_argument('--data-file', '-f')
