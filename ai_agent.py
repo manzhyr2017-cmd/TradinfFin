@@ -678,6 +678,12 @@ SYSTEM GUARDIANS & PORTFOLIO STATE:
         5. **MOMENTUM acceleration** → use "Acceleration Trader"
         6. **SCALPING opportunity** (Quick 1m move, RSI divergence on 1m, or FVG fill) → use "Neuro-Scalper (1m Micro)"
         
+        ### CRITICAL RULE (HISTORY BIAS):
+        - **CHECK LEARNED EXPERIENCE ABOVE!** 
+        - If the "Learned Experience" says this symbol has been PERFORMING BADLY (losses, fakeouts), you **MUST** be extra skeptical.
+        - **DEDUCT 15-20% CONFIDENCE** automatically if previous trades on this coin were losses, unless the setup is PERFECT.
+        - If Learning says "Avoid ETH", then DO NOT trade ETH.
+        
         ### SPECIAL GUARDIAN RULES:
         - **DIVERGENCE**: If ETH/BTC divergence is strongly negative (< -2%), Alts are likely losing liquidity to BTC. Avoid Longs on Alts.
         - **NEWS DANGER**: If News Shield reports a specific coin/event danger, BE EXTREMELY CAUTIOUS.
@@ -908,52 +914,62 @@ SYSTEM GUARDIANS & PORTFOLIO STATE:
 
     async def perform_self_correction(self):
         """
-        AI SELF-LEARNING (Step 4): Анализирует историю сделок и делает выводы.
+        AI SELF-LEARNING (Detailed): Анализирует историю сделок по инструментам.
         """
-        logger.info("🧠 AI Self-Correction: Analyzing past performance...")
+        logger.info("🧠 AI Self-Correction: Deep analyzer for past performance...")
         
         try:
-            # 1. Получаем последние 20 закрытых сделок
-            all_trades = database.get_trades(limit=50)
+            # 1. Получаем историю
+            all_trades = database.get_trades(limit=100)
             closed_trades = [t for t in all_trades if t['status'] == 'CLOSED']
             
-            if len(closed_trades) < 3:
-                logger.info("  Insufficient history for analysis.")
+            if not closed_trades:
+                logger.info("  No closed trades for analysis yet.")
                 return
 
-            # 2. Формируем отчет для AI
-            trades_summary = []
-            for t in closed_trades[:15]:
-                res = "WIN ✅" if t['pnl'] > 0 else "LOSS ❌"
-                trades_summary.append(f"- {t['symbol']} ({t['side']}): PnL: ${t['pnl']:.2f} | Result: {res}")
+            # 2. Группируем по символам
+            symbol_stats = {}
+            for t in closed_trades:
+                s = t['symbol']
+                pnl = t['pnl']
+                if s not in symbol_stats: symbol_stats[s] = {'pnl': 0, 'wins': 0, 'losses': 0}
+                symbol_stats[s]['pnl'] += pnl
+                if pnl > 0: symbol_stats[s]['wins'] += 1
+                else: symbol_stats[s]['losses'] += 1
             
-            summary_str = "\n".join(trades_summary)
+            # 3. Формируем подробный отчет
+            perf_str = "\n".join([
+                f"- {s}: PnL=${st['pnl']:.2f} ({st['wins']}W / {st['losses']}L)"
+                for s, st in symbol_stats.items()
+            ])
             
-            # 3. Запрос к AI на анализ
+            recent_trades_json = json.dumps(closed_trades[:15], indent=2)
+            
             prompt = f"""
-            АНАЛИЗ ЭФФЕКТИВНОСТИ ТОРГОВЛИ:
-            Ниже приведены последние сделки бота:
-            {summary_str}
+            ### SUMMARY OF RECENT PERFORMANCE BY SYMBOL:
+            {perf_str}
+            
+            ### DETAILED RECENT TRADES:
+            {recent_trades_json}
             
             ЗАДАЧА:
-            1. Проанализируй эти результаты. Есть ли повторяющиеся ошибки? (Напр. много стопов на альтах, или ложные пробои).
-            2. Дай краткую стратегическую установку (LEARNINGS) для будущих сделок.
-            3. Если всё хорошо, закрепи успех.
+            1. Проанализируй, какие символы (монеты) приносят УБЫТОК. (Напр. если ETH постоянно в минусе, почему?).
+            2. Выяви закономерности: ложные пробои, слишком близкие стопы, работа против тренда.
+            3. Напиши КРАТКУЮ инструкцию (3-4 пункта) на РУССКОМ для себя будущего.
             
-            ОТВЕТЬ НА РУССКОМ. Будь лаконичен. Этот текст будет добавлен в твой будущий контекст.
+            Пример вывода: "С ETH будь осторожен, много ложных пробоев. На BTC стратегия EMA работает отлично, продолжай."
             """
             
             messages = [
-                {"role": "system", "content": "You are a Chief Risk Officer. Analyze performance and give strategic corrections."},
+                {"role": "system", "content": "You are a Chief Performance Analyst. Be clinical and critical."},
                 {"role": "user", "content": prompt}
             ]
             
-            # Use current LLM
             correction = self._call_llm(messages)
             
             if correction:
                 self.learned_context = correction
-                logger.info(f"💾 Learning applied: {correction[:100]}...")
+                logger.info(f"✅ AI Self-Learning Update: {correction}")
             
         except Exception as e:
             logger.error(f"Self-Correction failed: {e}")

@@ -1503,3 +1503,20 @@ INFO:Dashboard:\u26a1 AI Agent requested execution for LTCUSDT Sell
 WARNING:ai_agent:\u274c AI AUTO-TRADE REJECTED: LTCUSDT - Auto-trade not enabled in Web Controller yet
 INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
 INFO:ai_agent:\u2705 Sentinel Cycle Complete. Sleeping for 15m
+INFO:bybit_client:\U0001f50d DEBUG POSITIONS RAW (ALL): {"nextPageCursor": "ZECUSDT%2C1770368627479%2C0", "category": "linear", "list": [{"symbol": "ZECUSDT", "leverage": "3", "breakEvenPrice": "214.28846271", "autoAddMargin": 0, "avgPrice": "214.58", "liqPrice": "744.84902865", "riskLimitValue": "100000", "takeProfit": "176.56", "positionValue": "47.2076", "isReduceOnly": false, "positionIMByMp": "15.71741045", "tpslMode": "Full", "riskId": 1211, "trailingStop": "0", "liqPriceByMp": "", "unrealisedPnl": "0.2442", "markPrice": "213.47", "adlRankIndicator": 2, "cumRealisedPnl": "-0.01699474", "positionMM": "1.00221178", "createdTime": "1770357770084", "positionIdx": 0, "positionIM": "15.71741045", "positionMMByMp": "1.00221178", "seq": 307316723830, "updatedTime": "1770368627479", "side": "Sell", "bustPrice": "", "positionBalance": "0", "leverageSysUpdatedTime": "", "curRealisedPnl": "-0.01699474", "size": "0.22", "positionStatus": "Normal", "mmrSysUpdatedTime": "", "stopLoss": "230", "tradeMode": 0, "sessionAvgPrice": ""}]}
+INFO:ai_agent:\U0001f575\ufe0f Smart Exit: Checking 1 active positions...
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing ZECUSDT...
+INFO:ai_agent:\U0001f4b2 Real-time Price for ZECUSDT: 213.44
+INFO:ai_agent:\U0001f4ca MTF RSI: 1m=34.2, 15m=42.1, 1H=52.4, 4H=15.1
+INFO:ai_agent:\U0001f50e Searching Brave: ZECUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:\u26a0\ufe0f AI generated weak RR (1.04) for strategy Mean Reversion (RSI). Adjusting TP to 1:3.0.
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 80, 'reasoning': 'На данный момент мы наблюдаем сильную поддержку на уровне 213.44, и все индикаторы RSI на разных таймфреймах (1м, 15м, 1ч, 4ч) находятся ниже 50, что указывает на потенциал для роста. Кроме того, последние новости и анализ TradingView указывают на возможное продолжение тренда. \U0001f4c8\U0001f4b0 [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 213.44, 'take_profit': 222.26, 'stop_loss': 210.5, 'signal_title': 'Отскок от поддержки', 'strategy_name': 'Mean Reversion (RSI)'}
+INFO:ai_agent:\U0001f6a8 SMART EXIT TRIGGERED: Closing Sell ZECUSDT. Reason: Loss Protection: Momentum shift (BUY) and P&L Bleeding (0.00%)
+INFO:bybit_client:Отправка ордера: Buy 0.22 ZECUSDT @ Market
+INFO:ai_agent:\u2705 Position Closed: {'orderId': '44d54cc3-697e-423f-a8e2-2750c992a32e', 'orderLinkId': ''}
+ERROR:Dashboard:Failed to send AI message: Timed out
+INFO:ai_agent:\U0001f4ca Sentinel selected top 5 MOVE-MAKERS (from top 20 volume): ['AAVEUSDT', 'SOLUSDT', 'ZECUSDT', 'SUIUSDT', 'LTCUSDT']
+INFO:ai_agent:\U0001f9e0 AI Sentinel Cycle: AAVEUSDT
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing AAVEUSDT...
+INFO:ai_agent:\U0001f4b2 Real-time Price for AAVEUSDT: 102.04

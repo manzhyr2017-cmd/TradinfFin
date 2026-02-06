@@ -998,6 +998,32 @@ async def switch_llm_provider(provider: str):
 async def reset_llm_providers():
     """Reset all exhausted LLM providers - try again"""
     global ai_agent
+    if ai_agent:
+        ai_agent.rate_limit_exhausted.clear()
+        ai_agent.current_llm_index = 0
+        return {"status": "ok", "message": "LLM providers reset"}
+    return {"status": "error", "message": "Agent not active"}
+
+@app.post("/api/ai/learn")
+async def force_ai_learning():
+    """Force the AI to analyze past trades and update its strategy immediately"""
+    global ai_agent
+    if not ai_agent:
+        return {"status": "error", "message": "AI Agent not initialized"}
+    
+    try:
+        # Run the self-correction logic (async mode)
+        # Note: perform_self_correction updates self.learned_context internally
+        await ai_agent.perform_self_correction()
+        
+        return {
+            "status": "ok", 
+            "message": "AI self-learning completed", 
+            "new_context": ai_agent.learned_context
+        }
+    except Exception as e:
+        logger.error(f"Force learning failed: {e}")
+        return {"status": "error", "message": str(e)}
     if not ai_agent or not hasattr(ai_agent, 'reset_llm_exhausted'):
         return {"status": "error", "message": "AI Agent not initialized"}
     
