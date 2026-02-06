@@ -181,6 +181,15 @@ class NewsEngine:
             url = f"{self.base_url}/posts/"
             params = {'auth_token': self.api_key, 'currencies': currency, 'kind': 'news', 'filter': 'hot'}
             response = requests.get(url, params=params, timeout=10)
+            
+            if response.status_code != 200:
+                logger.warning(f"⚠️ NewsEngine: CryptoPanic returned status {response.status_code}")
+                return {'score': 0.0, 'news_count': 0, 'critical_events': []}
+
+            if not response.text or response.text.strip() == "":
+                logger.warning("⚠️ NewsEngine: CryptoPanic returned empty response")
+                return {'score': 0.0, 'news_count': 0, 'critical_events': []}
+
             data = response.json()
             news = data.get('results', [])[:15]
             

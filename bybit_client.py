@@ -634,19 +634,24 @@ class BybitClient:
             
             positions = []
             if data and data.get('list'):
+                def safe_float(val, default=0.0):
+                    if val is None or val == "": return default
+                    try: return float(val)
+                    except: return default
+
                 for item in data.get('list', []):
-                    size = float(item.get('size', 0))
-                    if size != 0: # На UTA размер может быть отрицательным в некоторых режимах
+                    size = safe_float(item.get('size'))
+                    if size != 0: 
                         positions.append({
                             'symbol': item['symbol'],
                             'side': item['side'],
                             'size': abs(size),
-                            'entry_price': float(item.get('avgPrice', 0)),
-                            'mark_price': float(item.get('markPrice', 0)),
-                            'unrealised_pnl': float(item.get('unrealisedPnl', 0)),
-                            'leverage': float(item.get('leverage', 1)),
-                            'stop_loss': float(item.get('stopLoss', 0)),
-                            'take_profit': float(item.get('takeProfit', 0)),
+                            'entry_price': safe_float(item.get('avgPrice')),
+                            'mark_price': safe_float(item.get('markPrice')),
+                            'unrealised_pnl': safe_float(item.get('unrealisedPnl')),
+                            'leverage': safe_float(item.get('leverage', 1)),
+                            'stop_loss': safe_float(item.get('stopLoss')),
+                            'take_profit': safe_float(item.get('takeProfit')),
                             'position_idx': int(item.get('positionIdx', 0)),
                             'created_time': int(item.get('createdTime', 0))
                         })
