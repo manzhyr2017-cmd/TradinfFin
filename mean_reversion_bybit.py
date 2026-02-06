@@ -178,8 +178,8 @@ class NewsEngine:
             return {'score': 0.0, 'news_count': 0, 'critical_events': []}
             
         try:
-            url = f"{self.base_url}/posts/"
-            # Remove trailing slash and use more standard params
+            # Removed trailing slash to avoid 404 errors on some API endpoints
+            url = f"{self.base_url}/posts"
             params = {'auth_token': self.api_key, 'currencies': currency}
             response = requests.get(url, params=params, timeout=10)
             
