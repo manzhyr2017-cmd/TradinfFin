@@ -25,8 +25,8 @@ logger = logging.getLogger(__name__)
 @dataclass
 class RiskLimits:
     """Ограничения рисков"""
-    max_daily_loss_usd: float = 50.0       # Макс. дневной убыток
-    max_open_positions: int = 3            # Макс. кол-во открытых позиций
+    max_daily_loss_usd: float = 100.0       # Макс. дневной убыток
+    max_open_positions: int = 10            # Макс. кол-во открытых позиций
     max_leverage: float = 5.0              # Макс. плечо
     risk_per_trade_percent: float = 4.0    # Sniper Mode: 4% risk per trade
     
@@ -209,9 +209,10 @@ class ExecutionManager:
                     logger.warning(f"❌ КОНФЛИКТ КОРРЕЛЯЦИИ: {pos['symbol']} в {pos_side}, а {symbol} хочет в {new_side}. Пропуск.")
                     return False
                 
-                # ПРАВИЛО КОНЦЕНТРАЦИИ: Не более 1 позиции на группу (для безопасности)
-                if pos_side == new_side:
-                    logger.warning(f"⚠️ РИСК КОНЦЕНТРАЦИИ: {pos['symbol']} уже в {pos_side}. Пропуск {symbol} для диверсификации.")
+                # ПРАВИЛО КОНЦЕНТРАЦИИ: Не более 3 позиций на группу (повышено для лучшей доходности)
+                group_count = sum(1 for p in open_positions if p['symbol'].replace('USDT', '').replace('USDC', '') in my_group)
+                if group_count >= 3:
+                    logger.warning(f"⚠️ РИСК КОНЦЕНТРАЦИИ: В группе уже {group_count} позиций. Пропуск {symbol}.")
                     return False
         
         return True
@@ -456,9 +457,10 @@ class ExecutionManager:
             if vol_risk != base_risk:
                 logger.info(f"🛡️ Volatility sizing: ATR={atr_pct*100:.2f}%. Risk adjusted {base_risk}% -> {vol_risk:.1f}%")
 
-            # --- WHALE WATCHER (Phase 9) ---
-            if not self._check_liquidity_barriers(signal.symbol, side, signal.entry_price, signal.take_profit_1):
-                return False, "Whale wall found blocking TP"
+            # --- WHALE WATCHER (Phase 9) --- (Disabled for better trade frequency)
+            # if not self._check_liquidity_barriers(signal.symbol, side, signal.entry_price, signal.take_profit_1):
+            #     return False, "Whale wall found blocking TP"
+            pass
 
             # --- VIP SIGNAL BOOST (5% for top Selector coins) ---
             if hasattr(signal, 'is_vip') and signal.is_vip:
