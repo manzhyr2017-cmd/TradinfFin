@@ -93,26 +93,8 @@ class TradingBot:
             # Sniper Mode: Extreme signals only (85%+), R:R 1:4 minimum
             self.engine = AdvancedMeanReversionEngine(min_confluence=85, min_rr=4.0)
 
-    def switch_strategy(self, new_strategy: str):
-        """Dynamically switches the trading engine"""
-        if self.strategy_name == new_strategy:
-            return
-            
-        logger.info(f"🔄 Switching strategy from {self.strategy_name} to {new_strategy}")
-        self.strategy_name = new_strategy
-        
-        if new_strategy == "trend":
-            self.engine = TrendFollowingStrategy()
-        elif new_strategy == "breakout":
-            self.engine = BreakoutStrategy()
-        elif new_strategy == "acceleration":
-            self.engine = AccelerationStrategy()
-        elif new_strategy == "scalping":
-            self.engine = AdvancedMeanReversionEngine(min_confluence=80, min_rr=1.5)
-        else:
-            self.engine = AdvancedMeanReversionEngine(min_confluence=85, min_rr=4.0)
-            
-        # 2. Client & Scanner
+        # 2. Client & Analytics (Needed for execution)
+        self.analytics_service = AnalyticsService(db)
         self.client = BybitClient(
             category=self.category, 
             testnet=kwargs.get('testnet', False), 
@@ -121,13 +103,6 @@ class TradingBot:
             api_secret=kwargs.get('api_secret') or os.getenv('BYBIT_API_SECRET'),
             proxy=kwargs.get('proxy'),
             use_binance_data=self.use_binance_data
-        )
-        
-        self.scanner = BybitScanner(
-            client=self.client,
-            symbols=kwargs.get('symbols'),
-            min_volume_24h=kwargs.get('min_volume_24h', 5_000_000),
-            max_symbols=kwargs.get('max_symbols') or 100 # Force 100 symbols if not set
         )
         
         # 3. Execution
@@ -155,6 +130,13 @@ class TradingBot:
             except Exception as e:
                 logger.error(f"Execution Manager init failed: {e}")
                 self.execution = None
+
+        self.scanner = BybitScanner(
+            client=self.client,
+            symbols=kwargs.get('symbols'),
+            min_volume_24h=kwargs.get('min_volume_24h', 5_000_000),
+            max_symbols=kwargs.get('max_symbols') or 100 # Force 100 symbols if not set
+        )
             
         # 4. Telegram (Notifier for sending + Bot for receiving/AI chat)
         self.telegram = None
@@ -186,7 +168,8 @@ class TradingBot:
         }
         self.is_active = True
         self.last_state = {}
-        # 3. Services
+        
+        # 6. Services
         self.controller = BotController(self)
         self.scanner_service = ScannerService(self)
         self.sentiment_service = None 
@@ -194,12 +177,30 @@ class TradingBot:
         self.news_service = None
         self.hedge_service = None
         self.whale_service = None
-        self.analytics_service = AnalyticsService(db)
         self.ml_service = MLService()
         self.strategy_router = StrategyRouterService(self)
         
         # Save initial state immediately
         self.save_state_to_file()
+
+    def switch_strategy(self, new_strategy: str):
+        """Dynamically switches the trading engine"""
+        if self.strategy_name == new_strategy:
+            return
+            
+        logger.info(f"🔄 Switching strategy from {self.strategy_name} to {new_strategy}")
+        self.strategy_name = new_strategy
+        
+        if new_strategy == "trend":
+            self.engine = TrendFollowingStrategy()
+        elif new_strategy == "breakout":
+            self.engine = BreakoutStrategy()
+        elif new_strategy == "acceleration":
+            self.engine = AccelerationStrategy()
+        elif new_strategy == "scalping":
+            self.engine = AdvancedMeanReversionEngine(min_confluence=80, min_rr=1.5)
+        else:
+            self.engine = AdvancedMeanReversionEngine(min_confluence=85, min_rr=4.0)
 
 
     async def run_continuous_async(self, interval_seconds: int = 60):
