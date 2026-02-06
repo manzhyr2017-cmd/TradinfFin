@@ -179,7 +179,8 @@ class NewsEngine:
             
         try:
             url = f"{self.base_url}/posts/"
-            params = {'auth_token': self.api_key, 'currencies': currency, 'kind': 'news', 'filter': 'hot'}
+            # Remove trailing slash and use more standard params
+            params = {'auth_token': self.api_key, 'currencies': currency}
             response = requests.get(url, params=params, timeout=10)
             
             if response.status_code != 200:
