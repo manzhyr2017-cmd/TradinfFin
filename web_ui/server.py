@@ -62,6 +62,7 @@ async def lifespan(app: FastAPI):
     init_db()
     
     tg_bot = None  # Define early to avoid UnboundLocalError
+    bot_process = None
     config = load_config()
     if config.telegram_token:
         try:
@@ -320,8 +321,6 @@ async def lifespan(app: FastAPI):
             logger.error(f"AI/Telegram Startup failed: {e}")
             import traceback
             logger.error(traceback.format_exc())
-    except Exception as e:
-        logger.error(f"AI Agent failed: {e}")
 
     yield
     # Shutdown logic
