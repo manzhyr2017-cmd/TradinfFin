@@ -80,7 +80,7 @@ class BotController:
         # We try to use the richer Telegram bot if available
         if hasattr(self.bot, 'telegram_bot') and self.bot.telegram_bot:
             try:
-                from mean_reversion_bybit import AdvancedSignal, SignalType
+                from mean_reversion_bybit import AdvancedSignal, SignalType, SignalStrength, MarketRegime
                 
                 # Mock a Signal object from AI data for the formatter
                 sig_type = SignalType.LONG if data.get('action') == "BUY" else SignalType.SHORT
@@ -95,15 +95,32 @@ class BotController:
                 signal = AdvancedSignal(
                     symbol=data.get('symbol'),
                     signal_type=sig_type,
-                    probability=data.get('confidence', 70),
                     entry_price=safe_float(data.get('entry')),
                     stop_loss=safe_float(data.get('sl')),
                     take_profit_1=safe_float(data.get('tp')),
                     take_profit_2=safe_float(data.get('tp')) * 1.05,
-                    reasoning=[data.get('reason', '')],
+                    confluence=type('obj', (object,), {
+                        'total_score': data.get('confidence', 70),
+                        'max_possible': 100,
+                        'percentage': data.get('confidence', 70),
+                        'get_strength': lambda: SignalStrength.STRONG,
+                        'get_breakdown': lambda: "AI Analysis Confluence"
+                    })(),
+                    probability=data.get('confidence', 70),
+                    strength=SignalStrength.STRONG,
+                    timeframes_aligned={'1m': True, '15m': True, '1h': True},
+                    support_resistance_nearby=None,
+                    market_regime=MarketRegime.RANGING_WIDE,
+                    risk_reward_ratio=2.0,
+                    position_size_percent=1.0,
+                    funding_rate=None,
+                    funding_interpretation=None,
+                    orderbook_imbalance=None,
+                    timestamp=datetime.now(),
+                    valid_until=datetime.now() + timedelta(hours=4),
                     indicators={},
-                    confluence=type('obj', (object,), {'percentage': data.get('confidence', 0)})(),
-                    strength=None
+                    reasoning=[data.get('reason', '')],
+                    warnings=[]
                 )
                 
                 # If entry was market, get real price for display
@@ -174,16 +191,22 @@ class BotController:
             signal = AdvancedSignal(
                 symbol=symbol,
                 signal_type=sig_type,
-                probability=data.get('confidence', 90),
                 entry_price=float(entry),
                 stop_loss=float(data.get('stop_loss')),
                 take_profit_1=float(data.get('take_profit')),
                 take_profit_2=float(data.get('take_profit')) * 1.02,
-                confluence=None,
-                strength=None,
-                timeframes_aligned={},
+                confluence=type('obj', (object,), {
+                    'total_score': data.get('confidence', 90),
+                    'max_possible': 100,
+                    'percentage': data.get('confidence', 90),
+                    'get_strength': lambda: SignalStrength.STRONG,
+                    'get_breakdown': lambda: "AI Trade Execution"
+                })(),
+                probability=data.get('confidence', 90),
+                strength=SignalStrength.STRONG,
+                timeframes_aligned={'15m': True},
                 support_resistance_nearby=None,
-                market_regime=None,
+                market_regime=MarketRegime.RANGING_WIDE,
                 risk_reward_ratio=2.0,
                 position_size_percent=1.0,
                 funding_rate=None,
@@ -192,7 +215,7 @@ class BotController:
                 timestamp=datetime.now(),
                 valid_until=datetime.now() + timedelta(hours=4),
                 indicators={},
-                reasoning=data.get('reasoning', 'AI Trade'),
+                reasoning=[data.get('reasoning', 'AI Trade')],
                 warnings=[],
                 time_exit_bars=data.get('time_exit_bars', 24)
             )
@@ -217,7 +240,7 @@ class BotController:
         if not self.bot.execution:
             raise ValueError("Execution Manager не подключен")
             
-        from mean_reversion_bybit import AdvancedSignal, SignalType
+        from mean_reversion_bybit import AdvancedSignal, SignalType, SignalStrength, MarketRegime
         
         # Get current price
         ticker = self.bot.client._request(f"/v5/market/tickers?category=linear&symbol={symbol}")
@@ -234,14 +257,32 @@ class BotController:
         signal = AdvancedSignal(
             symbol=symbol,
             signal_type=sig_type,
-            probability=95, # Manual override
             entry_price=price,
             stop_loss=price * sl_mult,
             take_profit_1=price * tp_mult,
             take_profit_2=price * tp_mult * (1.02 if sig_type == SignalType.LONG else 0.98),
-            reasoning=["Ручной вход через Telegram"],
+            confluence=type('obj', (object,), {
+                'total_score': 95,
+                'max_possible': 100,
+                'percentage': 95,
+                'get_strength': lambda: SignalStrength.STRONG,
+                'get_breakdown': lambda: "Manual Telegram Entry"
+            })(),
+            probability=95,
+            strength=SignalStrength.STRONG,
+            timeframes_aligned={'Manual': True},
+            support_resistance_nearby=None,
+            market_regime=MarketRegime.RANGING_WIDE if 'MarketRegime' in locals() else type('obj', (object,), {'name': 'MANUAL'})(),
+            risk_reward_ratio=2.0,
+            position_size_percent=1.0,
+            funding_rate=None,
+            funding_interpretation=None,
+            orderbook_imbalance=None,
             timestamp=datetime.now(),
-            valid_until=datetime.now() + timedelta(hours=1)
+            valid_until=datetime.now() + timedelta(hours=1),
+            indicators={},
+            reasoning=["Ручной вход через Telegram"],
+            warnings=[]
         )
         
         loop = asyncio.get_running_loop()

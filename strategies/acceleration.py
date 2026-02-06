@@ -128,26 +128,24 @@ class AccelerationStrategy:
         return AdvancedSignal(
             symbol=symbol,
             signal_type=signal_type,
-            probability=85,
             entry_price=entry_price,
             stop_loss=stop_loss,
             take_profit_1=take_profit,
             take_profit_2=take_profit * 1.01,
             confluence=confluence,
+            probability=85,
             strength=SignalStrength.STRONG,
             timeframes_aligned={},
             support_resistance_nearby=None,
             market_regime=MarketRegime.STRONG_TREND_UP if signal_type == SignalType.LONG else MarketRegime.STRONG_TREND_DOWN,
             risk_reward_ratio=2.0,
             position_size_percent=5.0, # Aggressive sizing for acceleration
-            is_vip=True, # Accelerator Step: Boost to VIP risk
             funding_rate=0,
             funding_interpretation="Neutral",
             orderbook_imbalance=0,
             timestamp=ts,
             valid_until=valid_until_val,
             indicators={'rsi': curr['rsi'], 'ema200': curr['ema200']},
-            reasoning=", ".join(reasoning),
-            warnings=["High Risk Strategy"],
-            time_exit_bars=12 # Exit after 1 hour (5m bars)
+            reasoning=reasoning, # Now it's a list
+            warnings=["High Risk Strategy"]
         )

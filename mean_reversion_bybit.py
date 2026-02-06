@@ -113,28 +113,28 @@ class AdvancedSignal:
     take_profit_1: float
     take_profit_2: float
     
-    confluence: ConfluenceScore
-    probability: int
-    strength: SignalStrength
+    confluence: ConfluenceScore = field(default_factory=lambda: ConfluenceScore())
+    probability: int = 50
+    strength: SignalStrength = SignalStrength.MODERATE
     
-    timeframes_aligned: Dict[str, bool]
-    support_resistance_nearby: Optional[SupportResistanceLevel]
-    market_regime: MarketRegime
+    timeframes_aligned: Dict[str, bool] = field(default_factory=dict)
+    support_resistance_nearby: Optional[SupportResistanceLevel] = None
+    market_regime: MarketRegime = MarketRegime.NEUTRAL
     
-    risk_reward_ratio: float
-    position_size_percent: float
+    risk_reward_ratio: float = 2.0
+    position_size_percent: float = 1.0
     
     # Bybit специфичные данные
-    funding_rate: Optional[float]
-    funding_interpretation: Optional[str]
-    orderbook_imbalance: Optional[float]
+    funding_rate: Optional[float] = 0.0
+    funding_interpretation: Optional[str] = "Neutral"
+    orderbook_imbalance: Optional[float] = 0.0
     
-    timestamp: datetime
-    valid_until: datetime
+    timestamp: datetime = field(default_factory=lambda: datetime.now())
+    valid_until: datetime = field(default_factory=lambda: datetime.now() + timedelta(hours=4))
     
-    indicators: Dict[str, Any]
-    reasoning: List[str]
-    warnings: List[str]
+    indicators: Dict[str, Any] = field(default_factory=dict)
+    reasoning: List[str] = field(default_factory=list)
+    warnings: List[str] = field(default_factory=list)
     
     # Тюнинг стратегии (Фаза 5)
     time_exit_bars: int = 24  # Максимальное удержание (например, 24 свечи по 15м = 6 часов)
