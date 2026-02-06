@@ -323,13 +323,8 @@ class TradingTelegramBot:
         self.app = Application.builder().token(self.config.bot_token).build()
         self.setup_handlers(self.app)
         
-        # Initialize AI Agent
-        try:
-            from ai_agent import TradingAgent
-            self.ai_agent = TradingAgent(bot_controller=self.controller)
-        except Exception as e:
-            logger.error(f"Failed to load AI Agent: {e}")
-            self.ai_agent = None
+        # AI Agent (Assigned later by TradingBot)
+        self.ai_agent = None
         
     async def start(self):
         """Запуск бота (async)"""

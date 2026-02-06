@@ -219,7 +219,6 @@ class TradingBot:
                 self.sentiment_service = SentimentService(self.ai_agent)
                 self.selector_service = SelectorService(self.ai_agent, self.client)
                 self.news_service = NewsService(self.ai_agent)
-                self.news_service = NewsService(self.ai_agent)
                 self.whale_service = WhaleAlertService(self.client, telegram=self.telegram)
                 
                 # Start Background Loops
