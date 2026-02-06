@@ -61,6 +61,7 @@ async def lifespan(app: FastAPI):
     
     init_db()
     
+    tg_bot = None  # Define early to avoid UnboundLocalError
     config = load_config()
     if config.telegram_token:
         try:
@@ -138,31 +139,129 @@ async def lifespan(app: FastAPI):
                             await self.tg_bot.app.bot.send_message(chat_id=channel_id, text=data["message"], parse_mode="HTML")
                         return
 
-                    # Если это торговый сигнал, используем форматер бота
-                    from telegram_bot import SignalFormatter
-                    # Создаем mock объект сигнала для форматера, если нужно, 
-                    # или просто отправляем текст. Для краткости здесь - текст.
-                    symbol = data.get("symbol", "N/A")
-                    action = data.get("action", "WAIT")
-                    conf = data.get("confidence", 0)
-                    msg = f"🤖 <b>AI SIGNAL: {symbol}</b>\nAction: {action}\nConfidence: {conf}%"
-                    
-                    channel_id = os.getenv("TELEGRAM_CHANNEL")
-                    if channel_id:
-                        await self.tg_bot.app.bot.send_message(chat_id=channel_id, text=msg, parse_mode="HTML")
+                    # ТОРГОВЫЙ СИГНАЛ: Используем расширенный форматер
+                    try:
+                        from mean_reversion_bybit import AdvancedSignal, SignalType
+                        from telegram_bot import SignalFormatter
+                        
+                        # Преобразуем данные AI в объект AdvancedSignal для форматера
+                        sig_type = SignalType.LONG if data.get('action') == "BUY" else SignalType.SHORT
+                        
+                        def safe_float(val):
+                            try:
+                                if isinstance(val, (int, float)): return float(val)
+                                if not val: return 0.0
+                                return float(str(val).replace('$', '').replace(',', '').strip())
+                            except: return 0.0
+
+                        signal = AdvancedSignal(
+                            symbol=data.get('symbol'),
+                            signal_type=sig_type,
+                            probability=data.get('confidence', 70),
+                            entry_price=safe_float(data.get('entry')),
+                            stop_loss=safe_float(data.get('sl')),
+                            take_profit_1=safe_float(data.get('tp')),
+                            take_profit_2=safe_float(data.get('tp')) * 1.05,
+                            reasoning=[data.get('reason', '')],
+                            indicators={},
+                            confluence=type('obj', (object,), {'percentage': data.get('confidence', 0)})(),
+                            strength=None
+                        )
+
+                        # Если цены нет, пробуем получить текущую
+                        if signal.entry_price == 0:
+                            try:
+                                ticker = self.client._request(f"/v5/market/tickers?category=linear&symbol={signal.symbol}")
+                                signal.entry_price = float(ticker['list'][0]['lastPrice'])
+                            except: pass
+
+                        # Отправка через rich formatter
+                        await self.tg_bot.send_signal_with_actions(
+                            signal,
+                            sentiment=data.get('sentiment'),
+                            sector=data.get('strategy'),
+                            is_executed=data.get('executed', False),
+                            order_id=data.get('order_id'),
+                            execution_error=data.get('execution_error')
+                        )
+                        return
+                        
+                    except Exception as formatter_err:
+                        logger.error(f"Rich format failed, using standard: {formatter_err}")
+                        
+                        # Краткий формат (улучшенный)
+                        symbol = data.get("symbol", "N/A")
+                        action = data.get("action", "WAIT")
+                        conf = data.get("confidence", 0)
+                        entry = data.get("entry", "N/A")
+                        sl = data.get("sl", "N/A")
+                        tp = data.get("tp", "N/A")
+                        
+                        msg = (
+                            f"🤖 <b>AI SIGNAL: {symbol}</b>\n"
+                            f"Action: <b>{action}</b>\n"
+                            f"Confidence: {conf}%\n"
+                            f"Entry: {entry}\n"
+                            f"Target: {tp}\n"
+                            f"Stop: {sl}"
+                        )
+                        
+                        if data.get('execution_error'):
+                            msg += f"\n\n❌ <b>AUTO-TRADE ERROR</b>\n{data.get('execution_error')}"
+                        
+                        channel_id = os.getenv("TELEGRAM_CHANNEL")
+                        if channel_id:
+                            await self.tg_bot.app.bot.send_message(chat_id=channel_id, text=msg, parse_mode="HTML")
                 except Exception as e:
                     logger.error(f"Failed to send AI message: {e}")
 
             async def execute_ai_trade(self, analysis: dict):
-                """Исполнение сделок (заглушка для Web UI)"""
+                """Исполнение сделки через ExecutionManager"""
                 try:
-                    # В Web UI версии мы можем просто логировать или вызывать метод клиента
+                    conf = load_config()
+                    if not conf.auto_trade:
+                        return {"success": False, "error": "Auto-trade disabled in settings"}
+
+                    from execution import ExecutionManager, RiskLimits
+                    from mean_reversion_bybit import AdvancedSignal, SignalType
+                    
+                    # 1. Initialize manager
+                    limits = RiskLimits(
+                        max_daily_loss_usd=conf.max_daily_loss,
+                        risk_per_trade_percent=conf.risk_percent
+                    )
+                    manager = ExecutionManager(self.client, risk_limits=limits)
+                    
+                    # 2. Prepare signal object
                     symbol = analysis.get("symbol")
-                    side = "Buy" if analysis.get("action") == "BUY" else "Sell"
-                    logger.info(f"⚡ AI Agent requested execution for {symbol} {side}")
-                    # Здесь можно добавить вызов self.client.place_order если нужно авто-исполнение
-                    return {"success": False, "error": "Auto-trade not enabled in Web Controller yet"}
+                    action = analysis.get("action")
+                    sig_type = SignalType.LONG if action == "BUY" else SignalType.SHORT
+                    
+                    def safe_float(v, default=0.0):
+                        try: return float(str(v).replace('$','').replace(',',''))
+                        except: return default
+
+                    signal = AdvancedSignal(
+                        symbol=symbol,
+                        signal_type=sig_type,
+                        probability=analysis.get('confidence', 70),
+                        entry_price=safe_float(analysis.get('entry_price')),
+                        stop_loss=safe_float(analysis.get('stop_loss')),
+                        take_profit_1=safe_float(analysis.get('take_profit')),
+                        reasoning=analysis.get('reasoning', 'AI Web Execution')
+                    )
+
+                    # 3. Execute
+                    logger.info(f"⚡ AI Agent executing {symbol} {action} via ExecutionManager")
+                    success = manager.execute_signal(signal)
+                    
+                    if success:
+                        return {"success": True, "order_id": "WEB-AI-EXEC"}
+                    else:
+                        return {"success": False, "error": "Rejected by Risk Manager or Filter"}
+
                 except Exception as e:
+                    logger.error(f"Execution failed: {e}")
                     return {"success": False, "error": str(e)}
         
         # Link to actual services if already running
@@ -627,9 +726,17 @@ async def start_bot():
     
     config = load_config()
     
-    # Формируем команду запуска
-    # python main_bybit.py scan --continuous ...
+    # Cross-platform process cleanup
+    if os.name == 'nt':
+        cmd_cleanup = ["powershell", "-Command", "Get-Process python | Where-Object { $_.Id -ne $PID } | Stop-Process -Force"]
+    else:
+        cmd_cleanup = ["pkill", "-9", "-f", "main_bybit.py"]
     
+    try:
+        subprocess.run(cmd_cleanup, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+    except:
+        pass
+        
     cmd = [sys.executable, "main_bybit.py", "scan", "--continuous"]
     
     if config.symbols:
