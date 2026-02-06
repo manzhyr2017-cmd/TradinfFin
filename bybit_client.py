@@ -402,9 +402,11 @@ class BybitClient:
             
             if data and data.get('list'):
                 # Bybit returns totalEquity at the account level for UTA
-                equity = float(data['list'][0].get('totalEquity', 0))
-                if equity > 0:
-                    return equity
+                val = data['list'][0].get('totalEquity')
+                if val is not None and str(val).strip() != "":
+                    equity = float(val)
+                    if equity > 0:
+                        return equity
         except Exception as e:
             logger.error(f"Failed to fetch total equity: {e}")
             

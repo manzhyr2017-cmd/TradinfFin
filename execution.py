@@ -459,9 +459,18 @@ class ExecutionManager:
             
             # Получаем инфо об инструменте для точности
             instr_info = self.client.get_instrument_info(signal.symbol)
-            qty_step = float(instr_info.get('lotSizeFilter', {}).get('qtyStep', '0.001'))
-            min_qty = float(instr_info.get('lotSizeFilter', {}).get('minOrderQty', '0.001'))
-            price_tick = float(instr_info.get('priceFilter', {}).get('tickSize', '0.01'))
+            lot_filter = instr_info.get('lotSizeFilter', {})
+            price_filter = instr_info.get('priceFilter', {})
+
+            def _parse_float(val, default):
+                try:
+                    if val is None or str(val).strip() == "": return default
+                    return float(val)
+                except: return default
+
+            qty_step = _parse_float(lot_filter.get('qtyStep'), 0.001)
+            min_qty = _parse_float(lot_filter.get('minOrderQty'), 0.001)
+            price_tick = _parse_float(price_filter.get('tickSize'), 0.01)
             
             # Риск в %: Приоритет risk_override -> конфиг
             base_risk = risk_override if risk_override is not None else self.risk_limits.risk_per_trade_percent
