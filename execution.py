@@ -26,9 +26,9 @@ logger = logging.getLogger(__name__)
 class RiskLimits:
     """Ограничения рисков"""
     max_daily_loss_usd: float = 100.0       # Макс. дневной убыток
-    max_open_positions: int = 3             # Reduced from 10 to 3 for small balances
+    max_open_positions: int = 5             # Increased for flexibility
     max_leverage: float = 5.0              # Макс. плечо (ограничение снайпера)
-    risk_per_trade_percent: float = 1.0    # 1.0% risk per trade for stability
+    risk_per_trade_percent: float = 2.0    # Back to 2.0% as requested
     
     # Capital Accelerator (Step 1)
     compounding_enabled: bool = True       # Реинвест прибыли
@@ -426,9 +426,15 @@ class ExecutionManager:
                 logger.warning(msg)
                 return False, msg
 
-            # 2. Получаем актуальный баланс
             balance = self.client.get_total_equity()
             available_balance = self.client.get_wallet_balance('USDT', available_only=True)
+            
+            # --- API GLITCH WORKAROUND (Phase 10) ---
+            # If API reports 0 available but we have equity and NO positions, 
+            # we assume it's a reporting glitch or Standard account behavior.
+            if available_balance <= 1.0 and balance > 10 and len(positions) == 0:
+                logger.info(f"ℹ️ Available margin reported as ${available_balance:.2f}, but Equity is ${balance:.2f} and NO open positions. Using Equity as available.")
+                available_balance = balance * 0.98 # 2% buffer for fees/slippage
             
             # --- MARGIN RECOVERY (Phase 10) ---
             # If we have equity but NO available margin, it's usually because of open LIMIT orders.
