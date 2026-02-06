@@ -108,6 +108,11 @@ async def lifespan(app: FastAPI):
                     _sentinel_running = False
                     return {"message": "Sentinel Loop STOPPED"}
 
+                async def get_regime(self):
+                    if _services.get('sentiment'):
+                        return _services['sentiment'].regime
+                    return "NEUTRAL"
+
                 async def get_status(self):
                     return {
                         "running": _sentinel_running, 

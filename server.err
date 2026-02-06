@@ -1424,3 +1424,12 @@ INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing AVAXUSDT...
 INFO:ai_agent:\U0001f4b2 Real-time Price for AVAXUSDT: 8.473
 INFO:ai_agent:\U0001f4ca MTF RSI: 1m=32.7, 15m=66.8, 1H=36.1, 4H=23.6
 INFO:ai_agent:\U0001f50e Searching Brave: AVAXUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:\u26a0\ufe0f AI generated weak RR (1.09) for strategy Mean Reversion (RSI). Adjusting TP to 1:3.0.
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 70, 'reasoning': '\U0001f4c8\ufe0f На данный момент мы видим потенциал для роста AVAXUSDT. 1-минутный RSI находится на уровне 32,7, что является сигналом для покупки в стратегии Mean Reversion (RSI). Кроме того, цена находится вблизи критического уровня поддержки 8,473. \U0001f4ca\ufe0f [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 8.473, 'take_profit': 10.342000000000004, 'stop_loss': 7.85, 'signal_title': 'Отскок от поддержки', 'strategy_name': 'Mean Reversion (RSI)'}
+INFO:ai_agent:\U0001f680 AI SIGNAL found: BUY AVAXUSDT (Conf: 70%)
+INFO:ai_agent:\u26a1 AI AUTO-TRADE TRIGGERED: AVAXUSDT BUY
+INFO:Dashboard:\u26a1 AI Agent requested execution for AVAXUSDT Buy
+WARNING:ai_agent:\u274c AI AUTO-TRADE REJECTED: AVAXUSDT - Auto-trade not enabled in Web Controller yet
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:ai_agent:\u2705 Sentinel Cycle Complete. Sleeping for 15m

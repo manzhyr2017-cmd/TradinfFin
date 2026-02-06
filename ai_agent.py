@@ -690,10 +690,10 @@ SYSTEM GUARDIANS & PORTFOLIO STATE:
         3. **Find Setup**: Apply the chosen strategy.
         4. **Generate Signal**: With proper entry/SL/TP.
         
-        CRITICAL RULES:
+        - **SELECTIVITY**: We prefer NO TRADE over a BAD trade. If the setup is not clear, if there's indecision, or if volatility is too high/low, set confidence < 50 and action to 'WAIT'.
         - **Risk/Reward**: Must be > 1:3 for normal trades, but for SCALPING (1m) it can be 1:1.5 or 1:2.
         - **Entry**: MUST be close to {current_price}
-        - **Confidence**: Be honest. If no clear setup, confidence should be LOW.
+        - **Confidence**: Be extremeley strict. Only 85+ confidence trades will be executed.
         - **Scalping TP**: Usually 0.3% to 0.7%.
         - **Scalping SL**: Usually 0.2% to 0.4%.
         
@@ -1027,7 +1027,19 @@ SYSTEM GUARDIANS & PORTFOLIO STATE:
                     conf = analysis.get('confidence', 0)
                     action = str(analysis.get('action', '')).upper()
                     
-                    if action in ['BUY', 'SELL'] and conf >= 70:
+                    # --- SNIPER MODE: High Confidence + Regime Check ---
+                    regime = analysis.get('sentiment', 'NEUTRAL')
+                    
+                    # Fetch global sentiment from controller if available
+                    global_regime = "NEUTRAL"
+                    if self.controller and hasattr(self.controller, 'get_regime'):
+                        global_regime = await self.controller.get_regime()
+                        
+                    if global_regime == "RISK_OFF":
+                        logger.warning(f"🛡️ AI Sentinel SKIP: {symbol} - Global Regime is RISK_OFF")
+                        continue
+
+                    if action in ['BUY', 'SELL'] and conf >= 85:
                         logger.info(f"🚀 AI SIGNAL found: {action} {symbol} (Conf: {conf}%)")
                         
                         # Добавляем символ в данные анализа

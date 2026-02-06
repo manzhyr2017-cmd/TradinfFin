@@ -508,7 +508,7 @@ class AdvancedMeanReversionEngine:
     - Order Book Imbalance
     """
     
-    def __init__(self, min_confluence: int = 85, min_rr: float = 4.0):
+    def __init__(self, min_confluence: int = 85, min_rr: float = 4.5):
         """
         Sniper Mode: min_confluence=85 (Extreme only), min_rr=4.0 (1:4 minimum)
         """
