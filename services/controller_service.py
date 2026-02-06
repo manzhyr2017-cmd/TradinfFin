@@ -85,14 +85,21 @@ class BotController:
                 # Mock a Signal object from AI data for the formatter
                 sig_type = SignalType.LONG if data.get('action') == "BUY" else SignalType.SHORT
                 
+                # Helper for safe float conversion
+                def safe_float(val):
+                    try:
+                        return float(val)
+                    except (ValueError, TypeError):
+                        return 0.0
+
                 signal = AdvancedSignal(
                     symbol=data.get('symbol'),
                     signal_type=sig_type,
                     probability=data.get('confidence', 70),
-                    entry_price=float(data.get('entry', 0)) if str(data.get('entry')).replace('.','').isdigit() else 0,
-                    stop_loss=float(data.get('sl', 0)),
-                    take_profit_1=float(data.get('tp', 0)),
-                    take_profit_2=float(data.get('tp', 0)) * 1.05,
+                    entry_price=safe_float(data.get('entry')),
+                    stop_loss=safe_float(data.get('sl')),
+                    take_profit_1=safe_float(data.get('tp')),
+                    take_profit_2=safe_float(data.get('tp')) * 1.05,
                     reasoning=[data.get('reason', '')],
                     indicators={},
                     confluence=type('obj', (object,), {'percentage': data.get('confidence', 0)})(),
