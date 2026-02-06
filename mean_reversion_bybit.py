@@ -59,6 +59,7 @@ class MarketRegime(Enum):
     WEAK_TREND_DOWN = "WEAK_TREND_DOWN"
     STRONG_TREND_DOWN = "STRONG_TREND_DOWN"
     VOLATILE_CHAOS = "VOLATILE_CHAOS"
+    NEUTRAL = "NEUTRAL"
 
 
 @dataclass
