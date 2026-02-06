@@ -569,18 +569,27 @@ class ExecutionManager:
             required_margin = (qty * final_entry) / leverage
             
             # Buffer for fees and slippage (10%)
-            if required_margin > (available_balance * 0.9):
+            # Buffer for fees and slippage (Flexible 5-10%)
+            if required_margin > (available_balance * 0.95):
+                logger.warning(f"⚠️ Low Balance Warning: Need ${required_margin:.2f}, Have ${available_balance:.2f}")
+                
+                # Attempt to fit trade into 95% of available balance
                 old_qty = qty
-                qty = (available_balance * 0.85 * leverage) / final_entry
+                max_margin_usable = available_balance * 0.95
+                qty = (max_margin_usable * leverage) / final_entry
                 
                 # Re-apply rounding
                 qty_final = (Decimal(str(qty)) / Decimal(str(qty_step))).quantize(Decimal('1'), rounding=ROUND_FLOOR) * Decimal(str(qty_step))
                 qty = float(qty_final.normalize())
                 
+                new_margin = (qty * final_entry) / leverage
+                
                 if qty < min_qty:
-                    return False, f"Available balance too low even for min qty (Need: ${required_margin:.2f})"
+                    msg = f"Insufficient funds: Have ${available_balance:.2f}, Need min ${((min_qty*final_entry)/leverage):.2f}"
+                    logger.error(msg)
+                    return False, msg
                     
-                logger.warning(f"⚠️ Недостаточно маржи (${required_margin:.2f} > ${available_balance:.2f}). Масштабирование: {old_qty} -> {qty}")
+                logger.warning(f"📉 Downsizing Position: {old_qty} -> {qty} (Margin: ${new_margin:.2f})")
 
             logger.info(f"🚀 Итоговый расчет: Кол-во={qty}, Плечо={leverage}x, Маржа=${(qty*final_entry/leverage):.2f}")
             
