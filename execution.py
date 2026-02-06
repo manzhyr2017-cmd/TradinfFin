@@ -599,18 +599,19 @@ class ExecutionManager:
             self.client.set_leverage(signal.symbol, leverage)
             logger.info(f"⚙️ Dynamic Leverage set to {leverage}x (based on ATR)")
             
-            # Отправка ордера
+            # Отправка ордера (Используем Market для гарантированного входа в Sniper режиме)
             response = self.client.place_order(
                 symbol=signal.symbol,
                 side=side,
                 qty=qty,
-                price=final_entry,
+                price=None, # Market
+                order_type='Market',
                 stop_loss=signal.stop_loss,
-                take_profit=signal.take_profit_1  # Ставим TP1 как основной TP
+                take_profit=signal.take_profit_1
             )
             
-            order_id = response.get('orderId')
-            logger.info(f"✅ Ордер отправлен успешно! ID: {order_id} (Price: {final_entry})")
+            order_id = response.get('orderId') or response.get('orderLinkId', 'N/A')
+            logger.info(f"✅ Ордер отправлен успешно! ID: {order_id} (Type: Market)")
             
             # --- UNIFIED LOGGING ---
             try:

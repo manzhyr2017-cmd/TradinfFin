@@ -557,39 +557,53 @@ class BybitClient:
         return self._request('/v5/order/create', params, method='POST', signed=True)
 
     def get_open_positions(self, symbol: Optional[str] = None) -> List[Dict[str, Any]]:
-        """Получает открытые позиции"""
+        """Получает открытые позиции (Оптимизировано для Unified Trading Account)"""
         if self.use_binance_data:
              return []
              
-        params = {'category': self.category.value}
-        if symbol:
-            params['symbol'] = symbol
-        elif self.category == BybitCategory.LINEAR:
-            params['settleCoin'] = 'USDT'  # CRITICAL: Required for fetching all positions in Linear
+        try:
+            # Для UTA/Linear обязательно категория и расчетная монета
+            params = {
+                'category': 'linear',
+            }
+            if symbol:
+                params['symbol'] = symbol
+            else:
+                params['settleCoin'] = 'USDT'
+                
+            data = self._request('/v5/position/list', params, signed=True)
             
-        data = self._request('/v5/position/list', params, signed=True)
-        # Debug logging to identify why positions might be missing
-        import json
-        logger.info(f"🔍 DEBUG POSITIONS RAW ({symbol or 'ALL'}): {json.dumps(data)}")
-        
-        positions = []
-        for item in data.get('list', []):
-            size = float(item.get('size', 0))
-            if size > 0:
-                positions.append({
-                    'symbol': item['symbol'],
-                    'side': item['side'],
-                    'size': size,
-                    'entry_price': float(item.get('avgPrice', 0)),
-                    'mark_price': float(item.get('markPrice', 0)),
-                    'unrealised_pnl': float(item.get('unrealisedPnl', 0)),
-                    'leverage': float(item.get('leverage', 1)),
-                    'stop_loss': float(item.get('stopLoss', 0)),
-                    'take_profit': float(item.get('takeProfit', 0)),
-                    'created_time': int(item.get('createdTime', 0))
-                })
-        
-        return positions
+            # Если получили пустой список, пробуем без settleCoin (на случай USDC или других)
+            if not data or not data.get('list'):
+                if not symbol:
+                    del params['settleCoin']
+                    data = self._request('/v5/position/list', params, signed=True)
+            
+            positions = []
+            if data and data.get('list'):
+                for item in data.get('list', []):
+                    size = float(item.get('size', 0))
+                    if size != 0: # На UTA размер может быть отрицательным в некоторых режимах
+                        positions.append({
+                            'symbol': item['symbol'],
+                            'side': item['side'],
+                            'size': abs(size),
+                            'entry_price': float(item.get('avgPrice', 0)),
+                            'mark_price': float(item.get('markPrice', 0)),
+                            'unrealised_pnl': float(item.get('unrealisedPnl', 0)),
+                            'leverage': float(item.get('leverage', 1)),
+                            'stop_loss': float(item.get('stopLoss', 0)),
+                            'take_profit': float(item.get('takeProfit', 0)),
+                            'created_time': int(item.get('createdTime', 0))
+                        })
+            
+            if not symbol:
+                logger.info(f"📊 Найдено активных позиций (UTA): {len(positions)}")
+            return positions
+            
+        except Exception as e:
+            logger.error(f"Error fetching open positions (UTA): {e}")
+            return []
 
     
     # ============================================================
