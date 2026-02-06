@@ -581,11 +581,26 @@ class BybitClient:
         if price and order_type.lower() == 'limit':
             params['price'] = str(price)
             
-        if stop_loss:
-            params['stopLoss'] = str(stop_loss)
-            
-        if take_profit:
-            params['takeProfit'] = str(take_profit)
+        # --- NEW: TP/SL ROUNDING ---
+        if stop_loss or take_profit:
+            try:
+                info = self.get_instrument_info(symbol)
+                tick_str = info.get('priceFilter', {}).get('tickSize', '0.00001')
+                tick_size = float(tick_str)
+                
+                from decimal import Decimal, ROUND_HALF_UP
+                def round_p(p):
+                    d_p = Decimal(str(p))
+                    d_tick = Decimal(str(tick_size))
+                    return str(d_p.quantize(d_tick, rounding=ROUND_HALF_UP))
+                
+                if stop_loss:
+                    params['stopLoss'] = round_p(stop_loss)
+                if take_profit:
+                    params['takeProfit'] = round_p(take_profit)
+            except:
+                if stop_loss: params['stopLoss'] = str(stop_loss)
+                if take_profit: params['takeProfit'] = str(take_profit)
             
         if reduce_only:
             params['reduceOnly'] = True
@@ -632,6 +647,7 @@ class BybitClient:
                             'leverage': float(item.get('leverage', 1)),
                             'stop_loss': float(item.get('stopLoss', 0)),
                             'take_profit': float(item.get('takeProfit', 0)),
+                            'position_idx': int(item.get('positionIdx', 0)),
                             'created_time': int(item.get('createdTime', 0))
                         })
             

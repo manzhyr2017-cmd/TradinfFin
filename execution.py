@@ -658,9 +658,9 @@ class ExecutionManager:
                             symbol=signal.symbol,
                             stop_loss=signal.stop_loss,
                             take_profit=signal.take_profit_1,
-                            position_idx=0 
+                            position_idx=p.get('position_idx', 0) 
                         )
-                        logger.info(f"✅ Safety Guardian: Protection ENFORCED for {signal.symbol}")
+                        logger.info(f"✅ Safety Guardian: Protection ENFORCED for {signal.symbol} (idx: {p.get('position_idx', 0)})")
                     else:
                         logger.info(f"🛡️ Safety Guardian: TP/SL verified for {signal.symbol}")
                 else:
@@ -692,53 +692,50 @@ class ExecutionManager:
             for pos in positions:
                 symbol = pos['symbol']
                 side = pos['side'] # Buy or Sell
-                entry_price = float(pos['avgPrice'])
-                size = float(pos['size'])
-                stop_loss = float(pos.get('stopLoss', 0) or 0)
+                entry_price = float(pos.get('entry_price', 0))
+                size = float(pos.get('size', 0))
+                stop_loss = float(pos.get('stop_loss', 0) or 0)
+                take_profit = float(pos.get('take_profit', 0) or 0)
                 
-                if size == 0: continue
+                if size == 0: 
+                    continue
 
-                # Получаем текущую цену
-                # В идеале лучше получать ticker один раз для всех, но пока так
-                ticker = self.client._request(f"/v5/market/tickers?category=linear&symbol={symbol}")
-                if not ticker or 'list' not in ticker or not ticker['list']:
+                # Get current ticker price
+                ticker_data = self.client._request(f"/v5/market/tickers?category=linear&symbol={symbol}")
+                if not ticker_data or 'list' not in ticker_data or not ticker_data['list']:
                     continue
                 
-                current_price = float(ticker['list'][0]['lastPrice'])
+                current_price = float(ticker_data['list'][0]['lastPrice'])
                 
-                # Расчет PnL %
-                if side == 'Buy':
+                # Calculate PnL %
+                if side == 'Buy' or side == 'Long':
                     pnl_pct = (current_price - entry_price) / entry_price * 100
+                    side_key = 'Buy'
                 else:
                     pnl_pct = (entry_price - current_price) / entry_price * 100
+                    side_key = 'Sell'
                     
-                # 1. Безубыток (Break-Even) при > 1% профита
+                # 1. Break-Even at > 1.0% profit
                 if pnl_pct > 1.0:
                     new_sl = 0.0
-                    if side == 'Buy':
-                        # Ставим чуть выше входа для покрытия комиссий
-                        target_sl = entry_price * 1.002 
-                        if stop_loss < target_sl: # Если SL ниже безубытка
+                    if side_key == 'Buy':
+                        target_sl = entry_price * 1.001 # 0.1% profit
+                        if stop_loss < target_sl:
                             new_sl = target_sl
                     else:
-                        target_sl = entry_price * 0.998
+                        target_sl = entry_price * 0.999 # 0.1% profit
                         if stop_loss == 0 or stop_loss > target_sl:
                             new_sl = target_sl
                             
                     if new_sl > 0:
-                        logger.info(f"🔄 Moving SL to Break-Even for {symbol}: {new_sl}")
-                    if new_sl > 0:
-                        logger.info(f"🔄 Moving SL to Break-Even for {symbol}: {new_sl}")
+                        logger.info(f"🔄 Moving SL to Break-Even for {symbol}: {new_sl} (PnL: {pnl_pct:.2f}%)")
                         
-                        # Preserve existing TP
-                        existing_tp = float(pos.get('takeProfit', 0) or 0)
-                        
-                        # Use the clint's helper method
+                        # Use the client helper which handles rounding
                         self.client.set_trading_stop(
                             symbol=symbol,
                             stop_loss=new_sl,
-                            take_profit=existing_tp if existing_tp > 0 else None,
-                            position_idx=0
+                            take_profit=take_profit if take_profit > 0 else None,
+                            position_idx=pos.get('position_idx', 0)
                         )
         
         except Exception as e:

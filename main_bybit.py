@@ -244,6 +244,15 @@ class TradingBot:
             try:
                 start_ts = time.time()
                 await self.run_once()
+                
+                # --- POSITION MAINTENANCE ---
+                if self.execution and self.auto_trade:
+                    try:
+                        self.execution.check_trailing_stop()
+                        self.execution.check_time_exits()
+                    except Exception as e:
+                        logger.error(f"Maintenance task failed: {e}")
+
                 self.save_state_to_file()
                 duration = time.time() - start_ts
                 

@@ -1836,3 +1836,64 @@ INFO:Dashboard:\u26a1 AI Agent requested execution for LINKUSDT Sell
 WARNING:ai_agent:\u274c AI AUTO-TRADE REJECTED: LINKUSDT - Auto-trade not enabled in Web Controller yet
 INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
 INFO:ai_agent:\u2705 Sentinel Cycle Complete. Sleeping for 15m
+INFO:bybit_client:\U0001f50d DEBUG POSITIONS RAW (ALL): {"nextPageCursor": "", "category": "linear", "list": []}
+INFO:ai_agent:\U0001f4ca Sentinel selected top 5 MOVE-MAKERS (from top 20 volume): ['AAVEUSDT', 'SOLUSDT', 'LTCUSDT', 'ETHUSDT', 'LINKUSDT']
+INFO:ai_agent:\U0001f9e0 AI Sentinel Cycle: AAVEUSDT
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing AAVEUSDT...
+INFO:ai_agent:\U0001f4b2 Real-time Price for AAVEUSDT: 106.48
+INFO:ai_agent:\U0001f4ca MTF RSI: 1m=50.9, 15m=71.1, 1H=53.9, 4H=23.7
+INFO:ai_agent:\U0001f50e Searching Brave: AAVEUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'NEUTRAL', 'confidence': 60, 'reasoning': 'На данный момент рынок AAVEUSDT находится в состоянии неопределенности. Индикаторы RSI на разных таймфреймах показывают смешанные сигналы: 1m RSI - 50,9 (нейтрально), 15m RSI - 71,1 (перекупленность), 1H RSI - 53,9 (нейтрально), 4H RSI - 23,7 (перепроданность). Согласно нашим правилам, мы не можем открыть длинную позицию, поскольку не все таймфреймы показывают значения RSI ниже 50. Кроме того, рынок не находится в явном тренде, поэтому стратегия Trend Follower (EMA) не подходит. Уровни поддержки и сопротивления не дают четких сигналов на вход. В связи с этим, мы будем ожидать более четких сигналов на рынке.', 'suggested_risk': 0.5, 'action': 'WAIT', 'entry_price': 'Market', 'take_profit': 0, 'stop_loss': 0, 'signal_title': 'Ожидание сигнала', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:\U0001f9e0 AI Sentinel Cycle: SOLUSDT
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing SOLUSDT...
+INFO:ai_agent:\U0001f4b2 Real-time Price for SOLUSDT: 81.57
+INFO:ai_agent:\U0001f4ca MTF RSI: 1m=38.7, 15m=73.0, 1H=56.6, 4H=21.5
+INFO:ai_agent:\U0001f50e Searching Brave: SOLUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:\u26a0\ufe0f AI generated weak RR (1.15) for strategy Neuro-Scalper (1m Micro). Adjusting TP to 1:1.5.
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'BEARISH', 'confidence': 70, 'reasoning': 'Мы видим, что 1m RSI находится в зоне 38.7, что является сигналом для скальпинга. Однако, другие таймфреймы (15m, 1H, 4H) не подтверждают этот сигнал, поскольку их RSI находится выше 50. Согласно нашим правилам, мы не можем открывать длинную позицию, если все таймфреймы не находятся ниже 50. Следовательно, мы будем искать короткую позицию. Уровень поддержки находится на отметке 81.57, и мы можем ожидать пробоя этого уровня. [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'SELL', 'entry_price': 81.57, 'take_profit': 80.17499999999998, 'stop_loss': 82.5, 'signal_title': 'Пробой поддержки', 'strategy_name': 'Neuro-Scalper (1m Micro)'}
+INFO:ai_agent:\U0001f680 AI SIGNAL found: SELL SOLUSDT (Conf: 70%)
+INFO:ai_agent:\u26a1 AI AUTO-TRADE TRIGGERED: SOLUSDT SELL
+INFO:Dashboard:\u26a1 AI Agent requested execution for SOLUSDT Sell
+WARNING:ai_agent:\u274c AI AUTO-TRADE REJECTED: SOLUSDT - Auto-trade not enabled in Web Controller yet
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:ai_agent:\U0001f9e0 AI Sentinel Cycle: LTCUSDT
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing LTCUSDT...
+INFO:ai_agent:\U0001f4b2 Real-time Price for LTCUSDT: 52.08
+INFO:ai_agent:\U0001f4ca MTF RSI: 1m=58.3, 15m=72.4, 1H=56.5, 4H=22.0
+INFO:ai_agent:\U0001f50e Searching Brave: LTCUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'BEARISH', 'confidence': 70, 'reasoning': 'На данный момент LTCUSDT находится в состоянии неопределенности, но благодаря scalping триггеру на 1-минутном графике (RSI: 58,3) и общему понижательному тренду на крипторынке, мы можем ожидать дальнейшего падения цены. \U0001f4c9\U0001f4b8', 'suggested_risk': 1.0, 'action': 'SELL', 'entry_price': 52.08, 'take_profit': 51.7, 'stop_loss': 52.3, 'signal_title': 'Продажа LTCUSDT на scalping сигнале', 'strategy_name': 'Neuro-Scalper (1m Micro)'}
+INFO:ai_agent:\U0001f680 AI SIGNAL found: SELL LTCUSDT (Conf: 70%)
+INFO:ai_agent:\u26a1 AI AUTO-TRADE TRIGGERED: LTCUSDT SELL
+INFO:Dashboard:\u26a1 AI Agent requested execution for LTCUSDT Sell
+WARNING:ai_agent:\u274c AI AUTO-TRADE REJECTED: LTCUSDT - Auto-trade not enabled in Web Controller yet
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:ai_agent:\U0001f9e0 AI Sentinel Cycle: ETHUSDT
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing ETHUSDT...
+INFO:ai_agent:\U0001f4b2 Real-time Price for ETHUSDT: 1928.39
+INFO:ai_agent:\U0001f4ca MTF RSI: 1m=62.6, 15m=63.1, 1H=56.9, 4H=22.3
+INFO:ai_agent:\U0001f50e Searching Brave: ETHUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:\u26a0\ufe0f AI generated weak RR (2.10) for strategy Level Trader (S&R). Adjusting TP to 1:3.0.
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 70, 'reasoning': 'На графике наблюдается потенциальный пробой уровня сопротивления. Уровни RSI на разных таймфреймах не дают четкого сигнала для входа, но 4H RSI находится в зоне перепродажи, что может быть сигналом к покупке. Кроме того, новостной фильтр не показывает негативных новостей, которые могли бы повлиять на цену. \U0001f4c8\U0001f4b0 [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 1928.39, 'take_profit': 2073.5600000000004, 'stop_loss': 1880.0, 'signal_title': 'Пробой уровня сопротивления', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:\U0001f680 AI SIGNAL found: BUY ETHUSDT (Conf: 70%)
+INFO:ai_agent:\u26a1 AI AUTO-TRADE TRIGGERED: ETHUSDT BUY
+INFO:Dashboard:\u26a1 AI Agent requested execution for ETHUSDT Buy
+WARNING:ai_agent:\u274c AI AUTO-TRADE REJECTED: ETHUSDT - Auto-trade not enabled in Web Controller yet
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:ai_agent:\U0001f9e0 AI Sentinel Cycle: LINKUSDT
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing LINKUSDT...
+INFO:ai_agent:\U0001f4b2 Real-time Price for LINKUSDT: 8.288
+INFO:ai_agent:\U0001f4ca MTF RSI: 1m=63.8, 15m=69.6, 1H=60.7, 4H=22.8
+INFO:ai_agent:\U0001f50e Searching Brave: LINKUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:\u26a0\ufe0f AI generated weak RR (2.33) for strategy Trend Follower (EMA). Adjusting TP to 1:3.0.
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'BEARISH', 'confidence': 70, 'reasoning': "На графике LINKUSDT наблюдается нисходящий тренд. Индикатор RSI на разных таймфреймах показывает следующие значения: 1m - 63.8, 15m - 69.6, 1H - 60.7, 4H - 22.8. Поскольку ни один из таймфреймов не соответствует условиям для длинной позиции (все таймфреймы < 50), и учитывая нисходящий тренд, мы выбираем стратегию 'Trend Follower (EMA)' \U0001f4c9. Вход будет осуществлен недалеко от текущей цены 8.288. Ожидаем продолжения нисходящего тренда. [RR Adjusted to 1:3]", 'suggested_risk': 1.0, 'action': 'SELL', 'entry_price': 8.29, 'take_profit': 7.659999999999997, 'stop_loss': 8.5, 'signal_title': 'Продолжение нисходящего тренда', 'strategy_name': 'Trend Follower (EMA)'}
+INFO:ai_agent:\U0001f680 AI SIGNAL found: SELL LINKUSDT (Conf: 70%)
+INFO:ai_agent:\u26a1 AI AUTO-TRADE TRIGGERED: LINKUSDT SELL
+INFO:Dashboard:\u26a1 AI Agent requested execution for LINKUSDT Sell
+WARNING:ai_agent:\u274c AI AUTO-TRADE REJECTED: LINKUSDT - Auto-trade not enabled in Web Controller yet
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:ai_agent:\u2705 Sentinel Cycle Complete. Sleeping for 15m
