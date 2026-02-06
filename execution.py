@@ -428,12 +428,14 @@ class ExecutionManager:
 
             # 2. Получаем актуальный баланс (Total Equity для правильного реинвеста)
             balance = self.client.get_total_equity()
-            if balance <= 0:
-                msg = "Ошибка: Баланс 0 или недоступен"
+            available_balance = self.client.get_wallet_balance('USDT', available_only=True)
+            
+            if balance <= 0 or available_balance <= 0:
+                msg = f"Ошибка: Недостаточно средств (Equity: {balance}, Available: {available_balance})"
                 logger.error(msg)
                 return False, msg
                 
-            logger.info(f"💰 Актуальный баланс (Equity): ${balance:.2f}")
+            logger.info(f"💰 Актуальный баланс: Equity=${balance:.2f}, Available=${available_balance:.2f}")
             
             # 3. Рассчитываем размер позиции
             
@@ -523,9 +525,27 @@ class ExecutionManager:
                 return False, msg
                 
             qty = float(qty_final)
-            logger.info(f"Расчет позиции: Риск=${risk_usd:.2f}, Позиция=${position_size_usd:.0f}, Кол-во={qty} (Шаг: {qty_step})")
+            
+            # --- MARGIN CHECK & AUTO-SCALING ---
+            # Determine leverage BEFORE placing order for margin check
+            leverage = self.risk_limits.get_dynamic_leverage(atr_pct)
+            required_margin = (qty * final_entry) / leverage
+            
+            # Buffer for fees and slippage (10%)
+            if required_margin > (available_balance * 0.9):
+                old_qty = qty
+                qty = (available_balance * 0.85 * leverage) / final_entry
                 
-            logger.info(f"Расчет позиции: Риск=${risk_usd:.2f}, Позиция=${position_size_usd:.0f}, Кол-во={qty} (Шаг: {qty_step})")
+                # Re-apply rounding
+                qty_final = (Decimal(str(qty)) / Decimal(str(qty_step))).quantize(Decimal('1'), rounding=ROUND_FLOOR) * Decimal(str(qty_step))
+                qty = float(qty_final.normalize())
+                
+                if qty < min_qty:
+                    return False, f"Available balance too low even for min qty (Need: ${required_margin:.2f})"
+                    
+                logger.warning(f"⚠️ Недостаточно маржи (${required_margin:.2f} > ${available_balance:.2f}). Масштабирование: {old_qty} -> {qty}")
+
+            logger.info(f"🚀 Итоговый расчет: Кол-во={qty}, Плечо={leverage}x, Маржа=${(qty*final_entry/leverage):.2f}")
             
             # 4. Исполнение (Настройка + Ордер)
             side = 'Buy' if signal.signal_type == SignalType.LONG else 'Sell'

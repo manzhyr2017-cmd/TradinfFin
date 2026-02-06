@@ -299,7 +299,7 @@ class BybitClient:
     # TRADING & ACCOUNT - Торговля и Управление аккаунтом
     # ============================================================
 
-    def get_wallet_balance(self, coin: str = 'USDT') -> float:
+    def get_wallet_balance(self, coin: str = 'USDT', available_only: bool = False) -> float:
         """Получает баланс кошелька (Проверяет UNIFIED -> CONTRACT -> SPOT)"""
         
         # 1. Try UNIFIED (UTA)
@@ -313,10 +313,10 @@ class BybitClient:
                 for account in data['list']:
                     for asset in account.get('coin', []):
                         if asset['coin'] == coin:
-                            bal = float(asset.get('walletBalance', 0))
-                if bal > 0:
-                                logger.info(f"💰 Balance (UNIFIED): ${bal:.2f}")
-                                return bal
+                            field = 'availableToWithdraw' if available_only else 'walletBalance'
+                            bal = float(asset.get(field, asset.get('walletBalance', 0)))
+                            logger.info(f"💰 Balance (UNIFIED {field}): ${bal:.2f}")
+                            return bal
         except Exception as e:
             pass
 
