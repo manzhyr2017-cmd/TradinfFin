@@ -803,10 +803,9 @@ SYSTEM GUARDIANS & PORTFOLIO STATE:
 
     async def manage_active_positions(self):
         """
-        SMART EXIT: Monitors open positions and exits if AI detects trend reversal.
+        SMART EXIT DISABLED per User Request.
         """
-        if not self.controller or not hasattr(self.controller.bot, 'client') or not self.controller.bot.client:
-            return
+        return
 
         try:
             import asyncio

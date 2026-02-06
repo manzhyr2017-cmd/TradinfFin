@@ -738,14 +738,10 @@ class ExecutionManager:
             return False, msg
 
     def check_trailing_stop(self):
-        """
-        Проверяет и обновляет трейлинг-стоп для открытых позиций.
-        Логика:
-        1. Если прибыль > 1% -> Ставим SL в безубыток (+0.1%)
-        2. Если прибыль > 2.5% -> Подтягиваем SL за ценой (Trailing)
-        """
-        if not self.can_trade() or self.dry_run:
-            return
+        \"\"\"
+        TRAILING STOP DISABLED per User Request.
+        \"\"\"
+        return
 
         try:
             positions = self.client.get_open_positions()
@@ -802,19 +798,10 @@ class ExecutionManager:
             logger.error(f"Error in trailing stop: {e}")
 
     def check_time_exits(self, max_hold_hours: int = 6):
-        # Hot-reload config for max_hold_hours
-        try:
-            import json
-            with open('bot_config.json', 'r') as f:
-                config = json.load(f)
-                max_hold_hours = int(config.get('time_exit_hours', max_hold_hours))
-        except Exception:
-            pass
-        """
-        Проверяет и закрывает позиции, которые удерживаются слишком долго
-        """
-        if not self.can_trade() or self.dry_run:
-            return
+        \"\"\"
+        TIME BASED EXITS DISABLED per User Request.
+        \"\"\"
+        return
 
         try:
             positions = self.client.get_open_positions()
