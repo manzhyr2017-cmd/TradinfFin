@@ -622,8 +622,9 @@ class ExecutionManager:
             order_id = response.get('orderId') or response.get('orderLinkId', 'N/A')
             logger.info(f"✅ Ордер отправлен успешно! ID: {order_id} (Type: Market)")
             
-            # --- UNIFIED LOGGING ---
+            # --- UNIFIED LOGGING & SAFETY GUARDIAN ---
             try:
+                # 1. Log the trade
                 t_logger = get_trade_logger()
                 t_logger.log_trade_open(
                     symbol=signal.symbol,
@@ -637,8 +638,28 @@ class ExecutionManager:
                     confluence_score=getattr(signal, 'confluence_score', 0),
                     risk_reward=getattr(signal, 'risk_reward', 0)
                 )
+
+                # 2. SAFETY GUARDIAN: Verify TP/SL were actually accepted by Bybit
+                # Sometimes Market orders execute so fast that params are ignored or rejected silently
+                full_pos = self.client.get_open_positions(symbol=signal.symbol)
+                if full_pos:
+                    p = full_pos[0] # Should be our position
+                    p_sl = float(p.get('stop_loss', 0))
+                    p_tp = float(p.get('take_profit', 0))
+                    
+                    # If protection is missing, FORCE it immediately
+                    if p_sl == 0 or p_tp == 0:
+                        logger.warning(f"🛡️ Safety Guardian: TP/SL missing for {signal.symbol}! Forcing update...")
+                        self.client.set_trading_stop(
+                            symbol=signal.symbol,
+                            stop_loss=signal.stop_loss,
+                            take_profit=signal.take_profit_1,
+                            position_idx=0 
+                        )
+                        logger.info(f"✅ Safety Guardian: Protection ENFORCED for {signal.symbol}")
+
             except Exception as e:
-                logger.error(f"Unified Log Error: {e}")
+                logger.error(f"Unified Log/Safety Error: {e}")
             # ------------------
             
             return True, str(order_id)
