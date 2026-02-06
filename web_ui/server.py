@@ -595,8 +595,8 @@ async def get_status():
     llm_info = {"provider": "Unknown", "providers_count": 0}
     state = {}
     if ai_agent:
-        state['sentiment_regime'] = bot_state.get('sentiment_regime', 'NEUTRAL')
-        state['sentiment_reason'] = bot_state.get('sentiment_reason', 'Initializing...')
+        state['sentiment_regime'] = bot_state.get('sentiment_regime', ai_agent.sentiment_regime if hasattr(ai_agent, 'sentiment_regime') else 'NEUTRAL')
+        state['sentiment_reason'] = bot_state.get('sentiment_reason', ai_agent.sentiment_reason if hasattr(ai_agent, 'sentiment_reason') else 'Initializing...')
         
         if hasattr(ai_agent, 'llm_clients'):
             llm_info["providers_count"] = len(ai_agent.llm_clients)
@@ -842,14 +842,17 @@ async def start_bot():
     # Логи идут в файл bot.log
     try:
         log_out = open(LOG_FILE, "a", encoding='utf-8')
-        bot_process = subprocess.Popen(
-            cmd, 
-            cwd=PROJECT_ROOT,
-            stdout=log_out,
-            stderr=log_out,
-            env=env,
-            creationflags=subprocess.CREATE_NO_WINDOW  # Без консольного окна
-        )
+        # Use creationflags only on Windows
+        popen_kwargs = {
+            "cwd": PROJECT_ROOT,
+            "stdout": log_out,
+            "stderr": log_out,
+            "env": env
+        }
+        if os.name == 'nt':
+            popen_kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+
+        bot_process = subprocess.Popen(cmd, **popen_kwargs)
         return {"status": "ok", "message": "Бот запущен", "pid": bot_process.pid}
     except Exception as e:
         logger.error(f"Failed to start bot: {e}")
@@ -1141,6 +1144,12 @@ async def chat_endpoint(req: ChatRequest):
 
 # Запуск сервера
 # Запуск сервера
+@app.get("/api/active_symbols")
+async def get_active_symbols():
+    """Return list of symbols for chart selection"""
+    config = load_config()
+    return config.symbols or ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
+
 if __name__ == "__main__":
     import uvicorn
     import atexit
