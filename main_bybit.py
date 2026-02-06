@@ -101,7 +101,7 @@ class TradingBot:
             client=self.client,
             symbols=kwargs.get('symbols'),
             min_volume_24h=kwargs.get('min_volume_24h', 5_000_000),
-            max_symbols=kwargs.get('max_symbols')
+            max_symbols=kwargs.get('max_symbols') or 100 # Force 100 symbols if not set
         )
         
         # 3. Execution
