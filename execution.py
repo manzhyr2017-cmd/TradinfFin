@@ -719,22 +719,19 @@ class ExecutionManager:
                             
                     if new_sl > 0:
                         logger.info(f"🔄 Moving SL to Break-Even for {symbol}: {new_sl}")
-                        self.client._request('/v5/order/create', {
-                            'category': 'linear',
-                            'symbol': symbol,
-                            'action': 'Move', # Используем tradingStop (редактирование позиции)
-                             # В V5 редактирование SL делается через tpslMode='Full' или просто setTradingStop
-                        }, method='POST', signed=True) 
+                    if new_sl > 0:
+                        logger.info(f"🔄 Moving SL to Break-Even for {symbol}: {new_sl}")
                         
-                        # Корректный метод для V5 - set_trading_stop
-                        # Но так как его нет в client, используем универсальный request
-                        params = {
-                            'category': 'linear',
-                            'symbol': symbol,
-                            'stopLoss': str(round(new_sl, 4)),
-                            'positionIdx': 0 # 0 for one-way mode
-                        }
-                        self.client._request('/v5/position/trading-stop', params, method='POST', signed=True)
+                        # Preserve existing TP
+                        existing_tp = float(pos.get('takeProfit', 0) or 0)
+                        
+                        # Use the clint's helper method
+                        self.client.set_trading_stop(
+                            symbol=symbol,
+                            stop_loss=new_sl,
+                            take_profit=existing_tp if existing_tp > 0 else None,
+                            position_idx=0
+                        )
         
         except Exception as e:
             logger.error(f"Error in trailing stop: {e}")
