@@ -223,13 +223,14 @@ class BotController:
             loop = asyncio.get_running_loop()
             suggested_risk = data.get('suggested_risk')
             
-            # Note: execute_signal returns bool, we might want order_id from trade_logger/db
-            success = await loop.run_in_executor(None, lambda: self.bot.execution.execute_signal(signal, risk_override=suggested_risk))
+            # execute_signal now returns (success, message)
+            res = await loop.run_in_executor(None, lambda: self.bot.execution.execute_signal(signal, risk_override=suggested_risk))
+            success, msg = res if isinstance(res, tuple) else (res, "Unknown")
             
             if success:
                 logger.info(f"✅ AI Trade Executed: {symbol} {action}")
-                return {"success": True, "order_id": "AI-EXEC-OK"} # Real ID is in logs/db
-            return {"success": False, "error": "Execution rejected (Risk/Filters)"}
+                return {"success": True, "order_id": "AI-EXEC-OK", "message": msg}
+            return {"success": False, "error": f"Execution rejected: {msg}"}
             
         except Exception as e:
             logger.error(f"Failed to execute AI trade: {e}")
@@ -286,8 +287,9 @@ class BotController:
         )
         
         loop = asyncio.get_running_loop()
-        success = await loop.run_in_executor(None, lambda: self.bot.execution.execute_signal(signal))
+        success_res = await loop.run_in_executor(None, lambda: self.bot.execution.execute_signal(signal))
+        success, msg = success_res if isinstance(success_res, tuple) else (success_res, "Unknown")
         
         if success:
-            return "Ордер отправлен успешно"
-        return "Ордер отклонен риск-менеджером или фильтрами"
+            return f"Ордер отправлен успешно: {msg}"
+        return f"Ордер отклонен: {msg}"

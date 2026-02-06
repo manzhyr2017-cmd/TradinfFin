@@ -304,12 +304,13 @@ async def lifespan(app: FastAPI):
 
                     # 3. Execute
                     logger.info(f"⚡ AI Agent executing {symbol} {action} via ExecutionManager")
-                    success = manager.execute_signal(signal)
+                    res = manager.execute_signal(signal)
+                    success, msg = res if isinstance(res, tuple) else (res, "Unknown")
                     
                     if success:
-                        return {"success": True, "order_id": "WEB-AI-EXEC"}
+                        return {"success": True, "order_id": "WEB-AI-EXEC", "message": msg}
                     else:
-                        return {"success": False, "error": "Rejected by Risk Manager or Filter"}
+                        return {"success": False, "error": f"Rejected: {msg}"}
 
                 except Exception as e:
                     logger.error(f"Execution failed: {e}")

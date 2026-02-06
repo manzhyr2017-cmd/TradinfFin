@@ -381,16 +381,19 @@ class ExecutionManager:
             side = 'LONG' if signal.signal_type.value == 'LONG' else 'SHORT'
             
             if allowed == 'NONE':
-                logger.warning(f"🛑 RISK_OFF: Trading halted by Sentiment Service.")
-                return False
+                msg = "🛑 RISK_OFF: Trading halted by Sentiment Service."
+                logger.warning(msg)
+                return False, msg
             
             if allowed == 'LONG_ONLY' and side == 'SHORT':
-                logger.warning(f"📈 TREND_UP: Only LONGs allowed. Skipping SHORT {signal.symbol}.")
-                return False
+                msg = f"📈 TREND_UP: Only LONGs allowed. Skipping SHORT {signal.symbol}."
+                logger.warning(msg)
+                return False, msg
             
             if allowed == 'SHORT_ONLY' and side == 'LONG':
-                logger.warning(f"📉 TREND_DOWN: Only SHORTs allowed. Skipping LONG {signal.symbol}.")
-                return False
+                msg = f"📉 TREND_DOWN: Only SHORTs allowed. Skipping LONG {signal.symbol}."
+                logger.warning(msg)
+                return False, msg
             
         logger.info(f"🚀 Исполнение сигнала: {signal.symbol} {signal.signal_type.value}")
         
@@ -455,7 +458,7 @@ class ExecutionManager:
 
             # --- WHALE WATCHER (Phase 9) ---
             if not self._check_liquidity_barriers(signal.symbol, side, signal.entry_price, signal.take_profit_1):
-                return False
+                return False, "Whale wall found blocking TP"
 
             # --- VIP SIGNAL BOOST (5% for top Selector coins) ---
             if hasattr(signal, 'is_vip') and signal.is_vip:
@@ -469,8 +472,9 @@ class ExecutionManager:
             stop_loss_pct = abs(signal.entry_price - signal.stop_loss) / signal.entry_price
             
             if stop_loss_pct == 0:
-                logger.error("Ошибка: Стоп-лосс равен цене входа")
-                return False
+                msg = "Ошибка: Стоп-лосс равен цене входа"
+                logger.error(msg)
+                return False, msg
                 
             # Размер позиции в USDT = Риск / Стоп%
             position_size_usd = risk_usd / stop_loss_pct
@@ -512,8 +516,9 @@ class ExecutionManager:
             qty_final = qty_final.normalize()
             
             if qty_final < d_min:
-                logger.warning(f"Количество {qty_final} меньше минимального {d_min}. Пропуск.")
-                return False
+                msg = f"Количество {qty_final} меньше минимального {d_min}. Пропуск."
+                logger.warning(msg)
+                return False, msg
                 
             qty = float(qty_final)
             logger.info(f"Расчет позиции: Риск=${risk_usd:.2f}, Позиция=${position_size_usd:.0f}, Кол-во={qty} (Шаг: {qty_step})")
@@ -533,7 +538,7 @@ class ExecutionManager:
                 logger.info(f"  Price: {final_entry}")
                 logger.info(f"  SL: {signal.stop_loss}")
                 logger.info(f"  TP: {signal.take_profit_1}")
-                return True
+                return True, "DRY_RUN: Order simulated successfully"
             
             # Установка плеча и режима маржи
             leverage = self.risk_limits.get_dynamic_leverage(atr_pct)
@@ -573,11 +578,12 @@ class ExecutionManager:
                 logger.error(f"Unified Log Error: {e}")
             # ------------------
             
-            return True
+            return True, f"Order placed successfully: {order_id}"
             
         except Exception as e:
-            logger.error(f"❌ Ошибка исполнения: {e}")
-            return False
+            msg = f"❌ Ошибка исполнения: {e}"
+            logger.error(msg)
+            return False, msg
 
     def check_trailing_stop(self):
         """

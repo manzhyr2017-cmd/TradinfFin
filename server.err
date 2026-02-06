@@ -1258,3 +1258,38 @@ INFO:ai_agent:\U0001f4ca MTF RSI: 1m=51.0, 15m=68.9, 1H=37.1, 4H=28.4
 INFO:ai_agent:\U0001f50e Searching Brave: AAVEUSDT price analysis technical news today
 INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
 INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'NEUTRAL', 'confidence': 60, 'reasoning': 'На данный момент рынок AAVEUSDT находится в состоянии неопределенности. Индикаторы RSI на разных таймфреймах дают смешанные сигналы: 1m RSI = 51,0 (нейтрально), 15m RSI = 68,9 (перекупленность), 1H RSI = 37,1 (перепроданность) и 4H RSI = 28,4 (перепроданность). Это говорит о том, что рынок не имеет четкого направления. Однако, учитывая общую картину рынка и отсутствие сильных сигналов на покупку или продажу, мы можем ожидать возможного разворота в сторону покупателей. \U0001f914', 'suggested_risk': 1.0, 'action': 'WAIT', 'entry_price': 'Market', 'take_profit': 110.0, 'stop_loss': 105.0, 'signal_title': 'Ожидание разворота', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:\U0001f9e0 AI Sentinel Cycle: FARTCOINUSDT
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing FARTCOINUSDT...
+INFO:ai_agent:\U0001f4b2 Real-time Price for FARTCOINUSDT: 0.18788
+INFO:ai_agent:\U0001f4ca MTF RSI: 1m=48.0, 15m=61.5, 1H=35.7, 4H=30.1
+INFO:ai_agent:\U0001f50e Searching Brave: FARTCOINUSDT price analysis technical news today
+WARNING:ai_agent:\U0001f50c Proxy error in Brave Search: HTTPSConnectionPool(host='api.search.brave.com', port=443): Max retries exceeded with url: /res/v1/web/search?q=FARTCOINUSDT+price+analysis+technical+news+today&count=3 (Caused by ProxyError('Unable to connect to proxy', ConnectTimeoutError(<HTTPSConnection(host='156.246.213.194', port=62956) at 0x1be74ccca50>, 'Connection to 156.246.213.194 timed out. (connect timeout=10)')))
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:\u26a0\ufe0f AI generated weak RR (0.80) for strategy Level Trader (S&R). Adjusting TP to 1:3.0.
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'NEUTRAL', 'confidence': 60, 'reasoning': 'Текущая цена FARTCOINUSDT - 0,18788. Анализируя показатели RSI на разных таймфреймах, мы видим, что 1m RSI равен 48,0, 15m RSI - 61,5, 1H RSI - 35,7 и 4H RSI - 30,1. Поскольку значения RSI на всех таймфреймах не находятся в зоне экстремальных значений (< 30 или > 70), мы не можем говорить о явной тенденции рынка. Однако, учитывая, что все значения RSI не превышают 50, мы не можем открыть короткую позицию. Следовательно, мы будем искать возможности для длинной позиции. \U0001f4ca [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 0.18788, 'take_profit': 0.19951999999999998, 'stop_loss': 0.184, 'signal_title': 'Отскок от поддержки', 'strategy_name': 'Level Trader (S&R)'}
+INFO:ai_agent:\U0001f9e0 AI Sentinel Cycle: ZECUSDT
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing ZECUSDT...
+INFO:ai_agent:\U0001f4b2 Real-time Price for ZECUSDT: 216.24
+INFO:ai_agent:\U0001f4ca MTF RSI: 1m=46.6, 15m=64.6, 1H=42.9, 4H=24.4
+INFO:ai_agent:\U0001f50e Searching Brave: ZECUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'BULLISH', 'confidence': 70, 'reasoning': 'На данный момент наблюдаем пробой уровня сопротивления на графике 1м. RSI на 1м графике находится в зоне 46.6, что является сигналом для входа в лонг. Уровни сопротивления на 15м и 1ч графиках также подтверждают возможность пробоя вверх. \U0001f680', 'suggested_risk': 1.0, 'action': 'BUY', 'entry_price': 216.24, 'take_profit': 220.5, 'stop_loss': 213.5, 'signal_title': 'Пробой уровня сопротивления на 1м графике', 'strategy_name': 'Neuro-Scalper (1m Micro)'}
+INFO:ai_agent:\U0001f680 AI SIGNAL found: BUY ZECUSDT (Conf: 70%)
+INFO:ai_agent:\u26a1 AI AUTO-TRADE TRIGGERED: ZECUSDT BUY
+INFO:Dashboard:\u26a1 AI Agent requested execution for ZECUSDT Buy
+WARNING:ai_agent:\u274c AI AUTO-TRADE REJECTED: ZECUSDT - Auto-trade not enabled in Web Controller yet
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:ai_agent:\U0001f9e0 AI Sentinel Cycle: SOLUSDT
+INFO:ai_agent:\U0001f9e0 AI Sentinel: Analyzing SOLUSDT...
+INFO:ai_agent:\U0001f4b2 Real-time Price for SOLUSDT: 81.0
+INFO:ai_agent:\U0001f4ca MTF RSI: 1m=51.5, 15m=69.8, 1H=40.5, 4H=23.2
+INFO:ai_agent:\U0001f50e Searching Brave: SOLUSDT price analysis technical news today
+INFO:httpx:HTTP Request: POST https://integrate.api.nvidia.com/v1/chat/completions "HTTP/1.1 200 OK"
+WARNING:ai_agent:\u26a0\ufe0f AI generated weak RR (1.33) for strategy Trend Follower (EMA). Adjusting TP to 1:3.0.
+INFO:ai_agent:\U0001f9e0 Analysis Result: {'sentiment': 'BEARISH', 'confidence': 80, 'reasoning': 'На данный момент мы видим, что цена SOLUSDT находится в районе 81.0. Анализируя различные таймфреймы, мы видим, что RSI на 1-минутном графике составляет 51,5, что является нейтральным значением. Однако, на 15-минутном графике RSI составляет 69,8, что указывает на возможное продолжение нисходящего движения. На 1-часовом и 4-часовом графиках RSI составляет 40,5 и 23,2 соответственно, что также указывает на нисходящий тренд. Учитывая эти данные, мы можем предположить, что цена SOLUSDT будет продолжать падать. [RR Adjusted to 1:3]', 'suggested_risk': 1.0, 'action': 'SELL', 'entry_price': 81.0, 'take_profit': 76.5, 'stop_loss': 82.5, 'signal_title': 'Продажа на нисходящем тренде', 'strategy_name': 'Trend Follower (EMA)'}
+INFO:ai_agent:\U0001f680 AI SIGNAL found: SELL SOLUSDT (Conf: 80%)
+INFO:ai_agent:\u26a1 AI AUTO-TRADE TRIGGERED: SOLUSDT SELL
+INFO:Dashboard:\u26a1 AI Agent requested execution for SOLUSDT Sell
+WARNING:ai_agent:\u274c AI AUTO-TRADE REJECTED: SOLUSDT - Auto-trade not enabled in Web Controller yet
+INFO:httpx:HTTP Request: POST https://api.telegram.org/bot8339069750:AAGMYLCZ9bfovVb57fmB3vAZ_M7ePHbl2zo/sendMessage "HTTP/1.1 200 OK"
+INFO:ai_agent:\u2705 Sentinel Cycle Complete. Sleeping for 15m

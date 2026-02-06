@@ -137,17 +137,20 @@ class ScannerService:
                         logger.info(f"⚙️ AUTO-TRADE: Executing {signal.symbol}...")
                         try:
                             # Use execute_signal_async if available, else run in executor
+                            # Use execute_signal_async if available, else run in executor
                             if hasattr(self.bot.execution, 'execute_signal_async'):
-                                execution_success = await self.bot.execution.execute_signal_async(signal)
+                                res = await self.bot.execution.execute_signal_async(signal)
                             else:
-                                execution_success = await loop.run_in_executor(None, lambda: self.bot.execution.execute_signal(signal))
+                                res = await loop.run_in_executor(None, lambda: self.bot.execution.execute_signal(signal))
+                            
+                            # execute_signal returns (success, message)
+                            execution_success, exec_msg = res if isinstance(res, tuple) else (res, "Unknown")
                             
                             if execution_success:
                                 self.bot.stats['trades_executed'] += 1
-                                # We need order id for notification. 
-                                # Let's assume the DB or some state has the latest order info.
-                                # For now, we'll mark it as Executed.
-                                logger.info(f"✅ AUTO-TRADE SUCCESS: {signal.symbol}")
+                                logger.info(f"✅ AUTO-TRADE SUCCESS: {signal.symbol} - {exec_msg}")
+                            else:
+                                logger.warning(f"❌ AUTO-TRADE REJECTED for {signal.symbol}: {exec_msg}")
                         except Exception as e:
                             logger.error(f"❌ AUTO-TRADE FAILED for {signal.symbol}: {e}")
                     
