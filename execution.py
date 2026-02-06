@@ -641,6 +641,9 @@ class ExecutionManager:
 
                 # 2. SAFETY GUARDIAN: Verify TP/SL were actually accepted by Bybit
                 # Sometimes Market orders execute so fast that params are ignored or rejected silently
+                import time
+                time.sleep(1) # Give Bybit API 1 second to update position state
+                
                 full_pos = self.client.get_open_positions(symbol=signal.symbol)
                 if full_pos:
                     p = full_pos[0] # Should be our position
@@ -650,6 +653,7 @@ class ExecutionManager:
                     # If protection is missing, FORCE it immediately
                     if p_sl == 0 or p_tp == 0:
                         logger.warning(f"🛡️ Safety Guardian: TP/SL missing for {signal.symbol}! Forcing update...")
+                        # The client method now handles rounding internally
                         self.client.set_trading_stop(
                             symbol=signal.symbol,
                             stop_loss=signal.stop_loss,
@@ -657,6 +661,10 @@ class ExecutionManager:
                             position_idx=0 
                         )
                         logger.info(f"✅ Safety Guardian: Protection ENFORCED for {signal.symbol}")
+                    else:
+                        logger.info(f"🛡️ Safety Guardian: TP/SL verified for {signal.symbol}")
+                else:
+                    logger.warning(f"🛡️ Safety Guardian: Could not find position for {signal.symbol} to verify TP/SL")
 
             except Exception as e:
                 logger.error(f"Unified Log/Safety Error: {e}")

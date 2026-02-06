@@ -450,6 +450,44 @@ class BybitClient:
                 return True
             logger.warning(f"Ошибка смены режима маржи для {symbol}: {e}")
 
+    def set_trading_stop(self, symbol: str, take_profit: Optional[float] = None, stop_loss: Optional[float] = None, position_idx: int = 0):
+        """Устанавливает TP/SL для открытой позиции (Bybit V5)"""
+        try:
+            params = {
+                'category': 'linear',
+                'symbol': symbol,
+                'positionIdx': position_idx,
+            }
+            
+            # 1. Получаем точность цены (tickSize)
+            tick_size = 0.00001
+            try:
+                info = self.get_instrument_info(symbol)
+                tick_str = info.get('priceFilter', {}).get('tickSize', '0.00001')
+                tick_size = float(tick_str)
+            except: pass
+            
+            def round_price(p):
+                from decimal import Decimal, ROUND_HALF_UP
+                d_p = Decimal(str(p))
+                d_tick = Decimal(str(tick_size))
+                return str(d_p.quantize(d_tick, rounding=ROUND_HALF_UP))
+
+            if take_profit:
+                params['takeProfit'] = round_price(take_profit)
+            if stop_loss:
+                params['stopLoss'] = round_price(stop_loss)
+                
+            if 'takeProfit' not in params and 'stopLoss' not in params:
+                return False
+
+            logger.info(f"🛡️ Enforcing TP/SL for {symbol}: TP={params.get('takeProfit')}, SL={params.get('stopLoss')}")
+            return self._request('/v5/position/trading-stop', params, method='POST', signed=True)
+            
+        except Exception as e:
+            logger.error(f"❌ Failed to set trading stop for {symbol}: {e}")
+            return None
+
     def cancel_all_orders(self, symbol: str = "") -> bool:
         """Отменяет все ордера. Если symbol пуст, отменяет по settleCoin=USDT"""
         if self.use_binance_data:
