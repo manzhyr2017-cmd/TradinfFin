@@ -26,6 +26,16 @@ class BotController:
         return {"message": "Scanner PAUSED"}
         
     async def get_status(self):
+        # AI Status Retrieval
+        ai_info = {"provider": "Unknown", "model": "N/A"}
+        if hasattr(self.bot, 'ai_agent') and self.bot.ai_agent:
+            try:
+                name, _, model = self.bot.ai_agent._get_current_llm()
+                if name:
+                    ai_info = {"provider": name, "model": model}
+            except:
+                pass
+
         status = {
             "running": self.bot.is_active,
             "pid": os.getpid(),
@@ -35,7 +45,8 @@ class BotController:
             "news_danger": "None",
             "open_positions": [],
             "top_longs": [],
-            "top_shorts": []
+            "top_shorts": [],
+            "ai_status": ai_info # Added AI info
         }
         
         if self.bot.hedge_service:

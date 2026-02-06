@@ -82,6 +82,9 @@ class TradingBot:
             self.engine = BreakoutStrategy()
         elif self.strategy_name == "acceleration":
             self.engine = AccelerationStrategy()
+        elif self.strategy_name == "scalping":
+            # Scalping Mode: Lower RR (1.5), Higher Confluence
+            self.engine = AdvancedMeanReversionEngine(min_confluence=80, min_rr=1.5)
         else:
             # Sniper Mode: Extreme signals only (85%+), R:R 1:4 minimum
             self.engine = AdvancedMeanReversionEngine(min_confluence=85, min_rr=4.0)
