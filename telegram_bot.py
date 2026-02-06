@@ -378,7 +378,7 @@ class TradingTelegramBot:
             await self.app.stop()
             await self.app.shutdown()
     
-    async def send_signal_with_actions(self, signal, sentiment: str = None, sector: str = None, channel_id=None, is_executed: bool = False, order_id: str = None):
+    async def send_signal_with_actions(self, signal, sentiment: str = None, sector: str = None, channel_id=None, is_executed: bool = False, order_id: str = None, execution_error: str = None):
         """
         Sends a signal with Quick Action buttons (Enter/Skip).
         User can decide whether to execute the trade.
@@ -388,11 +388,6 @@ class TradingTelegramBot:
             logger.warning("Cannot send signal: No channel or app configured.")
             return None
         
-        # Quiet Hours check - DISABLED (User wants signals 24/7)
-        # if self.is_quiet_hours():
-        #     logger.info("🌙 Signal skipped (Quiet Hours).")
-        #     return None
-        
         # Format message
         msg = SignalFormatter.format_signal(signal, include_position_calc=True, sentiment=sentiment, sector=sector)
         
@@ -401,6 +396,15 @@ class TradingTelegramBot:
             # Buttons for managing position
             keyboard = [
                 [InlineKeyboardButton("📊 Статус позиции", callback_data=f"status_{signal.symbol}")]
+            ]
+        elif execution_error:
+            msg += f"\n\n❌ <b>AUTO-TRADE ERROR</b>\n⚠️ <code>{execution_error}</code>"
+            # Keep manual entry buttons even if auto failed
+            keyboard = [
+                [
+                    InlineKeyboardButton("✅ ВОЙТИ ВРУЧНУЮ", callback_data=f"enter_{signal.symbol}_{signal.signal_type.value}"),
+                    InlineKeyboardButton("❌ Пропустить", callback_data=f"skip_{signal.symbol}")
+                ]
             ]
         else:
             # Create Quick Action buttons (Manual Entry)

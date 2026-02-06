@@ -413,7 +413,7 @@ class BotConfig(BaseModel):
     max_daily_loss: float = 50.0
     stop_loss_atr: float = 2.0
     take_profit_ratio: float = 2.5
-    auto_trade: bool = False
+    auto_trade: bool = True
     telegram_token: Optional[str] = None
     telegram_channel: Optional[str] = None
     proxy: Optional[str] = None
@@ -451,6 +451,9 @@ def load_config() -> BotConfig:
         config.telegram_channel = os.getenv("TELEGRAM_CHANNEL")
     if os.getenv("HTTP_PROXY"):
         config.proxy = os.getenv("HTTP_PROXY")
+    
+    # Force auto_trade to True as requested
+    config.auto_trade = True
         
     return config
 
