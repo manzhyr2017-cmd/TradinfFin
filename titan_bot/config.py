@@ -1,12 +1,39 @@
 import os
+import sys
+from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
+# Пытаемся найти .env в текущей папке или в папке со скриптом
+current_dir = Path(os.getcwd())
+script_dir = Path(__file__).resolve().parent
+env_paths = [current_dir / ".env", script_dir / ".env", current_dir.parent / ".env"]
+
+env_loaded = False
+for path in env_paths:
+    if path.exists():
+        load_dotenv(path)
+        print(f"[Config] Loaded .env from {path}")
+        env_loaded = True
+        break
+
+if not env_loaded:
+    # Запасной вариант - стандартный поиск
+    load_dotenv()
 
 # === API BYBIT ===
-API_KEY = os.getenv("BYBIT_API_KEY", "your_key")
-API_SECRET = os.getenv("BYBIT_API_SECRET", "your_secret")
-TESTNET = os.getenv("TESTNET", "False").lower() == "true"
+API_KEY = os.getenv("BYBIT_API_KEY")
+API_SECRET = os.getenv("BYBIT_API_SECRET")
+TESTNET_STR = os.getenv("TESTNET", "False").lower()
+TESTNET = TESTNET_STR == "true"
+
+# Валидация
+if not API_KEY or API_KEY == "your_key":
+    print("⚠️ WARNING: BYBIT_API_KEY NOT FOUND! Check your .env file.")
+else:
+    print(f"✅ BYBIT_API_KEY loaded: {API_KEY[:4]}****")
+
+if not API_SECRET or API_SECRET == "your_secret":
+    print("⚠️ WARNING: BYBIT_API_SECRET NOT FOUND!")
 
 
 # === ТОРГОВЫЕ ПАРАМЕТРЫ ===

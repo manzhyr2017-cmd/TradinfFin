@@ -165,7 +165,13 @@ class DataEngine:
             ask_walls = asks[asks['size'] > asks['size'].mean() * 3]
             
             # Проверка на пустой стакан
-            if bids.empty or asks.empty:
+            if bids.empty or asks.empty or len(bids) == 0 or len(asks) == 0:
+                return None
+
+            try:
+                best_ask = asks['price'].iloc[0]
+                best_bid = bids['price'].iloc[0]
+            except (IndexError, KeyError):
                 return None
 
             orderbook_data = {
@@ -176,8 +182,8 @@ class DataEngine:
                 'imbalance': imbalance,
                 'bid_walls': bid_walls,
                 'ask_walls': ask_walls,
-                'spread': asks['price'].iloc[0] - bids['price'].iloc[0] if not asks.empty and not bids.empty else 0,
-                'mid_price': (asks['price'].iloc[0] + bids['price'].iloc[0]) / 2 if not asks.empty and not bids.empty else 0
+                'spread': best_ask - best_bid,
+                'mid_price': (best_ask + best_bid) / 2
             }
             
             self.orderbook_cache[symbol] = orderbook_data
