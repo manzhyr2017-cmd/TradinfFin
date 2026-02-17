@@ -1,0 +1,12 @@
+.env
+*.log
+__pycache__/
+*.db
+*.err
+*.pid
+bot_state.json
+signals_bybit.json
+models/*.pkl
+node_modules/
+dist/
+.DS_Store
