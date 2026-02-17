@@ -1,56 +1,57 @@
 import os
+import requests
+import time
 from pybit.unified_trading import HTTP
 from dotenv import load_dotenv
-import json
-import time
 
-def test_everything():
+def test_time_and_auth():
     load_dotenv()
     
-    api_key = os.getenv("BYBIT_API_KEY")
-    api_secret = os.getenv("BYBIT_API_SECRET")
     testnet = os.getenv("TESTNET", "True").lower() == "true"
+    base_url = "https://api-testnet.bybit.com" if testnet else "https://api.bybit.com"
     
-    print(f"--- HARDCORE AUTH TEST ---")
-    print(f"Key: {api_key[:4]}****")
-    
-    # Список доменов для теста
-    domains = [
-        "https://api-testnet.bybit.com",
-        "https://api-testnet.bybit.com" # Повтор для уверенности
-    ]
-    
-    for domain in domains:
-        print(f"\nTesting Domain: {domain}")
-        session = HTTP(
-            testnet=testnet,
-            api_key=api_key,
-            api_secret=api_secret,
-            recv_window=60000 # Максимальное окно
-        )
+    print("--- 🕒 TIME SYNC CHECK ---")
+    try:
+        # Получаем время сервера Bybit
+        server_time_res = requests.get(f"{base_url}/v5/market/time")
+        bybit_time = int(server_time_res.json()['result']['timeInMsg'])
+        local_time = int(time.time() * 1000)
         
-        # Тест 1: Баланс UTA
-        print("Test 1: UNIFIED balance...")
-        try:
-            res = session.get_wallet_balance(accountType="UNIFIED", coin="USDT")
-            print(f"✅ SUCCESS UTA: {res['retCode']}")
-            return
-        except Exception as e:
-            print(f"❌ UTA Failed: {e}")
-            
-        # Тест 2: Позиции (простейший запрос)
-        print("Test 2: Positions list...")
-        try:
-            res = session.get_positions(category="linear", symbol="BTCUSDT")
-            print(f"✅ SUCCESS POSITIONS: {res['retCode']}")
-            return
-        except Exception as e:
-            print(f"❌ Positions Failed: {e}")
+        drift = local_time - bybit_time
+        print(f"Bybit Server Time: {bybit_time}")
+        print(f"Local Server Time: {local_time}")
+        print(f"Time Drift: {drift} ms")
+        
+        if abs(drift) > 5000:
+            print("❌ CRITICAL TIME DRIFT! Your server clock is out of sync.")
+        else:
+            print("✅ Time sync is acceptable.")
+    except Exception as e:
+        print(f"❌ Failed to get server time: {e}")
 
-    print("\n--- CONCLUSION ---")
-    print("If all failed with 401, check:")
-    print("1. Are these keys EXACTLY from TESTNET (not mainnet)?")
-    print("2. Is your server time correct? Current server time:", time.ctime())
+    print("\n--- 🔐 AUTH TEST ---")
+    session = HTTP(
+        testnet=testnet,
+        api_key=os.getenv("BYBIT_API_KEY"),
+        api_secret=os.getenv("BYBIT_API_SECRET"),
+        recv_window=60000
+    )
+    
+    # Пытаемся сделать публичный запрос (не требует ключей)
+    print("Testing PUBLIC request (Tickers)...")
+    try:
+        res = session.get_tickers(category="linear", symbol="BTCUSDT")
+        print(f"✅ Public API: OK (Symbol: {res['result']['list'][0]['symbol']})")
+    except Exception as e:
+        print(f"❌ Public API Failed: {e}")
+
+    # Пытаемся сделать приватный запрос
+    print("\nTesting PRIVATE request (Balance)...")
+    try:
+        res = session.get_wallet_balance(accountType="UNIFIED", coin="USDT")
+        print(f"✅ Private API: SUCCESS! Code: {res['retCode']}")
+    except Exception as e:
+        print(f"❌ Private API Failed: {e}")
 
 if __name__ == "__main__":
-    test_everything()
+    test_time_and_auth()
