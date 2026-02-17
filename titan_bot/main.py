@@ -109,6 +109,11 @@ class TitanBotUltimateFinal:
         
         while self.is_running:
             try:
+                # Добавляем небольшую случайную задержку (jitter), 
+                # чтобы боты не долбили API одновременно
+                import random
+                time.sleep(random.uniform(0.5, 3.0))
+                
                 self._main_loop()
                 time.sleep(config.ANALYSIS_INTERVAL)
             except KeyboardInterrupt:

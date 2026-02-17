@@ -81,6 +81,7 @@ class TitanTelegramBot:
                 thread.start()
                 self.bot_threads[s] = thread
                 started.append(s)
+                await asyncio.sleep(2)  # Задержка 2 секунды между запуском ботов
         
         if started:
             await update.message.reply_text(f"🚀 Запуск систем TITAN для: {', '.join(started)}")
