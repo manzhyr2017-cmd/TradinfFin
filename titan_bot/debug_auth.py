@@ -2,50 +2,55 @@ import os
 from pybit.unified_trading import HTTP
 from dotenv import load_dotenv
 import json
+import time
 
-def test_bybit_auth_official():
+def test_everything():
     load_dotenv()
     
     api_key = os.getenv("BYBIT_API_KEY")
     api_secret = os.getenv("BYBIT_API_SECRET")
     testnet = os.getenv("TESTNET", "True").lower() == "true"
     
-    print(f"--- TESTING OFFICIAL BYBIT AUTH (pybit) ---")
+    print(f"--- HARDCORE AUTH TEST ---")
     print(f"Key: {api_key[:4]}****")
-    print(f"Testnet: {testnet}")
     
-    session = HTTP(
-        testnet=testnet,
-        api_key=api_key,
-        api_secret=api_secret,
-        recv_window=20000
-    )
+    # Список доменов для теста
+    domains = [
+        "https://api-testnet.bybit.com",
+        "https://api-testnet.bybit.com" # Повтор для уверенности
+    ]
     
-    try:
-        # Пробуем получить баланс самого простого типа
-        response = session.get_wallet_balance(
-            accountType="UNIFIED",
-            coin="USDT"
+    for domain in domains:
+        print(f"\nTesting Domain: {domain}")
+        session = HTTP(
+            testnet=testnet,
+            api_key=api_key,
+            api_secret=api_secret,
+            recv_window=60000 # Максимальное окно
         )
-        print("✅ SUCCESS!")
-        print(json.dumps(response, indent=2))
         
-    except Exception as e:
-        print("❌ FAILED!")
-        print(f"Error Type: {type(e).__name__}")
-        print(f"Error Detail: {str(e)}")
-        
-        # Если не UTA, пробуем обычный аккаунт
-        print("\nTrying legacy CONTRACT account...")
+        # Тест 1: Баланс UTA
+        print("Test 1: UNIFIED balance...")
         try:
-            response = session.get_wallet_balance(
-                accountType="CONTRACT",
-                coin="USDT"
-            )
-            print("✅ SUCCESS (Legacy CONTRACT)!")
-            print(json.dumps(response, indent=2))
-        except Exception as e2:
-            print(f"❌ Legacy also failed: {e2}")
+            res = session.get_wallet_balance(accountType="UNIFIED", coin="USDT")
+            print(f"✅ SUCCESS UTA: {res['retCode']}")
+            return
+        except Exception as e:
+            print(f"❌ UTA Failed: {e}")
+            
+        # Тест 2: Позиции (простейший запрос)
+        print("Test 2: Positions list...")
+        try:
+            res = session.get_positions(category="linear", symbol="BTCUSDT")
+            print(f"✅ SUCCESS POSITIONS: {res['retCode']}")
+            return
+        except Exception as e:
+            print(f"❌ Positions Failed: {e}")
+
+    print("\n--- CONCLUSION ---")
+    print("If all failed with 401, check:")
+    print("1. Are these keys EXACTLY from TESTNET (not mainnet)?")
+    print("2. Is your server time correct? Current server time:", time.ctime())
 
 if __name__ == "__main__":
-    test_bybit_auth_official()
+    test_everything()
