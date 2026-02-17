@@ -83,15 +83,16 @@ class CompositeScoreEngine:
     
     def calculate(
         self,
-        mtf_analysis,
-        smc_signal,
-        orderflow_signal,
-        volume_profile,
-        oi_analysis,
-        regime_analysis,
-        whale_analysis,
-        fear_greed,
-        correlation_analysis
+        symbol: Optional[str] = None,
+        mtf_analysis = None,
+        smc_signal = None,
+        orderflow_signal = None,
+        volume_profile = None,
+        oi_analysis = None,
+        regime_analysis = None,
+        whale_analysis = None,
+        fear_greed = None,
+        correlation_analysis = None
     ) -> CompositeSignal:
         """
         Рассчитывает композитный скор на основе всех входных данных.
