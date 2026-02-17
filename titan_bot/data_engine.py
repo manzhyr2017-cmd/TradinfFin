@@ -23,7 +23,8 @@ class DataEngine:
             testnet=config.TESTNET,
             api_key=config.API_KEY,
             api_secret=config.API_SECRET,
-            recv_window=20000  # Увеличенное окно для предотвращения 401
+            recv_window=20000,
+            demo=getattr(config, 'BYBIT_DEMO', False)
         )
         
         # Кэш для данных (чтобы не долбить API)

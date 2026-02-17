@@ -25,12 +25,14 @@ API_KEY = os.getenv("BYBIT_API_KEY")
 API_SECRET = os.getenv("BYBIT_API_SECRET")
 TESTNET_STR = os.getenv("TESTNET", "False").lower()
 TESTNET = TESTNET_STR == "true"
+BYBIT_DEMO = os.getenv("BYBIT_DEMO", "False").lower() == "true"
 
 # Валидация
-if not API_KEY or API_KEY == "your_key":
-    print("⚠️ WARNING: BYBIT_API_KEY NOT FOUND! Check your .env file.")
+if not API_KEY:
+    print("⚠️ WARNING: BYBIT_API_KEY NOT FOUND!")
 else:
-    print(f"✅ BYBIT_API_KEY loaded: {API_KEY[:4]}****")
+    mode = "DEMO" if BYBIT_DEMO else ("TESTNET" if TESTNET else "MAINNET")
+    print(f"✅ BYBIT_API_KEY loaded: {API_KEY[:4]}**** (Mode: {mode})")
 
 if not API_SECRET or API_SECRET == "your_secret":
     print("⚠️ WARNING: BYBIT_API_SECRET NOT FOUND!")

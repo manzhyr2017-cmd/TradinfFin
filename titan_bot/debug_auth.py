@@ -36,7 +36,8 @@ def test_time_and_auth():
         testnet=testnet,
         api_key=os.getenv("BYBIT_API_KEY"),
         api_secret=os.getenv("BYBIT_API_SECRET"),
-        recv_window=60000
+        recv_window=60000,
+        demo=os.getenv("BYBIT_DEMO", "False").lower() == "true"
     )
     
     # Пытаемся сделать публичный запрос (не требует ключей)
