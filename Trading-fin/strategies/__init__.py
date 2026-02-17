@@ -1,0 +1,4 @@
+from strategies.deposit_acceleration import DepositAccelerationEngine
+from strategies.trend_following import TrendFollowingStrategy
+from strategies.breakout import BreakoutStrategy
+from strategies.acceleration import AccelerationStrategy

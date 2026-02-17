@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>История Сделок - Trading Bot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+
+    <!-- DataTables for sorting/pagination -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+    <style>
+        .glass-panel {
+            background: rgba(17, 24, 39, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        /* DataTables Customization */
+        .dataTables_wrapper {
+            color: #e2e8f0;
+        }
+
+        .dataTables_length select,
+        .dataTables_filter input {
+            background: #1e293b;
+            color: white;
+            border: 1px solid #475569;
+            padding: 4px;
+            border-radius: 4px;
+        }
+
+        table.dataTable tbody tr {
+            background-color: transparent !important;
+        }
+
+        table.dataTable tbody td {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-900 text-gray-200 font-sans">
+
+    <div class="flex h-screen overflow-hidden">
+
+        <!-- Sidebar -->
+        <aside class="w-64 glass-panel flex flex-col justify-between hidden md:flex z-10 relative">
+            <div>
+                <div
+                    class="p-6 text-2xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-500">
+                    NEURO-BOT
+                </div>
+
+                <nav class="mt-6 flex flex-col space-y-1">
+                    <a href="/"
+                        class="px-6 py-3 text-gray-400 hover:bg-gray-800 hover:text-white transition flex items-center gap-3">
+                        <span>📊</span> Dashboard
+                    </a>
+                    <a href="/history"
+                        class="px-6 py-3 text-blue-400 bg-gray-800 border-r-4 border-blue-500 transition flex items-center gap-3 font-semibold">
+                        <span>📜</span> History
+                    </a>
+                </nav>
+            </div>
+
+            <div class="p-4 border-t border-gray-800">
+                <a href="/logout"
+                    class="block w-full py-2 text-center text-sm text-red-400 hover:bg-red-900/20 rounded transition">Выход</a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col relative overflow-hidden">
+            <!-- Top Header -->
+            <!-- Top Header -->
+            <header
+                class="h-16 border-b border-gray-800 flex items-center justify-between px-6 glass-panel z-10 shrink-0">
+                <div class="flex items-center gap-4">
+                    <h2 class="text-xl font-semibold text-gray-100">История Торговли</h2>
+                    <a href="/api/export/trades"
+                        class="px-3 py-1 bg-green-500/20 text-green-400 border border-green-500 rounded text-xs hover:bg-green-500/30 transition flex items-center gap-2">
+                        <span>📥</span> Export CSV
+                    </a>
+                    <a href="/" class="text-xs text-blue-400 hover:underline">← Назад в Дашборд</a>
+                </div>
+                <div class="text-sm text-gray-400" id="clock">00:00:00</div>
+            </header>
+
+            <!-- Content -->
+            <div class="flex-1 overflow-y-auto p-6 relative">
+                <div class="max-w-7xl mx-auto w-full pt-4"> <!-- Center Container -->
+
+                    <!-- Equity Chart Section -->
+                    <div class="glass-panel p-6 rounded-2xl mb-8">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-gray-100 font-semibold flex items-center gap-2">
+                                <span class="text-blue-400 text-xl">📈</span> График Доходности (Equity Curve)
+                            </h3>
+                        </div>
+                        <div style="height: 300px; position: relative;">
+                            <canvas id="equityChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                        <div class="glass-panel p-5 rounded-2xl relative overflow-hidden group">
+                            <div
+                                class="absolute -right-4 -top-4 w-20 h-20 bg-blue-500/10 rounded-full group-hover:bg-blue-500/20 transition">
+                            </div>
+                            <h3 class="text-gray-400 text-sm font-medium">Win Rate</h3>
+                            <p class="text-3xl font-bold mt-1 text-white" id="stat-winrate">--%</p>
+                        </div>
+                        <!-- ... entries 100-123 ... -->
+                        <div class="glass-panel p-5 rounded-2xl relative overflow-hidden group">
+                            <div
+                                class="absolute -right-4 -top-4 w-20 h-20 bg-green-500/10 rounded-full group-hover:bg-green-500/20 transition">
+                            </div>
+                            <h3 class="text-gray-400 text-sm font-medium">Total PnL</h3>
+                            <p class="text-3xl font-bold mt-1 text-green-400" id="stat-pnl">--$</p>
+                        </div>
+                        <div class="glass-panel p-5 rounded-2xl relative overflow-hidden group">
+                            <div
+                                class="absolute -right-4 -top-4 w-20 h-20 bg-purple-500/10 rounded-full group-hover:bg-purple-500/20 transition">
+                            </div>
+                            <h3 class="text-gray-400 text-sm font-medium">Total Trades</h3>
+                            <p class="text-3xl font-bold mt-1 text-white" id="stat-total">--</p>
+                        </div>
+                        <div class="glass-panel p-5 rounded-2xl relative overflow-hidden group">
+                            <div
+                                class="absolute -right-4 -top-4 w-20 h-20 bg-yellow-500/10 rounded-full group-hover:bg-yellow-500/20 transition">
+                            </div>
+                            <h3 class="text-gray-400 text-sm font-medium">Wins / Losses</h3>
+                            <p class="text-3xl font-bold mt-1 text-white"><span class="text-green-400"
+                                    id="stat-wins">0</span> / <span class="text-red-400" id="stat-losses">0</span></p>
+                        </div>
+                    </div>
+
+                    <!-- Table -->
+                    <div class="glass-panel p-6 rounded-2xl">
+                        <table id="historyTable" class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-gray-400 text-sm border-b border-gray-700">
+                                    <th class="py-3">ID</th>
+                                    <th class="py-3">Time</th>
+                                    <th class="py-3">Symbol</th>
+                                    <th class="py-3">Side</th>
+                                    <th class="py-3">Score</th>
+                                    <th class="py-3">R:R</th>
+                                    <th class="py-3">Size</th>
+                                    <th class="py-3">Price</th>
+                                    <th class="py-3">PnL</th>
+                                    <th class="py-3">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-gray-300 text-sm">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let equityChart = null;
+
+        // Update Clock
+        setInterval(() => {
+            const clock = document.getElementById('clock');
+            if (clock) clock.innerText = new Date().toLocaleTimeString();
+        }, 1000);
+
+        function renderChart(trades) {
+            const ctx = document.getElementById('equityChart').getContext('2d');
+
+            // Сортируем сделки по времени (от старых к новым)
+            const sortedTrades = [...trades].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+            let cumulativePnL = 0;
+            const chartData = sortedTrades.map(t => {
+                cumulativePnL += parseFloat(t.pnl || 0);
+                return {
+                    x: new Date(t.timestamp),
+                    y: cumulativePnL
+                };
+            });
+
+            if (equityChart) equityChart.destroy();
+
+            equityChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: 'Cumulative PnL ($)',
+                        data: chartData,
+                        borderColor: '#60a5fa',
+                        backgroundColor: 'rgba(96, 165, 250, 0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#60a5fa'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: { unit: 'day' },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#94a3b8' }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#94a3b8' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            titleColor: '#f8fafc',
+                            bodyColor: '#94a3b8',
+                            borderColor: '#475569',
+                            borderWidth: 1
+                        }
+                    }
+                }
+            });
+        }
+
+        // Потребность в адаптере для времени в Chart.js 3+
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+
+    <script>
+        async function loadHistory() {
+            try {
+                // 1. Stats
+                const statsRes = await fetch('/api/stats');
+                const stats = await statsRes.json();
+
+                document.getElementById('stat-total').innerText = stats.total;
+                document.getElementById('stat-wins').innerText = stats.wins;
+                document.getElementById('stat-losses').innerText = stats.losses;
+
+                const winrateEl = document.getElementById('stat-winrate');
+                winrateEl.innerText = stats.win_rate + '%';
+                winrateEl.className = `text-3xl font-bold mt-1 ${stats.win_rate >= 50 ? 'text-green-400' : 'text-red-400'}`;
+
+                const pnlEl = document.getElementById('stat-pnl');
+                pnlEl.innerText = (stats.pnl >= 0 ? '+' : '') + stats.pnl + '$';
+                pnlEl.className = `text-3xl font-bold mt-1 ${stats.pnl >= 0 ? 'text-green-400' : 'text-red-400'}`;
+
+                // 2. Table & Chart
+                const historyRes = await fetch('/api/history');
+                const data = await historyRes.json();
+
+                if (data.trades) {
+                    renderChart(data.trades);
+                }
+
+                // Initialize DataTable
+                $('#historyTable').DataTable({
+                    data: data.trades,
+                    destroy: true,
+                    order: [[0, 'desc']],
+                    columns: [
+                        { data: 'id' },
+                        { data: 'timestamp', render: (d) => new Date(d).toLocaleString() },
+                        { data: 'symbol', render: (data) => `<span class="font-bold text-white">${data}</span>` },
+                        {
+                            data: 'side',
+                            render: (data) => data === 'Buy' || data === 'Long'
+                                ? `<span class="bg-green-500/20 text-green-400 px-2 py-1 rounded text-xs font-bold">LONG</span>`
+                                : `<span class="bg-red-500/20 text-red-400 px-2 py-1 rounded text-xs font-bold">SHORT</span>`
+                        },
+                        {
+                            data: 'confluence_score',
+                            render: (data) => data ? `<span class="px-2 py-1 rounded text-xs font-bold ${data >= 80 ? 'text-green-400' : 'text-yellow-400'}">${data}%</span>` : '<span class="text-gray-500">-</span>'
+                        },
+                        {
+                            data: 'risk_reward',
+                            render: (data) => data ? `<span class="text-xs text-blue-300">${parseFloat(data).toFixed(2)}</span>` : '<span class="text-gray-500">-</span>'
+                        },
+                        { data: 'qty' },
+                        { data: 'price' },
+                        {
+                            data: 'pnl',
+                            render: (data) => {
+                                const val = parseFloat(data);
+                                const color = val >= 0 ? 'text-green-400' : 'text-red-400';
+                                return `<span class="${color} font-bold">${val > 0 ? '+' : ''}${val}</span>`;
+                            }
+                        },
+                        { data: 'status' }
+                    ],
+                    language: {
+                        search: "Поиск:",
+                        lengthMenu: "Показать _MENU_ сделок",
+                        info: "Записи с _START_ по _END_ из _TOTAL_",
+                        paginate: { first: "«", last: "»", next: "›", previous: "‹" }
+                    }
+                });
+
+            } catch (e) {
+                console.error("Failed to load history:", e);
+            }
+        }
+
+        $(document).ready(function () {
+            loadHistory();
+            setInterval(loadHistory, 30000);
+        });
+    </script>
+</body>
+
+</html>

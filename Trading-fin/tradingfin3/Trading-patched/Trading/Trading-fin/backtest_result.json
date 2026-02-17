@@ -1,0 +1,16 @@
+{
+  "total_trades": 4,
+  "winning_trades": 0,
+  "losing_trades": 4,
+  "win_rate": 0.0,
+  "total_pnl_percent": -4.25,
+  "avg_win_percent": 0,
+  "avg_loss_percent": 1.06,
+  "profit_factor": 0.0,
+  "max_drawdown_percent": 0.25,
+  "sharpe_ratio": -103.84,
+  "max_consecutive_wins": 0,
+  "max_consecutive_losses": 4,
+  "symbol": "BTCUSDT",
+  "period": "2026-01-05 - 2026-02-03"
+}
