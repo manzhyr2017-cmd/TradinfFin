@@ -230,26 +230,44 @@ class DataEngine:
     # БАЛАНС И ПОЗИЦИИ
     # ==========================================
     def get_balance(self) -> float:
-        """Получает доступный баланс USDT."""
+        """Получает баланс USDT (поддержка UTA и Contract аккаунтов)."""
         try:
+            # 1. Пробуем Unified аккаунт (UTA), как на скрине юзера
             response = self.session.get_wallet_balance(
                 accountType="UNIFIED",
                 coin="USDT"
             )
             
-            if response['retCode'] != 0:
-                return config.INITIAL_DEPOSIT
+            if response['retCode'] == 0 and response['result']['list']:
+                # В UTA режиме часто смотрят totalEquity
+                total_equity = response['result']['list'][0].get('totalEquity')
+                if total_equity:
+                    return float(total_equity)
+                
+                # Или ищем в списке монет
+                coins = response['result']['list'][0].get('coin', [])
+                for c in coins:
+                    if c.get('coin') == 'USDT':
+                        return float(c.get('walletBalance', 0.0))
             
-            coins = response['result']['list'][0]['coin']
-            for coin in coins:
-                if coin['coin'] == 'USDT':
-                    return float(coin['availableToWithdraw'])
+            # 2. Если не UTA, пробуем Contract (классический деривативный)
+            response = self.session.get_wallet_balance(
+                accountType="CONTRACT",
+                coin="USDT"
+            )
             
-            return config.INITIAL_DEPOSIT
+            if response['retCode'] == 0 and response['result']['list']:
+                coins = response['result']['list'][0].get('coin', [])
+                for c in coins:
+                    if c.get('coin') == 'USDT':
+                        return float(c.get('walletBalance', 0.0))
+            
+            # Если всё равно 401 или ошибка, возвращаем дефолт из конфига
+            return getattr(config, 'INITIAL_DEPOSIT', 300.0)
             
         except Exception as e:
-            print(f"[DataEngine] Ошибка получения баланса: {e}")
-            return config.INITIAL_DEPOSIT
+            print(f"[DataEngine] Ошибка баланса: {e}")
+            return getattr(config, 'INITIAL_DEPOSIT', 300.0)
     
     def get_positions(self, symbol: str = None) -> list:
         """Получает открытые позиции."""
