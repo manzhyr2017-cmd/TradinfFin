@@ -22,7 +22,8 @@ class DataEngine:
         self.session = HTTP(
             testnet=config.TESTNET,
             api_key=config.API_KEY,
-            api_secret=config.API_SECRET
+            api_secret=config.API_SECRET,
+            recv_window=20000  # Увеличенное окно для предотвращения 401
         )
         
         # Кэш для данных (чтобы не долбить API)
