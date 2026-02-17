@@ -33,7 +33,8 @@ class DataEngine:
         self.trades_cache = []
         self.last_update = {}
         
-        print(f"[DataEngine] Инициализирован. Testnet: {config.TESTNET}")
+        mode = "DEMO" if getattr(config, 'BYBIT_DEMO', False) else ("TESTNET" if config.TESTNET else "MAINNET")
+        print(f"[DataEngine] Инициализирован. Режим: {mode}")
     
     # ==========================================
     # СВЕЧИ (KLINES / OHLCV)

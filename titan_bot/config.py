@@ -21,6 +21,9 @@ if not env_loaded:
     load_dotenv()
 
 # === API BYBIT ===
+# Принудительно перечитываем, если нужно
+load_dotenv(override=True)
+
 API_KEY = os.getenv("BYBIT_API_KEY")
 API_SECRET = os.getenv("BYBIT_API_SECRET")
 TESTNET_STR = os.getenv("TESTNET", "False").lower()
@@ -28,11 +31,11 @@ TESTNET = TESTNET_STR == "true"
 BYBIT_DEMO = os.getenv("BYBIT_DEMO", "False").lower() == "true"
 
 # Валидация
+mode = "DEMO" if BYBIT_DEMO else ("TESTNET" if TESTNET else "MAINNET")
 if not API_KEY:
-    print("⚠️ WARNING: BYBIT_API_KEY NOT FOUND!")
+    print(f"⚠️ [Config] WARNING: BYBIT_API_KEY NOT FOUND! (Mode: {mode})")
 else:
-    mode = "DEMO" if BYBIT_DEMO else ("TESTNET" if TESTNET else "MAINNET")
-    print(f"✅ BYBIT_API_KEY loaded: {API_KEY[:4]}**** (Mode: {mode})")
+    print(f"✅ [Config] BYBIT_API_KEY loaded: {API_KEY[:4]}**** (Mode: {mode})")
 
 if not API_SECRET or API_SECRET == "your_secret":
     print("⚠️ WARNING: BYBIT_API_SECRET NOT FOUND!")
