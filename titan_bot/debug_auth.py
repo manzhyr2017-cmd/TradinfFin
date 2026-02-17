@@ -14,16 +14,18 @@ def test_time_and_auth():
     try:
         # Получаем время сервера Bybit
         server_time_res = requests.get(f"{base_url}/v5/market/time")
-        bybit_time = int(server_time_res.json()['result']['timeInMsg'])
+        resp_json = server_time_res.json()
+        bybit_time = int(resp_json.get('time', resp_json.get('result', {}).get('timeNano', 0)[:13]))
         local_time = int(time.time() * 1000)
         
-        drift = local_time - bybit_time
-        print(f"Bybit Server Time: {bybit_time}")
-        print(f"Local Server Time: {local_time}")
-        print(f"Time Drift: {drift} ms")
+        drift_sec = (local_time - bybit_time) / 1000
+        print(f"Bybit Server Time (UTC): {time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(bybit_time/1000))}")
+        print(f"Local Server Time (UTC): {time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(local_time/1000))}")
+        print(f"Time Drift: {drift_sec:.2f} seconds")
         
-        if abs(drift) > 5000:
-            print("❌ CRITICAL TIME DRIFT! Your server clock is out of sync.")
+        if abs(drift_sec) > 10:
+            print(f"❌ CRITICAL TIME DRIFT ({drift_sec:.2f}s)! Your server clock is out of sync.")
+            print("Run: sudo systemctl restart systemd-timesyncd")
         else:
             print("✅ Time sync is acceptable.")
     except Exception as e:
