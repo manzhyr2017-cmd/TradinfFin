@@ -1,49 +1,51 @@
 import os
-import time
-import hmac
-import hashlib
-import requests
+from pybit.unified_trading import HTTP
 from dotenv import load_dotenv
+import json
 
-def test_bybit_auth():
+def test_bybit_auth_official():
     load_dotenv()
     
     api_key = os.getenv("BYBIT_API_KEY")
     api_secret = os.getenv("BYBIT_API_SECRET")
     testnet = os.getenv("TESTNET", "True").lower() == "true"
     
-    base_url = "https://api-testnet.bybit.com" if testnet else "https://api.bybit.com"
-    endpoint = "/v5/account/wallet-balance"
-    params = "accountType=UNIFIED&coin=USDT"
+    print(f"--- TESTING OFFICIAL BYBIT AUTH (pybit) ---")
+    print(f"Key: {api_key[:4]}****")
+    print(f"Testnet: {testnet}")
     
-    timestamp = str(int(time.time() * 1000))
-    recv_window = "20000"
+    session = HTTP(
+        testnet=testnet,
+        api_key=api_key,
+        api_secret=api_secret,
+        recv_window=20000
+    )
     
-    raw_data = timestamp + api_key + recv_window + params
-    signature = hmac.new(
-        bytes(api_secret, "utf-8"),
-        bytes(raw_data, "utf-8"),
-        hashlib.sha256
-    ).hexdigest()
-    
-    headers = {
-        "X-BAPI-API-KEY": api_key,
-        "X-BAPI-SIGN": signature,
-        "X-BAPI-TIMESTAMP": timestamp,
-        "X-BAPI-RECV-WINDOW": recv_window,
-        "Content-Type": "application/json"
-    }
-    
-    url = f"{base_url}{endpoint}?{params}"
-    
-    print(f"--- TESTING BYBIT AUTH ---")
-    print(f"URL: {url}")
-    print(f"Timestamp: {timestamp}")
-    print(f"Recv Window: {recv_window}")
-    
-    response = requests.get(url, headers=headers)
-    print(f"Status: {response.status_code}")
-    print(f"Response: {response.text}")
+    try:
+        # Пробуем получить баланс самого простого типа
+        response = session.get_wallet_balance(
+            accountType="UNIFIED",
+            coin="USDT"
+        )
+        print("✅ SUCCESS!")
+        print(json.dumps(response, indent=2))
+        
+    except Exception as e:
+        print("❌ FAILED!")
+        print(f"Error Type: {type(e).__name__}")
+        print(f"Error Detail: {str(e)}")
+        
+        # Если не UTA, пробуем обычный аккаунт
+        print("\nTrying legacy CONTRACT account...")
+        try:
+            response = session.get_wallet_balance(
+                accountType="CONTRACT",
+                coin="USDT"
+            )
+            print("✅ SUCCESS (Legacy CONTRACT)!")
+            print(json.dumps(response, indent=2))
+        except Exception as e2:
+            print(f"❌ Legacy also failed: {e2}")
 
 if __name__ == "__main__":
-    test_bybit_auth()
+    test_bybit_auth_official()
