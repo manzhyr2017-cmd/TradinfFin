@@ -36,7 +36,8 @@ from telegram_bridge import TitanTelegramBridge
 class TitanBotUltimateFinal:
     """Финальная версия со всеми модулями."""
     
-    def __init__(self):
+    def __init__(self, symbol=None):
+        self.symbol = symbol or config.SYMBOL
         self._print_banner()
         
         # Базовые модули
@@ -99,11 +100,11 @@ class TitanBotUltimateFinal:
         """Запуск бота."""
         self.is_running = True
         
-        print(f"[TITAN] Запуск ULTIMATE FINAL... Symbol: {config.SYMBOL}")
+        print(f"[TITAN] Запуск ULTIMATE FINAL... Symbol: {self.symbol}")
         
         if config.WEBSOCKET_ENABLED:
             self.stream = RealtimeDataStream()
-            self.stream.start(config.SYMBOL)
+            self.stream.start(self.symbol)
             time.sleep(2)
         
         while self.is_running:
@@ -122,7 +123,7 @@ class TitanBotUltimateFinal:
     def _main_loop(self):
         """Главный цикл."""
         print(f"\n{'='*70}")
-        print(f"[{datetime.now().strftime('%H:%M:%S')}] ANALYSIS CYCLE")
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] ANALYSIS CYCLE - {self.symbol}")
         print('='*70)
         
         # ══════════════════════════════════════════
@@ -136,23 +137,24 @@ class TitanBotUltimateFinal:
         # ══════════════════════════════════════════
         # СБОР ВСЕХ ДАННЫХ
         # ══════════════════════════════════════════
-        print("[Analysis] Собираю разведданные...")
+        print(f"[{self.symbol}] Собираю разведданные...")
         
-        mtf_analysis = self.mtf.analyze()
-        smc_signal = self.smc.analyze()
-        of_signal = self.orderflow.analyze(config.SYMBOL, self.stream)
-        regime = self.regime.analyze()
-        oi = self.oi.analyze()
-        vp = self.volume_profile.analyze()
-        whale = self.whale.analyze()
+        mtf_analysis = self.mtf.analyze(self.symbol)
+        smc_signal = self.smc.analyze(self.symbol)
+        of_signal = self.orderflow.analyze(self.symbol, self.stream)
+        regime = self.regime.analyze(self.symbol)
+        oi = self.oi.analyze(self.symbol)
+        vp = self.volume_profile.analyze(self.symbol)
+        whale = self.whale.analyze(self.symbol)
         fg = self.fear_greed.analyze()
-        corr = self.correlations.analyze()
+        corr = self.correlations.analyze(self.symbol)
         
         # ══════════════════════════════════════════
         # COMPOSITE SCORE
         # ══════════════════════════════════════════
         
         composite_signal = self.composite.calculate(
+            symbol=self.symbol,
             mtf_analysis=mtf_analysis,
             smc_signal=smc_signal,
             orderflow_signal=of_signal,
@@ -169,7 +171,7 @@ class TitanBotUltimateFinal:
         
         # Отправляем в ТГ если сигнал сильный
         if abs(composite_signal.total_score) > 40:
-             self.telegram.send_dashboard(composite_signal)
+             self.telegram.send_dashboard(composite_signal, self.symbol)
         
         # ══════════════════════════════════════════
         # РЕШЕНИЕ
@@ -248,7 +250,7 @@ class TitanBotUltimateFinal:
         print(f"{'🚀'*30}\n")
         
         result = self.executor.place_order(
-            symbol=config.SYMBOL,
+            symbol=self.symbol,
             side=side,
             quantity=final_qty,
             price=smc_signal.entry_price,
@@ -261,7 +263,7 @@ class TitanBotUltimateFinal:
             atr = df['atr'].iloc[-1] if (df is not None and not df.empty) else smc_signal.entry_price * 0.01
             
             self.trailing.register_position(
-                symbol=config.SYMBOL,
+                symbol=self.symbol,
                 side=composite.direction,
                 entry_price=smc_signal.entry_price,
                 initial_stop=smc_signal.stop_loss,
@@ -269,7 +271,7 @@ class TitanBotUltimateFinal:
             )
             
             self.partial_tp.register_position(
-                symbol=config.SYMBOL,
+                symbol=self.symbol,
                 side=composite.direction,
                 entry_price=smc_signal.entry_price,
                 stop_loss=smc_signal.stop_loss,
@@ -278,7 +280,7 @@ class TitanBotUltimateFinal:
             
             # Уведомление в ТГ об исполнении
             self.telegram.send_signal({
-                'symbol': config.SYMBOL,
+                'symbol': self.symbol,
                 'direction': composite.direction,
                 'score': composite.total_score,
                 'entry': smc_signal.entry_price,
@@ -293,16 +295,16 @@ class TitanBotUltimateFinal:
     
     def _manage_positions(self):
         """Управляет открытыми позициями."""
-        positions = self.data.get_positions(config.SYMBOL)
+        positions = self.data.get_positions(self.symbol)
         
         if not positions:
             return
         
-        ticker = self.data.get_funding_rate(config.SYMBOL)
+        ticker = self.data.get_funding_rate(self.symbol)
         if ticker:
             current_price = ticker['last_price']
-            self.trailing.update(config.SYMBOL, current_price)
-            self.partial_tp.check_and_execute(config.SYMBOL, current_price)
+            self.trailing.update(self.symbol, current_price)
+            self.partial_tp.check_and_execute(self.symbol, current_price)
     
     def _shutdown(self):
         """Завершение работы."""
@@ -315,18 +317,15 @@ class TitanBotUltimateFinal:
 
 
 if __name__ == "__main__":
-    bot = TitanBotUltimateFinal()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--symbol", type=str, default=None)
+    parser.add_argument("--mode", type=str, choices=["bot", "scan"], default="bot")
+    args = parser.parse_args()
     
-    print("\nTITAN ULTIMATE FINAL MENU:")
-    print("  1. Start Live/Demo Bot")
-    print("  2. Run Analysis Once")
-    print("  3. Exit")
+    bot = TitanBotUltimateFinal(symbol=args.symbol)
     
-    choice = input("\nSelect: ").strip()
-    
-    if choice == "1":
+    if args.mode == "bot":
         bot.start()
-    elif choice == "2":
-        bot._main_loop()
     else:
-        print("Goodbye!")
+        bot._main_loop()

@@ -21,8 +21,9 @@ logger = logging.getLogger("TitanTG")
 class TitanTelegramBot:
     def __init__(self):
         self.token = os.getenv("TELEGRAM_BOT_TOKEN")
-        self.bot_instance = TitanBotUltimateFinal()
-        self.bot_thread = None
+        self.symbols = ["ETHUSDT", "SOLUSDT", "BTCUSDT"]
+        self.bots = {s: TitanBotUltimateFinal(symbol=s) for s in self.symbols}
+        self.bot_threads = {}
         
         # Build app
         self.app = Application.builder().token(self.token).build()
@@ -47,7 +48,7 @@ class TitanTelegramBot:
         elif text == "🚨 Emergency Stop":
             await self.stop_bot_cmd(update, context)
         elif text == "🧠 Composite Score":
-            await self.status_cmd(update, context) # Simplified for now
+            await self.status_cmd(update, context)
 
     async def start_cmd(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         keyboard = [
@@ -57,37 +58,46 @@ class TitanTelegramBot:
         ]
         reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
         await update.message.reply_text(
-            "💎 <b>TITAN BOT 2026 - ULTIMATE FINAL</b>\n\nДобро пожаловать в центр управления. Выберите действие:",
+            f"💎 <b>TITAN BOT 2026 - MULTI-MODE</b>\n\nМониторинг: {', '.join(self.symbols)}\n\nВыберите действие:",
             reply_markup=reply_markup,
             parse_mode=ParseMode.HTML
         )
 
     async def status_cmd(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        status = "🟢 ACTIVE" if self.bot_instance.is_running else "🔴 STANDBY"
-        msg = f"<b>TITAN STATUS:</b> {status}\n"
-        msg += f"<b>Symbol:</b> {config.SYMBOL}\n"
-        msg += f"<b>Time:</b> {datetime.now().strftime('%H:%M:%S')}"
+        msg = "<b>TITAN MULTI-STATUS:</b>\n\n"
+        for s, bot in self.bots.items():
+            status = "🟢 ACTIVE" if bot.is_running else "🔴 STANDBY"
+            msg += f"• <b>{s}:</b> {status}\n"
+            
+        msg += f"\n🕓 <b>Time:</b> {datetime.now().strftime('%H:%M:%S')}"
         await update.message.reply_text(msg, parse_mode=ParseMode.HTML)
 
     async def run_bot_cmd(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        if self.bot_instance.is_running:
-            await update.message.reply_text("Бот уже запущен!")
-            return
-            
-        await update.message.reply_text("🚀 Инициализация систем TITAN...")
-        # Запускаем бота в отдельном потоке
-        self.bot_thread = threading.Thread(target=self.bot_instance.start)
-        self.bot_thread.daemon = True
-        self.bot_thread.start()
-        await update.message.reply_text("✅ TITAN BOT запущен и анализирует рынок.")
+        started = []
+        for s, bot in self.bots.items():
+            if not bot.is_running:
+                thread = threading.Thread(target=bot.start)
+                thread.daemon = True
+                thread.start()
+                self.bot_threads[s] = thread
+                started.append(s)
+        
+        if started:
+            await update.message.reply_text(f"🚀 Запуск систем TITAN для: {', '.join(started)}")
+        else:
+            await update.message.reply_text("Все боты уже запущены.")
 
     async def stop_bot_cmd(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        if not self.bot_instance.is_running:
-            await update.message.reply_text("Бот не запущен.")
-            return
-            
-        self.bot_instance.is_running = False
-        await update.message.reply_text("🛑 Остановка TITAN BOT...")
+        stopped = []
+        for s, bot in self.bots.items():
+            if bot.is_running:
+                bot.is_running = False
+                stopped.append(s)
+                
+        if stopped:
+            await update.message.reply_text(f"🛑 Останавливаю TITAN для: {', '.join(stopped)}")
+        else:
+            await update.message.reply_text("Боты не запущены.")
 
     async def button_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         query = update.callback_query
