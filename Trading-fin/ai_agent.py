@@ -196,6 +196,11 @@ When you analyst a chart, follow this flow:
                 continue
             
             try:
+                # Robust key handling for DeepSeek (it must start with sk-)
+                if provider["name"] == "IBOOT_DEEPSEEK" and not api_key.startswith("sk-"):
+                    api_key = f"sk-{api_key}"
+                    logger.info(f"  🔧 Added missing 'sk-' prefix to {provider['name']} key")
+
                 if provider["name"] == "Google Gemini":
                     # Special handling for Native Gemini REST API
                     self.llm_clients.append((provider["name"], "NATIVE_GEMINI", provider["model"]))
