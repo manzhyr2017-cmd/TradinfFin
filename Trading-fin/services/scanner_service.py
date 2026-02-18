@@ -260,13 +260,54 @@ class ScannerService:
                         
                         logger.info(f"🎯 SIGNAL QUALIFIED: {symbol} {signal.signal_type.value} ({signal.probability}%)")
                         
+                        # --- EXECUTION (NEW ORDER: EXECUTE FIRST) ---
+                        is_executed = False
+                        order_id = None
+                        execution_error = None
+                        
+                        if self.bot.execution and self.bot.auto_trade:
+                            logger.info(f"⚙️ EXECUTING: {symbol}...")
+                            try:
+                                if hasattr(self.bot.execution, 'execute_signal_async'):
+                                    success, res = await self.bot.execution.execute_signal_async(signal)
+                                else:
+                                    # execute_signal returns (success, result/order_id)
+                                    exec_res = self.bot.execution.execute_signal(signal)
+                                    if isinstance(exec_res, tuple):
+                                        success, res = exec_res
+                                    else:
+                                        success, res = exec_res, "Unknown response"
+                                
+                                if success:
+                                    is_executed = True
+                                    order_id = res
+                                    self.bot.stats['trades_executed'] += 1
+                                    logger.info(f"✅ Auto-Execution Successful: {symbol} | OrderID: {order_id}")
+                                else:
+                                    execution_error = res
+                                    logger.warning(f"❌ Auto-Execution Failed: {symbol} | Error: {execution_error}")
+                            except Exception as ee:
+                                execution_error = str(ee)
+                                logger.error(f"⚠️ Execution Exception: {ee}")
+
                         # --- TELEGRAM (PRIORITY) ---
                         tg_sent = False
                         # Try interactive bot first (with buttons)
                         if hasattr(self.bot, 'telegram_bot') and self.bot.telegram_bot:
                             try:
                                 logger.info(f"📨 TG (Interactive): Sending for {symbol}...")
-                                await self.bot.telegram_bot.send_signal_with_actions(signal)
+                                # Capture sentiment/sector for formatting
+                                sentiment = self.bot.sentiment_service.regime if hasattr(self.bot, 'sentiment_service') and self.bot.sentiment_service else None
+                                sector = None # Could be extracted from indicators if needed
+                                
+                                await self.bot.telegram_bot.send_signal_with_actions(
+                                    signal, 
+                                    sentiment=sentiment, 
+                                    sector=sector,
+                                    is_executed=is_executed, 
+                                    order_id=order_id, 
+                                    execution_error=execution_error
+                                )
                                 tg_sent = True
                             except Exception as te:
                                 logger.error(f"❌ TG Bot Error: {te}")
@@ -275,17 +316,10 @@ class ScannerService:
                         if not tg_sent and hasattr(self.bot, 'telegram') and self.bot.telegram:
                             try:
                                 logger.info(f"📨 TG (Notifier): Sending for {symbol}...")
+                                # For simple notifier, we just send the signal
                                 await self.bot.telegram.send(signal) # Async await instead of sync
                             except Exception as te:
                                 logger.error(f"❌ TG Notifier Error: {te}")
-
-                        # --- EXECUTION ---
-                        if self.bot.execution and self.bot.auto_trade:
-                            logger.info(f"⚙️ EXECUTING: {symbol}...")
-                            if hasattr(self.bot.execution, 'execute_signal_async'):
-                                await self.bot.execution.execute_signal_async(signal)
-                            else:
-                                self.bot.execution.execute_signal(signal)
                     else:
                         logger.info(f"⏭️ {symbol} Rejected: Low Prob ({signal.probability}% < {self.bot.min_probability}%)")
 

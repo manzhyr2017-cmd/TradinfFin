@@ -330,6 +330,7 @@ class NewsEngine:
         cache_ttl_seconds: int = 300,          # Кэш на 5 минут
         request_timeout: int = 10,              # Таймаут запроса
         max_articles: int = 50,                 # Макс. статей для анализа
+        use_finbert: bool = False,              # Совместимость
     ):
         self.cryptopanic_key = cryptopanic_key
         self.cache_ttl = cache_ttl_seconds
