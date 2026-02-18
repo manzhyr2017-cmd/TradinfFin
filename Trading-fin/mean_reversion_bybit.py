@@ -2393,8 +2393,9 @@ class AdvancedMeanReversionEngine:
             is_bearish_macro = tf_1h.get('ema_dist', 0) < -0.5 and tf_1h.get('trend_direction') == 'down'
             
             if is_bearish_macro:
-                # Allow only if EXTREME exhaustion (RSI < 15)
-                if tf_15m['rsi'] > 15:
+                # Relax for AGGRESSIVE mode (low min_confluence)
+                rsi_block_threshold = 15 if self.min_confluence >= 50 else 30
+                if tf_15m['rsi'] > rsi_block_threshold:
                     logger.debug(f"{symbol}: Blocked LONG by Trend Guardian (Bearish Macro)")
                     return None
 
@@ -2632,8 +2633,9 @@ class AdvancedMeanReversionEngine:
             is_bullish_macro = tf_1h.get('ema_dist', 0) > 0.5 and tf_1h.get('trend_direction') == 'up'
             
             if is_bullish_macro:
-                # Allow only if EXTREME exhaustion (RSI > 85)
-                if tf_15m['rsi'] < 85:
+                # Relax for AGGRESSIVE mode (low min_confluence)
+                rsi_block_threshold = 85 if self.min_confluence >= 50 else 70
+                if tf_15m['rsi'] < rsi_block_threshold:
                     logger.debug(f"{symbol}: Blocked SHORT by Trend Guardian (Bullish Macro)")
                     return None
         

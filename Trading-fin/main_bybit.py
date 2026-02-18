@@ -197,7 +197,7 @@ class TradingBot:
             logger.info(f"🚀 Deposit Acceleration Engine loaded | Phase auto-detection by balance")
         else:
             # Sniper Mode: Extreme signals only (85%+), R:R 1:4 minimum
-            self.engine = UltimateTradingEngine(cryptopanic_key=cryptopanic_key, total_capital=equity, min_confluence=85)
+            self.engine = UltimateTradingEngine(cryptopanic_key=cryptopanic_key, total_capital=equity, min_confluence=self.min_probability)
 
         # 3. Execution Manager (with Tradingfin3.0 components)
         self.execution = None

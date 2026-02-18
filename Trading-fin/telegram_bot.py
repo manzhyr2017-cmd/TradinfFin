@@ -924,14 +924,7 @@ class TelegramNotifier:
         Check if current time is within Quiet Hours (00:00 - 06:00 Kamchatka Time).
         Kamchatka is UTC+12.
         """
-        # Get UTC time
-        utc_now = datetime.utcnow()
-        # Convert to Kamchatka (UTC+12)
-        kamchatka_time = utc_now + timedelta(hours=12)
-        
-        # Quiet period: 00:00 to 06:00
-        if 0 <= kamchatka_time.hour < 6:
-            return True
+        # DISABLED: User wants 24/7 operation in AGGRESSIVE mode
         return False
 
     async def send_message(self, text: str, channel_id: str = None, keyboard=None):
