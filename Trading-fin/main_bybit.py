@@ -95,6 +95,7 @@ class TradingBot:
     """Координатор торговой системы"""
     
     def __init__(self, **kwargs):
+        global config
         self.strategy_name = kwargs.get('strategy', 'mean_reversion')
         self.min_probability = kwargs.get('min_probability', 85)
         
