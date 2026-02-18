@@ -719,20 +719,20 @@ class TradingTelegramBot:
             # Вместо AI бреда - показываем меню
             text = update.message.text
             
-            if text == "🚀 Старт":
+            if text in ["🚀 Старт", "🚀 Start", "🚀 Start Analysis"]:
                 res = await self.controller.start_bot()
                 await update.message.reply_text(f"🚀 Запуск: {res.get('message', 'error')}")
-            elif text == "🛑 Стоп":
+            elif text in ["🛑 Стоп", "🛑 Stop"]:
                 res = await self.controller.stop_bot()
                 await update.message.reply_text(f"🛑 Остановка: {res.get('message', 'error')}")
-            elif text == "📊 Статус":
+            elif text in ["📊 Статус", "📊 Status"]:
                 status = await self.controller.get_status()
                 state = "🟢 RUNNING" if status.get('running') else "🔴 STOPPED"
                 msg = f"Статус: {state}\nPID: {status.get('pid')}"
                 if status.get('regime'):
                      msg += f"\n\n🌍 <b>Режим рынка:</b> {status.get('regime')}"
                 await update.message.reply_text(msg, parse_mode=ParseMode.HTML)
-            elif text == "💰 Баланс":
+            elif text in ["💰 Баланс", "💰 Balance"]:
                 msg = "💰 Баланс: Функция недоступна"
                 if hasattr(self.controller, 'get_balance'):
                      try:
@@ -741,7 +741,7 @@ class TradingTelegramBot:
                      except Exception as e:
                          msg = f"Ошибка получения баланса: {e}"
                 await update.message.reply_text(msg, parse_mode=ParseMode.HTML)
-            elif text == "📋 Топ Монеты":
+            elif text in ["📋 Топ Монеты", "📋 Top Coins"]:
                 data = await self.controller.get_selector_data()
                 if not data:
                     await update.message.reply_text("❌ Данные селектора недоступны")
@@ -823,9 +823,18 @@ class TradingTelegramBot:
             
             elif text == "🧠 AI Чат":
                 await update.message.reply_text("🤖 Я готов к общению! Просто напишите мне любой вопрос о рынке или состоянии бота.")
-            
             # If text is not a command/button, try to use AI Agent with Real-Time Context
-            if text not in ["🚀 Старт", "🛑 Стоп", "📊 Статус", "💰 Баланс", "📋 Топ Монеты", "📊 Сводка", "🚨 PANIC", "🛡️ Защита", "🧠 AI Чат"]:
+            recognized_buttons = [
+                "🚀 Старт", "🚀 Start", "🚀 Start Analysis",
+                "🛑 Стоп", "🛑 Stop",
+                "📊 Статус", "📊 Status",
+                "💰 Баланс", "💰 Balance",
+                "📋 Топ Монеты", "📋 Top Coins",
+                "📊 Сводка", "📊 Summary",
+                "🚨 PANIC", "🛡️ Защита", "🛡️ Protection",
+                "🧠 AI Чат", "🧠 AI Chat"
+            ]
+            if text not in recognized_buttons:
                  # Send typing action
                  await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
                  

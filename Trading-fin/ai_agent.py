@@ -27,10 +27,10 @@ logger = logging.getLogger(__name__)
 LLM_PROVIDERS = [
     {
         "name": "IBOOT_DEEPSEEK",
-        "env_key": "IBOOT_API_KEY",
+        "env_key": "DEEPSEEK_API_KEY",
         "base_url": "https://api.deepseek.com",
         "model": "deepseek-chat",
-        "key_prefix": "sk-"
+        "key_prefix": ""
     },
     {
         "name": "Google Gemini",
