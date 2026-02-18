@@ -34,6 +34,12 @@ import json
 import os
 from collections import deque
 
+# Import config (added for Titan Bot modes)
+try:
+    import config
+except ImportError:
+    config = None
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -176,17 +182,41 @@ class ConfluenceScore:
         return (self.total_score / self.max_possible) * 100 if self.max_possible > 0 else 0
     
     def get_strength(self) -> SignalStrength:
-        pct = self.percentage
-        if pct >= 80:
-            return SignalStrength.EXTREME
-        elif pct >= 65:
-            return SignalStrength.STRONG
-        elif pct >= 50:
-            return SignalStrength.MODERATE
-        elif pct >= 35:
-            return SignalStrength.WEAK
+        if config and hasattr(config, "TRADE_MODE"):
+            # Dynamic thresholds based on config
+            pct = self.total_score # Use raw score if user config uses raw score, but user config has thresholds like 40, 25, 15 which are low for pct.
+            # User config says: COMPOSITE_STRONG_THRESHOLD = 40. 
+            # Original code used percentage.
+            # Convert config thresholds to percentage if needed, OR use total_score.
+            # The user's config comments say "Было 60, снижаем". 60/145 is ~41%.
+            # "COMPOSITE_STRONG_THRESHOLD = 40". 40/145 is ~27%.
+            # Let's assume user thresholds are RAW SCORES because max_possible is 145.
+            
+            score = self.total_score
+            
+            if score >= getattr(config, 'COMPOSITE_STRONG_THRESHOLD', 40):
+                return SignalStrength.EXTREME # Or STRONG? User says "STRONG_THRESHOLD = 40"
+            elif score >= getattr(config, 'COMPOSITE_MODERATE_THRESHOLD', 25):
+                return SignalStrength.STRONG # Mapping moderate threshold to strong signal for aggressive?
+            elif score >= getattr(config, 'COMPOSITE_WEAK_THRESHOLD', 15):
+                return SignalStrength.MODERATE
+            elif score >= getattr(config, 'COMPOSITE_MIN_FOR_ENTRY', 10):
+                return SignalStrength.WEAK
+            else:
+                return SignalStrength.WEAK # Fallback
         else:
-            return SignalStrength.WEAK
+            # Fallback to original percentage based logic
+            pct = self.percentage
+            if pct >= 80:
+                return SignalStrength.EXTREME
+            elif pct >= 65:
+                return SignalStrength.STRONG
+            elif pct >= 50:
+                return SignalStrength.MODERATE
+            elif pct >= 35:
+                return SignalStrength.WEAK
+            else:
+                return SignalStrength.WEAK
     
     def get_breakdown(self) -> str:
         """Возвращает детальную разбивку по факторам"""
@@ -2096,6 +2126,11 @@ class MultiTimeframeAnalyzer:
         details = {}
         
         if direction == 'LONG':
+            # AGGRESSIVE MODE BONUS
+            if config and getattr(config, 'TRADE_MODE', '') == 'AGGRESSIVE':
+                score += 15
+                details['AGGRESSIVE'] = "🚀 Aggressive Bonus +15"
+
             if tf_15m['rsi_oversold']:
                 score += 20
                 details['15m_rsi'] = f"✅ RSI={tf_15m['rsi']:.1f} < 30"
@@ -2127,6 +2162,11 @@ class MultiTimeframeAnalyzer:
                 details['4h_macd'] = "✅ 4H MACD вверх"
         
         else:  # SHORT
+            # AGGRESSIVE MODE BONUS
+            if config and getattr(config, 'TRADE_MODE', '') == 'AGGRESSIVE':
+                score += 15
+                details['AGGRESSIVE'] = "🚀 Aggressive Bonus +15"
+                
             if tf_15m['rsi_overbought']:
                 score += 20
                 details['15m_rsi'] = f"✅ RSI={tf_15m['rsi']:.1f} > 70"
@@ -2226,17 +2266,28 @@ class AdvancedMeanReversionEngine:
         atr_pct = (atr / current_price) * 100
         
         if atr_pct < 0.2:
-            logger.debug(f"{symbol}: Low Volatility (ATR {atr_pct:.2f}%) - SKIP")
-            return None
+            # In AGGRESSIVE mode, we might allow lower volatility
+            if config and getattr(config, 'TRADE_MODE', '') == 'AGGRESSIVE':
+                 pass # Allow low vol in aggressive
+            else:
+                logger.debug(f"{symbol}: Low Volatility (ATR {atr_pct:.2f}%) - SKIP")
+                return None
         
         # Режим рынка
         if is_scalping:
             regime = MarketRegime.RANGING_WIDE # Default for scalping
         else:
             regime = self.detect_regime(df_4h)
-            if regime in [MarketRegime.STRONG_TREND_UP, MarketRegime.STRONG_TREND_DOWN, MarketRegime.VOLATILE_CHAOS]:
-                logger.debug(f"{symbol}: {regime.value} - пропуск")
-                return None
+            
+            # In AGGRESSIVE mode, we trade ALL regimes except maybe CHAOS
+            if config and getattr(config, 'TRADE_MODE', '') == 'AGGRESSIVE':
+                if regime == MarketRegime.VOLATILE_CHAOS:
+                     logger.debug(f"{symbol}: CHAOS - skip even in aggressive")
+                     return None
+            else:
+                if regime in [MarketRegime.STRONG_TREND_UP, MarketRegime.STRONG_TREND_DOWN, MarketRegime.VOLATILE_CHAOS]:
+                    logger.debug(f"{symbol}: {regime.value} - пропуск")
+                    return None
         
         # Анализ таймфреймов
         tf_15m = self.mtf_analyzer.analyze_timeframe(df_15m)

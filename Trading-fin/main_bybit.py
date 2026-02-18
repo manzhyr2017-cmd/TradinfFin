@@ -22,8 +22,18 @@ from datetime import datetime
 from typing import List, Optional
 from dotenv import load_dotenv
 
+
 # Загрузка env
 load_dotenv(override=True)
+
+try:
+    import config
+    from trade_modes import apply_mode, TRADE_MODES
+except ImportError as e:
+    logging.warning(f"Could not import config or trade_modes: {e}")
+    config = None
+    apply_mode = None
+
 
 # Внутренние модули
 from mean_reversion_bybit import (
@@ -87,6 +97,26 @@ class TradingBot:
     def __init__(self, **kwargs):
         self.strategy_name = kwargs.get('strategy', 'mean_reversion')
         self.min_probability = kwargs.get('min_probability', 85)
+        
+        # Apply Trading Mode (Titan Bot 2026)
+        self.mode_name = kwargs.get('mode')
+        if not self.mode_name and config and hasattr(config, 'TRADE_MODE'):
+             self.mode_name = config.TRADE_MODE
+             
+        if apply_mode and self.mode_name:
+            self.mode_settings = apply_mode(self.mode_name)
+            # Override min_probability (Composite Score check)
+            if self.strategy_name in ['mean_reversion', 'auto']:
+                new_min = self.mode_settings.get('composite_min_score')
+                if new_min:
+                    self.min_probability = new_min
+                    logger.info(f"🔄 TITAN MODE '{self.mode_name}': Min Score set to {self.min_probability}")
+            
+            # Allow aggressive settings overrides
+            if self.mode_name == 'AGGRESSIVE':
+                logger.info("🚀 AGGRESSIVE MODE: Relaxing all filters!")
+        
+        # Adaptive threshold for scalping (if default 85 is unchanged)
         
         # Adaptive threshold for scalping (if default 85 is unchanged)
         if self.strategy_name in ["scalping", "new_scalping"] and self.min_probability == 85:
@@ -544,6 +574,22 @@ def cmd_scan(args):
     telegram_token = os.getenv('TELEGRAM_BOT_TOKEN') or file_config.get('telegram_token')
     telegram_channel = os.getenv('TELEGRAM_CHANNEL') or file_config.get('telegram_channel')
     
+    if args.interactive_mode:
+        print("""
+    ╔════════════════════════════════════════╗
+    ║        SELECT TRADING MODE             ║
+    ╠════════════════════════════════════════╣
+    ║  1. CONSERVATIVE (1-3 trades/day)      ║
+    ║  2. MODERATE     (3-6 trades/day)      ║
+    ║  3. AGGRESSIVE   (5-15 trades/day)     ║
+    ║  4. SCALPER      (10-30 trades/day)    ║
+    ╚════════════════════════════════════════╝
+        """)
+        choice = input("Select mode (1-4): ").strip()
+        mode_map = {"1": "CONSERVATIVE", "2": "MODERATE", "3": "AGGRESSIVE", "4": "SCALPER"}
+        args.mode = mode_map.get(choice, "AGGRESSIVE")
+        print(f"Selected: {args.mode}")
+
     # Определяем параметры
     # If --all is passed, ignore symbols from config and scan top by volume
     if args.all:
@@ -574,7 +620,8 @@ def cmd_scan(args):
          strategy=args.strategy or file_config.get('strategy', 'mean_reversion'),
         api_key=api_key,
         api_secret=api_secret,
-        disable_telegram_polling=args.no_telegram_bot
+        disable_telegram_polling=args.no_telegram_bot,
+        mode=args.mode
     )
     
     try:
@@ -676,6 +723,8 @@ def main():
     scan_parser.add_argument('--risk', type=float, default=1.0)
     scan_parser.add_argument('--use-binance', action='store_true')
     scan_parser.add_argument('--no-telegram-bot', action='store_true', help='Disable interactive Telegram bot polling')
+    scan_parser.add_argument('--mode', type=str, default=None, choices=['CONSERVATIVE', 'MODERATE', 'AGGRESSIVE', 'SCALPER'], help='Trading Mode')
+    scan_parser.add_argument('--interactive-mode', action='store_true', help='Interactive mode selection')
     
     bt_parser = subparsers.add_parser('backtest', help='Бэктестинг')
     bt_parser.add_argument('--data-file', '-f')
