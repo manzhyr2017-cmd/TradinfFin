@@ -2314,8 +2314,9 @@ class AdvancedMeanReversionEngine:
                     ai_prob = self.ai.predict_success_probability(long_signal.indicators)
                     long_signal.indicators['ai_score'] = ai_prob
                     long_signal.reasoning.append(f"🤖 AI Score: {ai_prob*100:.1f}%")
-                    # Filter weak AI signals
-                    if ai_prob < 0.6:
+                    # Filter weak AI signals (Relaxed for AGGRESSIVE or UNTRAINED AI)
+                    is_aggressive = self.min_confluence < 50
+                    if ai_prob < 0.6 and ai_prob != 0.5 and not is_aggressive:
                          logger.info(f"AI rejected LONG {symbol} (prob {ai_prob:.2f})")
                          return None
                 except Exception as e:
@@ -2336,7 +2337,9 @@ class AdvancedMeanReversionEngine:
                     ai_prob = self.ai.predict_success_probability(short_signal.indicators)
                     short_signal.indicators['ai_score'] = ai_prob
                     short_signal.reasoning.append(f"🤖 AI Score: {ai_prob*100:.1f}%")
-                    if ai_prob < 0.6:
+                    # Filter weak AI signals (Relaxed for AGGRESSIVE or UNTRAINED AI)
+                    is_aggressive = self.min_confluence < 50
+                    if ai_prob < 0.6 and ai_prob != 0.5 and not is_aggressive:
                          logger.info(f"AI rejected SHORT {symbol} (prob {ai_prob:.2f})")
                          return None
                 except Exception as e:
