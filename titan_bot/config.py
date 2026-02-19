@@ -42,8 +42,10 @@ if not API_SECRET or API_SECRET == "your_secret":
 
 
 # === ТОРГОВЫЕ ПАРАМЕТРЫ ===
-SYMBOL = "ETHUSDT"           # Что торгуем
+SYMBOL = "ETHUSDT"           # Дефолтная пара
 BENCHMARK = "BTCUSDT"        # На что смотрим как на индикатор рынка
+MULTI_SYMBOL_ENABLED = True  # Сканировать несколько монет
+MAX_SYMBOLS = 10             # Сколько монет в топе перебирать
 TIMEFRAME = "15"             # Таймфрейм в минутах
 CATEGORY = "linear"          # linear = фьючерсы USDT
 
