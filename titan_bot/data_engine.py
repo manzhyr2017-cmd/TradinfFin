@@ -329,46 +329,29 @@ class RealtimeDataStream:
         
     def start(self, symbol: str = None):
         """Запускает WebSocket соединение."""
-        if symbol is None:
-            symbol = config.SYMBOL
-            
+    def start(self, symbol):
+        """Запуск прослушивания сделок для одного или нескольких символов."""
+        if self.ws:
+            return
+
         self.ws = WebSocket(
             testnet=config.TESTNET,
-            channel_type="linear"
+            channel_type="linear",
+            demo=getattr(config, 'BYBIT_DEMO', False)
         )
         
-        # Подписка на ленту сделок (Trade Stream)
-        self.ws.trade_stream(
-            symbol=symbol,
-            callback=self._handle_trade
-        )
-        
-        # Подписка на стакан
-        self.ws.orderbook_stream(
-            depth=50,
-            symbol=symbol,
-            callback=self._handle_orderbook
-        )
-        
-        print(f"[RealtimeStream] WebSocket запущен для {symbol}")
+        # Если пришел список - подписываемся на все
+        if isinstance(symbol, list):
+            for s in symbol:
+                self.ws.trade_stream(symbol=s, callback=self._handle_trade)
+            print(f"[RealtimeStream] WebSocket запущен для {len(symbol)} монет")
+        else:
+            self.ws.trade_stream(symbol=symbol, callback=self._handle_trade)
+            print(f"[RealtimeStream] WebSocket запущен для {symbol}")
     
     def switch_symbol(self, symbol: str):
-        """Переключает подписку на новый символ."""
-        try:
-            # В v5 pybit проще всего перезапустить WS для нового символа 
-            if self.ws:
-                try:
-                    # Попытка тихого закрытия
-                    self.ws.exit()
-                except:
-                    pass
-                self.ws = None
-            
-            # Небольшая пауза для очистки ресурсов сокетов
-            time.sleep(0.1)
-            self.start(symbol)
-        except Exception as e:
-            print(f"[RealtimeStream] Ошибка переключения символа: {e}")
+        """Метод оставлен для совместимости, но теперь мы стараемся не перезапускать WS часто."""
+        pass
     
     def _handle_trade(self, message):
         """

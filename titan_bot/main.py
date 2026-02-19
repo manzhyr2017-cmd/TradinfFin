@@ -111,35 +111,36 @@ class TitanBotUltimateFinal:
         
         # Первичный подбор символов
         if config.MULTI_SYMBOL_ENABLED:
-            self.symbol_list = self.selector.get_top_symbols(config.MAX_SYMBOLS)
+            self.symbol_list = self.selector.get_top_symbols(10)
         
         if config.WEBSOCKET_ENABLED:
             self.stream = RealtimeDataStream()
-            # Начинаем с первого, будем подписываться на новые по мере хода
-            self.stream.start(self.symbol_list[0])
+            # Подписываемся сразу на весь список!
+            self.stream.start(self.symbol_list)
             time.sleep(2)
         
         cycle_count = 0
         while self.is_running:
             try:
-                # Раз в 5 циклов обновляем список топов (чтобы список был свежим)
-                if config.MULTI_SYMBOL_ENABLED and cycle_count % 5 == 0:
-                    self.symbol_list = self.selector.get_top_symbols(10)
+                # Раз в 5 циклов (примерно каждые 15-20 мин) обновляем список топов
+                if config.MULTI_SYMBOL_ENABLED and cycle_count % 5 == 0 and cycle_count > 0:
+                    new_symbols = self.selector.get_top_symbols(10)
+                    if new_symbols != self.symbol_list:
+                        self.symbol_list = new_symbols
+                        # Если список сменился, перезапускаем WS
+                        if self.stream:
+                            if self.stream.ws: self.stream.ws.exit()
+                            self.stream.ws = None
+                            self.stream.start(self.symbol_list)
                 
                 for symbol in self.symbol_list:
                     self.current_symbol = symbol
-                    
-                    # Если включен WS, переключаем подписку корректно
-                    if self.stream and config.WEBSOCKET_ENABLED:
-                        self.stream.switch_symbol(symbol)
-                    
                     self._main_loop(symbol)
                     
                     # Пауза 3 секунды между монетами по просьбе юзера
                     time.sleep(3)
                 
                 cycle_count += 1
-                # Убираем долгую паузу ANALYSIS_INTERVAL, чтобы сканирование было потоковым
                 
             except KeyboardInterrupt:
                 self._shutdown()
