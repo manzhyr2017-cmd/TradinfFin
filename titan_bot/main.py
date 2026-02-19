@@ -255,9 +255,36 @@ class TitanBotUltimateFinal:
     def _execute_trade(self, symbol, composite, smc_signal, regime):
         """Исполняет сделку."""
         
+        # Если нет сигнала от SMC, но сигнал ОЧЕНЬ сильный - заходим по рынку
+        is_very_strong = composite.total_score >= 40
+        
         if smc_signal is None:
-            print(f"[Trade] {symbol}: Нет точки входа от SMC")
-            return
+            if is_very_strong:
+                print(f"[Trade] {symbol}: SMC не дал точку, но Score {composite.total_score} > 40. ВХОДИМ ПО РЫНКУ!")
+                # Создаем фейковый сигнал для входа по рынку
+                ticker = self.data.session.get_tickers(category=config.CATEGORY, symbol=symbol)
+                current_price = float(ticker['result']['list'][0]['lastPrice'])
+                
+                # Примерный стоп 1% для рыночного входа
+                sl_dist = current_price * 0.01
+                sl = current_price - sl_dist if composite.direction == 'LONG' else current_price + sl_dist
+                
+                from smart_money import SMCSignal, SMCSignalType
+                smc_signal = SMCSignal(
+                    signal_type=SMCSignalType.NO_SIGNAL,
+                    entry_price=current_price,
+                    stop_loss=sl,
+                    take_profit=current_price + (sl_dist * 2),
+                    liquidity_level=current_price,
+                    confidence=0.5,
+                    description="Market Entry (High Score)"
+                )
+            else:
+                print(f"[Trade] {symbol}: Нет точки входа от SMC")
+                return
+        
+        # Определяем тип ордера
+        order_type = "Market" if is_very_strong else "Limit"
         
         # Рассчитываем размер позиции
         base_position = self.risk.calculate_position_size(
@@ -293,7 +320,8 @@ class TitanBotUltimateFinal:
             side=side,
             quantity=final_qty,
             price=smc_signal.entry_price,
-            stop_loss=smc_signal.stop_loss
+            stop_loss=smc_signal.stop_loss,
+            order_type=order_type
         )
         
         if result.success:
