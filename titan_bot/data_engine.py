@@ -330,24 +330,36 @@ class RealtimeDataStream:
     def start(self, symbol: str = None):
         """Запускает WebSocket соединение."""
     def start(self, symbol):
-        """Запуск прослушивания сделок для одного или нескольких символов."""
+        """Запуск прослушивания сделок с защитой от перегрузки подключений."""
         if self.ws:
             return
 
-        self.ws = WebSocket(
-            testnet=config.TESTNET,
-            channel_type="linear",
-            demo=getattr(config, 'BYBIT_DEMO', False)
-        )
-        
-        # Если пришел список - подписываемся на все
-        if isinstance(symbol, list):
-            for s in symbol:
-                self.ws.trade_stream(symbol=s, callback=self._handle_trade)
-            print(f"[RealtimeStream] WebSocket запущен для {len(symbol)} монет")
-        else:
-            self.ws.trade_stream(symbol=symbol, callback=self._handle_trade)
-            print(f"[RealtimeStream] WebSocket запущен для {symbol}")
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                self.ws = WebSocket(
+                    testnet=config.TESTNET,
+                    channel_type="linear",
+                    demo=getattr(config, 'BYBIT_DEMO', False)
+                )
+                
+                # Если пришел список - подписываемся на все
+                if isinstance(symbol, list):
+                    for s in symbol:
+                        self.ws.trade_stream(symbol=s, callback=self._handle_trade)
+                    print(f"[RealtimeStream] WebSocket успешно запущен для {len(symbol)} монет")
+                else:
+                    self.ws.trade_stream(symbol=symbol, callback=self._handle_trade)
+                    print(f"[RealtimeStream] WebSocket успешно запущен для {symbol}")
+                return # Выходим при успехе
+                
+            except Exception as e:
+                print(f"[RealtimeStream] Попытка {attempt+1}/{max_retries} не удалась: {e}")
+                if attempt < max_retries - 1:
+                    time.sleep(30) # Ждем 30 секунд перед повтором
+                else:
+                    print("[RealtimeStream] КРИТИЧЕСКАЯ ОШИБКА: Не удалось подключиться к WebSocket после всех попыток.")
+                    raise e
     
     def switch_symbol(self, symbol: str):
         """Метод оставлен для совместимости, но теперь мы стараемся не перезапускать WS часто."""

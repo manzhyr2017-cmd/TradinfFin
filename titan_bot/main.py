@@ -107,17 +107,19 @@ class TitanBotUltimateFinal:
         """Запуск бота."""
         self.is_running = True
         
+        print(f"[TITAN] Ожидание сброса лимитов Bybit (10 сек)...")
+        time.sleep(10)
         print(f"[TITAN] Запуск ULTIMATE FINAL в режиме сканирования...")
         
-        # Первичный подбор символов
+        # Первичный подбор символов (только ОДИН раз здесь)
         if config.MULTI_SYMBOL_ENABLED:
-            self.symbol_list = self.selector.get_top_symbols(10)
+            self.symbol_list = self.selector.get_top_symbols(config.MAX_SYMBOLS)
         
         if config.WEBSOCKET_ENABLED:
             self.stream = RealtimeDataStream()
             # Подписываемся сразу на весь список!
             self.stream.start(self.symbol_list)
-            time.sleep(2)
+            time.sleep(5)
         
         cycle_count = 0
         while self.is_running:
