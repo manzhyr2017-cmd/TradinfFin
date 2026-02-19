@@ -8,42 +8,50 @@ echo "🚀 Starting Titan Bot Deployment..."
 # 1. Update system
 sudo apt update && sudo apt install -y python3-pip python3-venv git
 
-# 2. Check if folder exists
+# 2. Setup directory structure
+TRADING_DIR="$HOME/Trading"
+BOT_DIR="$TRADING_DIR/titan_bot"
+
+echo "📂 Setting up directory: $TRADING_DIR"
+mkdir -p "$TRADING_DIR"
+cd "$TRADING_DIR"
+
+# 3. Check if folder exists or clone
 if [ ! -d "titan_bot" ]; then
-    echo "📥 Cloning repository..."
+    echo "📥 Cloning repository into $BOT_DIR..."
     git clone https://github.com/manzhyr2017-cmd/TradinfFin titan_bot
 fi
 
-cd titan_bot
+cd "$BOT_DIR"
 
-# 3. Create virtual environment
-echo "Creating virtual environment..."
+# 4. Create virtual environment
+echo "🐍 Creating virtual environment..."
 python3 -m venv venv
 source venv/bin/activate
 
-# 4. Install dependencies
+# 5. Install dependencies
 echo "📦 Installing requirements..."
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# 5. Setup environment
+# 6. Setup environment
 if [ ! -f ".env" ]; then
     echo "📝 Creating .env from example..."
     cp .env.example .env
-    echo "⚠️  IMPORTANT: Edit .env and add your API keys!"
+    echo "⚠️  IMPORTANT: Edit .env (nano .env) and add your API keys!"
 fi
 
-# 6. Create Service for 24/7 run
+# 7. Create Systemd Service for 24/7 run
 echo "⚙️  Setting up Systemd Service..."
 cat <<EOF | sudo tee /etc/systemd/system/titan.service
 [Unit]
-Description=Titan Trading Bot
+Description=Titan Trading Bot (Aggressive Mode)
 After=network.target
 
 [Service]
 User=$USER
-WorkingDirectory=$(pwd)
-ExecStart=$(pwd)/venv/bin/python main.py
+WorkingDirectory=$BOT_DIR
+ExecStart=$BOT_DIR/venv/bin/python main.py
 Restart=always
 RestartSec=10
 
@@ -56,8 +64,10 @@ sudo systemctl enable titan
 
 echo "✅ Deployment complete!"
 echo "------------------------------------------------"
-echo "To starting bot:"
-echo "1. Edit .env (nano .env)"
-echo "2. Run: sudo systemctl start titan"
-echo "3. Logs: journalctl -u titan -f"
+echo "Path: $BOT_DIR"
+echo "To start bot:"
+echo "1. cd $BOT_DIR"
+echo "2. Edit keys: nano .env"
+echo "3. Run: sudo systemctl start titan"
+echo "4. Logs: journalctl -u titan -f"
 echo "------------------------------------------------"
