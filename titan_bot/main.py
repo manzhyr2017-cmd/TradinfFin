@@ -324,6 +324,7 @@ class TitanBotUltimateFinal:
             quantity=final_qty,
             price=smc_signal.entry_price,
             stop_loss=smc_signal.stop_loss,
+            take_profit=smc_signal.take_profit,
             order_type=order_type
         )
         
@@ -355,7 +356,7 @@ class TitanBotUltimateFinal:
                 'score': composite.total_score,
                 'entry': smc_signal.entry_price,
                 'sl': smc_signal.stop_loss,
-                'tp': smc_signal.take_profit_1,
+                'tp': smc_signal.take_profit,
                 'confidence': composite.confidence,
                 'strength': composite.strength,
                 'recommendation': composite.recommendation
