@@ -351,6 +351,8 @@ class DataEngine:
                         'side': pos['side'],
                         'size': float(pos['size']),
                         'entry_price': float(pos['avgPrice']),
+                        'stop_loss': float(pos.get('stopLoss', 0)) if pos.get('stopLoss') else 0,
+                        'take_profit': float(pos.get('takeProfit', 0)) if pos.get('takeProfit') else 0,
                         'unrealized_pnl': float(pos['unrealisedPnl']),
                         'leverage': float(pos['leverage'])
                     })

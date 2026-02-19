@@ -121,9 +121,19 @@ class TitanBotUltimateFinal:
             self.stream.start(self.symbol_list)
             time.sleep(5)
         
+        # Восстановление позиций (если бот перезагрузился)
+        self._recover_tracked_positions()
+        
         cycle_count = 0
         while self.is_running:
             try:
+                # Проверка WebSocket (реконнект если упал)
+                if config.WEBSOCKET_ENABLED:
+                    if not self.stream or not self.stream.ws:
+                        print("[TITAN] Реинициализация WebSocket...")
+                        self.stream = RealtimeDataStream()
+                        self.stream.start(self.symbol_list)
+                
                 # Раз в 5 циклов (примерно каждые 15-20 мин) обновляем список топов
                 if config.MULTI_SYMBOL_ENABLED and cycle_count % 5 == 0 and cycle_count > 0:
                     new_symbols = self.selector.get_top_symbols(10)
@@ -377,6 +387,45 @@ class TitanBotUltimateFinal:
             self.trailing.update(symbol, current_price)
             self.partial_tp.check_and_execute(symbol, current_price)
     
+    def _recover_tracked_positions(self):
+        """Сканирует биржу и берет под управление уже открытые позиции."""
+        print("[TITAN] Сканирование существующих позиций...")
+        active_positions = self.data.get_positions()
+        
+        for pos in active_positions:
+            symbol = pos['symbol']
+            side = pos['side']
+            entry = pos['entry_price']
+            sl = pos['stop_loss']
+            qty = pos['size']
+            
+            # Регистрируем в стоп-менеджере
+            if symbol not in self.trailing.active_stops:
+                df = self.data.get_klines(symbol, limit=20)
+                atr = df['atr'].iloc[-1] if (df is not None and not df.empty) else entry * 0.01
+                
+                # Если SL не задан на бирже, ставим виртуальный
+                initial_sl = sl if sl > 0 else (entry * 0.98 if side == 'Buy' else entry * 1.02)
+                
+                print(f"[TITAN] Recovered position: {side} {symbol} @ {entry}")
+                self.trailing.register_position(
+                    symbol=symbol,
+                    side='LONG' if side == 'Buy' else 'SHORT',
+                    entry_price=entry,
+                    initial_stop=initial_sl,
+                    atr=atr
+                )
+            
+            # Регистрируем в Partial TP
+            if symbol not in self.partial_tp.active_positions:
+                self.partial_tp.register_position(
+                    symbol=symbol,
+                    side='LONG' if side == 'Buy' else 'SHORT',
+                    entry_price=entry,
+                    stop_loss=initial_sl,
+                    quantity=qty
+                )
+
     def _shutdown(self):
         """Завершение работы."""
         self.is_running = False
