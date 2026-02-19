@@ -122,9 +122,9 @@ class TitanBotUltimateFinal:
         cycle_count = 0
         while self.is_running:
             try:
-                # Раз в 10 циклов обновляем список топов
-                if config.MULTI_SYMBOL_ENABLED and cycle_count % 10 == 0:
-                    self.symbol_list = self.selector.get_top_symbols(config.MAX_SYMBOLS)
+                # Раз в 5 циклов обновляем список топов (чтобы список был свежим)
+                if config.MULTI_SYMBOL_ENABLED and cycle_count % 5 == 0:
+                    self.symbol_list = self.selector.get_top_symbols(10)
                 
                 for symbol in self.symbol_list:
                     self.current_symbol = symbol
@@ -135,12 +135,11 @@ class TitanBotUltimateFinal:
                     
                     self._main_loop(symbol)
                     
-                    # Небольшая пауза между монетами
-                    time.sleep(2)
+                    # Пауза 3 секунды между монетами по просьбе юзера
+                    time.sleep(3)
                 
                 cycle_count += 1
-                print(f"\n[TITAN] Круг завершен. Жду {config.ANALYSIS_INTERVAL} сек...")
-                time.sleep(config.ANALYSIS_INTERVAL)
+                # Убираем долгую паузу ANALYSIS_INTERVAL, чтобы сканирование было потоковым
                 
             except KeyboardInterrupt:
                 self._shutdown()

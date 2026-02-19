@@ -18,68 +18,50 @@ class SymbolSelector:
 
     def get_top_symbols(self, count=10):
         """
-        Получает топ монет на основе комбинации объема и волатильности.
+        Получает ТОП-10 монет Bybit по объему торгов.
+        Исключаем мем-коины и неликвид.
         """
         try:
-            # 1. Получаем все тикеры для линейных фьючерсов
+            # Черный список (мем-коины и волатильный мусор)
+            blacklist = ['PEPEUSDT', 'SHIBUSDT', 'DOGEUSDT', 'FLOKIUSDT', 'BONKUSDT', 'MEMEUSDT', '1000PEPEUSDT', '1000LUNCUSDT', '1000SHIBUSDT']
+            
+            # 1. Получаем все тикеры
             response = self.session.get_tickers(category="linear")
             if response['retCode'] != 0:
-                print(f"[Selector] Ошибка получения тикеров: {response['retMsg']}")
                 return [config.SYMBOL]
 
             tickers = response['result']['list']
             
-            # 2. Фильтруем (только к USDT и с минимальным объемом)
-            # Мы ищем монеты, которые "дышат" и ликвидны
+            # 2. Фильтруем и собираем данные по объемам
             candidates = []
             for t in tickers:
                 symbol = t['symbol']
-                if not symbol.endswith('USDT'):
+                if not symbol.endswith('USDT') or symbol in blacklist:
                     continue
                 
-                # Игнорируем стейблкоины и сам BTC/ETH (опционально, но лучше оставить как базу)
+                # Игнорируем стейблкоины
                 if symbol in ['USDCUSDT', 'BUSDUSDT', 'DAIUSDT']:
                     continue
 
-                volume = float(t['volume24h'])
-                volatility = abs(float(t['price24hPcnt'])) * 100 # в процентах
-                
                 candidates.append({
                     'symbol': symbol,
-                    'volume': volume,
-                    'volatility': volatility,
-                    'last_price': float(t['lastPrice'])
+                    'volume': float(t['volume24h'])
                 })
 
             if not candidates:
                 return [config.SYMBOL]
 
-            # 3. Ранжирование
-            # Сортируем по объему (Rank Volume)
+            # 3. Сортируем ТОЛЬКО по объему (самые надежные и ликвидные)
             candidates.sort(key=lambda x: x['volume'], reverse=True)
-            for i, c in enumerate(candidates):
-                c['volume_rank'] = i
-            
-            # Сортируем по волатильности (Rank Volatility)
-            candidates.sort(key=lambda x: x['volatility'], reverse=True)
-            for i, c in enumerate(candidates):
-                c['volatility_rank'] = i
-
-            # Итоговый ранг (чем меньше, тем лучше)
-            for c in candidates:
-                c['total_rank'] = (c['volume_rank'] + c['volatility_rank']) / 2
-
-            # Сортируем по итоговому рангу
-            candidates.sort(key=lambda x: x['total_rank'])
 
             top_list = [c['symbol'] for c in candidates[:count]]
             
-            # Убеждаемся, что Benchmark (BTC) всегда на контроле (опционально)
-            if config.BENCHMARK not in top_list:
-                top_list.append(config.BENCHMARK)
-
-            print(f"[Selector] Выбран топ-{len(top_list)}: {', '.join(top_list)}")
+            print(f"[Selector] Актуальный ТОП-10 по объему: {', '.join(top_list)}")
             return top_list
+
+        except Exception as e:
+            print(f"[Selector] Ошибка селектора: {e}")
+            return [config.SYMBOL]
 
         except Exception as e:
             print(f"[Selector] Ошибка селектора: {e}")
