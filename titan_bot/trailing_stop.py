@@ -114,7 +114,7 @@ class TrailingStopManager:
             # Переносим стоп в точку входа + небольшой буфер
             new_stop = state.entry_price + (state.atr * 0.1)
             state.breakeven_activated = True
-            print(f"[TrailingStop] ✅ БЕЗУБЫТОК активирован @ {new_stop:.2f}")
+            print(f"[TrailingStop] ✅ БЕЗУБЫТОК активирован @ {new_stop:.6g}")
             return new_stop
         
         # === ЭТАП 2: Трейлинг при +1.5R ===
@@ -130,7 +130,7 @@ class TrailingStopManager:
             
             # Стоп двигается только ВВЕРХ (для лонга)
             if potential_stop > state.current_stop:
-                print(f"[TrailingStop] 📈 Стоп поднят: {state.current_stop:.2f} → {potential_stop:.2f}")
+                print(f"[TrailingStop] 📈 Стоп поднят: {state.current_stop:.6g} → {potential_stop:.6g}")
                 return potential_stop
         
         return None
@@ -149,7 +149,7 @@ class TrailingStopManager:
         if profit_in_r >= 1.0 and not state.breakeven_activated:
             new_stop = state.entry_price - (state.atr * 0.1)
             state.breakeven_activated = True
-            print(f"[TrailingStop] ✅ БЕЗУБЫТОК активирован @ {new_stop:.2f}")
+            print(f"[TrailingStop] ✅ БЕЗУБЫТОК активирован @ {new_stop:.6g}")
             return new_stop
         
         # Трейлинг
@@ -163,7 +163,7 @@ class TrailingStopManager:
             
             # Стоп двигается только ВНИЗ (для шорта)
             if potential_stop < state.current_stop:
-                print(f"[TrailingStop] 📉 Стоп опущен: {state.current_stop:.2f} → {potential_stop:.2f}")
+                print(f"[TrailingStop] 📉 Стоп опущен: {state.current_stop:.6g} → {potential_stop:.6g}")
                 return potential_stop
         
         return None

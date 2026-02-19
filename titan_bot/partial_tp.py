@@ -102,7 +102,7 @@ class PartialTakeProfitManager:
         
         print(f"\n[PartialTP] Зарегистрирована позиция {side} {symbol}")
         for tp in tp_levels:
-            print(f"  TP{tp.r_multiple}R @ {tp.price:.2f} → закрыть {tp.percent_to_close}%")
+            print(f"  TP{tp.r_multiple}R @ {tp.price:.6g} → закрыть {tp.percent_to_close}%")
     
     def check_and_execute(self, symbol: str, current_price: float) -> Optional[dict]:
         """
@@ -161,7 +161,7 @@ class PartialTakeProfitManager:
                     state.total_realized_pnl += pnl
                     
                     print(f"\n[PartialTP] ✅ ЧАСТИЧНЫЙ ТЕЙК ИСПОЛНЕН!")
-                    print(f"  Уровень: +{tp.r_multiple}R @ {tp.price:.2f}")
+                    print(f"  Уровень: +{tp.r_multiple}R @ {tp.price:.6g}")
                     print(f"  Закрыто: {qty_to_close} ({tp.percent_to_close}%)")
                     print(f"  PnL: ${pnl:.2f}")
                     print(f"  Осталось: {state.remaining_quantity}")
