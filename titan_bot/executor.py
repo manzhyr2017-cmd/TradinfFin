@@ -35,7 +35,8 @@ class OrderExecutor:
         self.session = HTTP(
             testnet=config.TESTNET,
             api_key=config.API_KEY,
-            api_secret=config.API_SECRET
+            api_secret=config.API_SECRET,
+            demo=getattr(config, 'BYBIT_DEMO', False)
         )
         self.data = data_engine
         
