@@ -284,6 +284,8 @@ class DataEngine:
             params = {'category': config.CATEGORY}
             if symbol:
                 params['symbol'] = symbol
+            elif config.CATEGORY == 'linear':
+                params['settleCoin'] = 'USDT'
                 
             response = self.session.get_positions(**params)
             
