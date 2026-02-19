@@ -71,11 +71,12 @@ class TitanTelegramBridge:
 """
         return self.send_message(msg.strip())
 
-    def send_dashboard(self, signal):
+    def send_dashboard(self, signal, symbol=None):
         """Отправляет полный дашборд композитного скора"""
+        target_symbol = symbol or config.SYMBOL
         # (Упрощенная версия для ТГ)
         msg = f"📊 <b>TITAN COMPOSITE REPORT</b>\n"
-        msg += f"Symbol: <b>{config.SYMBOL}</b>\n"
+        msg += f"Symbol: <b>{target_symbol}</b>\n"
         msg += f"Score: <b>{signal.total_score:+.1f}</b>\n"
         msg += f"Direction: <b>{signal.direction}</b>\n\n"
         

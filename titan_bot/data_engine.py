@@ -356,13 +356,16 @@ class RealtimeDataStream:
         """Переключает подписку на новый символ."""
         try:
             # В v5 pybit проще всего перезапустить WS для нового символа 
-            # (так как мы сканируем последовательно)
             if self.ws:
                 try:
+                    # Попытка тихого закрытия
                     self.ws.exit()
                 except:
                     pass
+                self.ws = None
             
+            # Небольшая пауза для очистки ресурсов сокетов
+            time.sleep(0.1)
             self.start(symbol)
         except Exception as e:
             print(f"[RealtimeStream] Ошибка переключения символа: {e}")
