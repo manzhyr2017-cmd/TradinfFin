@@ -61,9 +61,11 @@ class NewsFilter:
         self.scheduled_events = self._load_scheduled_events()
         
         # Время "опасной зоны" вокруг события (в минутах)
+        high_before = getattr(config, 'NEWS_DANGER_HOURS_BEFORE', 2) * 60
+        
         self.danger_zones = {
-            'HIGH': {'before': 120, 'after': 60},      # 2 часа до, 1 час после
-            'MEDIUM': {'before': 60, 'after': 30},     # 1 час до, 30 мин после
+            'HIGH': {'before': high_before, 'after': 60},
+            'MEDIUM': {'before': 60, 'after': 30},
             'LOW': {'before': 30, 'after': 15}
         }
     

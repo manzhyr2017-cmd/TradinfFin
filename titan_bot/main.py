@@ -7,6 +7,7 @@ import time
 import sys
 from datetime import datetime
 import config
+import trade_modes
 
 # ВСЕ МОДУЛИ
 from data_engine import DataEngine, RealtimeDataStream
@@ -39,6 +40,9 @@ class TitanBotUltimateFinal:
     def __init__(self, symbol=None):
         self.symbol = symbol or config.SYMBOL
         self._print_banner()
+        
+        # Применяем режим торговли из конфига
+        self.mode_settings = trade_modes.apply_mode(config.TRADE_MODE)
         
         # Базовые модули
         self.data = DataEngine()
@@ -198,16 +202,22 @@ class TitanBotUltimateFinal:
             return False
         
         # Session
-        can_trade, msg = self.session.is_good_time_to_trade()
-        if not can_trade:
-            print(f"[Filter] 🕐 Session: {msg}")
-            return False
+        if self.mode_settings.get("session_filter", True):
+            can_trade, msg = self.session.is_good_time_to_trade(
+                min_quality=self.mode_settings.get("session_min_quality", 5)
+            )
+            if not can_trade:
+                print(f"[Filter] 🕐 Session: {msg}")
+                return False
+        else:
+            print("[Filter] 🕐 Session: IGNORED (Aggressive Mode)")
         
         # News
-        news = self.news.check()
-        if not news.can_trade:
-            print(f"[Filter] 📰 News: {news.message}")
-            return False
+        if self.mode_settings.get("news_filter", True):
+            news = self.news.check()
+            if not news.can_trade:
+                print(f"[Filter] 📰 News: {news.message}")
+                return False
         
         # Risk limits
         risk = self.risk.check_risk_limits()

@@ -47,31 +47,47 @@ BENCHMARK = "BTCUSDT"        # На что смотрим как на индик
 TIMEFRAME = "15"             # Таймфрейм в минутах
 CATEGORY = "linear"          # linear = фьючерсы USDT
 
+# === ТЕКУЩИЙ РЕЖИМ ТОРГОВЛИ ===
+TRADE_MODE = "AGGRESSIVE"    # "CONSERVATIVE", "MODERATE", "AGGRESSIVE", "SCALPER"
+
 # === РИСК-МЕНЕДЖМЕНТ ===
 INITIAL_DEPOSIT = 300        # Начальный депозит
 RISK_PER_TRADE = 0.02        # Риск на сделку (2%)
-MAX_DAILY_LOSS = 0.06        # Макс. дневная потеря (6% = стоп на день)
-MIN_RR_RATIO = 2.5           # Минимальный Risk/Reward (1:2.5)
-MAX_POSITIONS = 1            # Макс. одновременных позиций
+MAX_DAILY_LOSS = 0.10        # Макс. дневная потеря (было 6%, теперь 10% для агрессивного)
+MIN_RR_RATIO = 2.0           # Минимальный Risk/Reward (было 2.5, теперь 2.0)
+MAX_POSITIONS = 3            # Макс. одновременных позиций (было 1, теперь 3)
+
+# === ФИЛЬТРЫ - НАСТРОЙКИ ДЛЯ AGGRESSIVE ===
+SESSION_FILTER_ENABLED = False  # Отключаем для агрессивного режима
+SESSION_MIN_QUALITY = 2         # Почти любое время (было 5)
+
+NEWS_FILTER_ENABLED = True
+NEWS_DANGER_HOURS_BEFORE = 1    # Было 2, теперь 1
+CORRELATION_FILTER_ENABLED = True
+CORRELATION_MIN_SAFE = 0.3      # Ослаблено (было 0.5)
+
+# === COMPOSITE SCORE - КЛЮЧЕВОЕ! ===
+COMPOSITE_MIN_FOR_ENTRY = 20      # Минимальный скор для входа (был 35-40)
+MTF_STRICT_MODE = False          # Не требуем идеального совпадения всех ТФ
 
 # === ORDER FLOW ===
-ORDERBOOK_DEPTH = 50         # Глубина стакана для анализа
-IMBALANCE_THRESHOLD = 0.65   # Порог дисбаланса (65% = сильная стенка)
-VOLUME_SPIKE_MULT = 2.5      # Множитель для детекции аномального объема
+ORDERBOOK_DEPTH = 25         # Глубина стакана (было 50)
+IMBALANCE_THRESHOLD = 0.55   # Порог дисбаланса (было 0.65)
+VOLUME_SPIKE_MULT = 2.0      # Было 2.5
 
 # === FUNDING ===
-FUNDING_LONG_THRESHOLD = 0.01    # Выше = толпа в лонгах (опасно для лонга)
-FUNDING_SHORT_THRESHOLD = -0.005 # Ниже = толпа в шортах (опасно для шорта)
+FUNDING_LONG_THRESHOLD = 0.02    # Ослаблено
+FUNDING_SHORT_THRESHOLD = -0.01  # Ослаблено
 
 # === SMC (Smart Money Concepts) ===
-SWING_LOOKBACK = 20          # Свечей назад для поиска swing high/low
-SFP_CONFIRMATION_PIPS = 0.001 # Минимальный прокол уровня (0.1%)
+SWING_LOOKBACK = 15          # Было 20
+SFP_CONFIRMATION_PIPS = 0.0005 # Было 0.001
 
 # === MACHINE LEARNING ===
 ML_MODEL_PATH = "models/titan_model.pkl"
 ML_TRAINING_DAYS = 30        # Дней данных для обучения
-ML_CONFIDENCE_THRESHOLD = 0.7 # Минимальная уверенность модели
+ML_CONFIDENCE_THRESHOLD = 0.6 # Было 0.7
 
 # === ТАЙМЕРЫ ===
-ANALYSIS_INTERVAL = 60       # Секунд между анализами (для REST API)
+ANALYSIS_INTERVAL = 30       # Секунд между анализами (было 60)
 WEBSOCKET_ENABLED = True     # Использовать WebSocket для реалтайма

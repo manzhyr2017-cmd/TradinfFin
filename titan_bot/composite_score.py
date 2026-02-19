@@ -73,13 +73,28 @@ class CompositeScoreEngine:
             'correlation': 0.05
         }
         
-        # Пороги для решений
-        self.thresholds = {
-            'strong_signal': 60,
-            'moderate_signal': 40,
-            'weak_signal': 20,
-            'conflict_zone': 15
-        }
+        # Пороги для решений (динамически подстраиваются под TRADE_MODE)
+        if getattr(config, 'TRADE_MODE', 'MODERATE') == 'AGGRESSIVE':
+            self.thresholds = {
+                'strong_signal': getattr(config, 'COMPOSITE_STRONG_THRESHOLD', 40),
+                'moderate_signal': getattr(config, 'COMPOSITE_MODERATE_THRESHOLD', 25),
+                'weak_signal': getattr(config, 'COMPOSITE_WEAK_THRESHOLD', 15),
+                'conflict_zone': getattr(config, 'COMPOSITE_MIN_FOR_ENTRY', 20)
+            }
+        elif getattr(config, 'TRADE_MODE', 'MODERATE') == 'SCALPER':
+            self.thresholds = {
+                'strong_signal': 30,
+                'moderate_signal': 20,
+                'weak_signal': 10,
+                'conflict_zone': 10
+            }
+        else: # CONSERVATIVE or MODERATE
+            self.thresholds = {
+                'strong_signal': 60,
+                'moderate_signal': 40,
+                'weak_signal': 20,
+                'conflict_zone': 15
+            }
     
     def calculate(
         self,
