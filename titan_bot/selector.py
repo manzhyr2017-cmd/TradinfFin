@@ -23,7 +23,11 @@ class SymbolSelector:
         """
         try:
             # Черный список (мем-коины и волатильный мусор)
-            blacklist = ['PEPEUSDT', 'SHIBUSDT', 'DOGEUSDT', 'FLOKIUSDT', 'BONKUSDT', 'MEMEUSDT', '1000PEPEUSDT', '1000LUNCUSDT', '1000SHIBUSDT']
+            blacklist = [
+                'PEPEUSDT', 'SHIBUSDT', 'DOGEUSDT', 'FLOKIUSDT', 'BONKUSDT', 
+                'MEMEUSDT', '1000PEPEUSDT', '1000LUNCUSDT', '1000SHIBUSDT', 
+                'PUMPFUNUSDT', '1000BONKUSDT', '1000FLOKIUSDT'
+            ]
             
             # 1. Получаем все тикеры
             response = self.session.get_tickers(category="linear")

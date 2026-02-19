@@ -129,9 +129,9 @@ class TitanBotUltimateFinal:
                 for symbol in self.symbol_list:
                     self.current_symbol = symbol
                     
-                    # Если включен WS, переключаем подписку
+                    # Если включен WS, переключаем подписку корректно
                     if self.stream and config.WEBSOCKET_ENABLED:
-                        self.stream.ws.trade_stream(symbol=symbol, callback=self.stream._handle_trade)
+                        self.stream.switch_symbol(symbol)
                     
                     self._main_loop(symbol)
                     

@@ -352,6 +352,21 @@ class RealtimeDataStream:
         
         print(f"[RealtimeStream] WebSocket запущен для {symbol}")
     
+    def switch_symbol(self, symbol: str):
+        """Переключает подписку на новый символ."""
+        try:
+            # В v5 pybit проще всего перезапустить WS для нового символа 
+            # (так как мы сканируем последовательно)
+            if self.ws:
+                try:
+                    self.ws.exit()
+                except:
+                    pass
+            
+            self.start(symbol)
+        except Exception as e:
+            print(f"[RealtimeStream] Ошибка переключения символа: {e}")
+    
     def _handle_trade(self, message):
         """
         Обработчик входящих сделок.
