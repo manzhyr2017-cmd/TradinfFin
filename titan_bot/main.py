@@ -265,11 +265,12 @@ class TitanBotUltimateFinal:
         """Исполняет сделку."""
         
         # Если нет сигнала от SMC, но сигнал ОЧЕНЬ сильный - заходим по рынку
-        is_very_strong = composite.total_score >= 40
+        strong_threshold = getattr(config, 'COMPOSITE_STRONG_THRESHOLD', 45)
+        is_very_strong = composite.total_score >= strong_threshold
         
         if smc_signal is None:
             if is_very_strong:
-                print(f"[Trade] {symbol}: SMC не дал точку, но Score {composite.total_score} > 40. ВХОДИМ ПО РЫНКУ!")
+                print(f"[Trade] {symbol}: SMC не дал точку, но Score {composite.total_score} >= {strong_threshold}. ВХОДИМ ПО РЫНКУ!")
                 # Создаем фейковый сигнал для входа по рынку
                 ticker = self.data.session.get_tickers(category=config.CATEGORY, symbol=symbol)
                 current_price = float(ticker['result']['list'][0]['lastPrice'])

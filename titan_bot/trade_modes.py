@@ -8,7 +8,7 @@ TRADE_MODES = {
     
     "CONSERVATIVE": {
         # Мало сделок, но качественные
-        "composite_min_score": 50,
+        "composite_min_score": 60,
         "session_filter": True,
         "session_min_quality": 6,
         "news_filter": True,
@@ -22,7 +22,7 @@ TRADE_MODES = {
     
     "MODERATE": {
         # Баланс между качеством и количеством
-        "composite_min_score": 35,
+        "composite_min_score": 40,
         "session_filter": True,
         "session_min_quality": 4,
         "news_filter": True,
@@ -36,7 +36,7 @@ TRADE_MODES = {
     
     "AGGRESSIVE": {
         # Много сделок, выше риск
-        "composite_min_score": 20,
+        "composite_min_score": 30,
         "session_filter": False,
         "session_min_quality": 2,
         "news_filter": True,  # Это оставляем!
@@ -50,7 +50,7 @@ TRADE_MODES = {
     
     "SCALPER": {
         # Максимум сделок, минимум фильтров
-        "composite_min_score": 15,
+        "composite_min_score": 25,
         "session_filter": False,
         "session_min_quality": 1,
         "news_filter": False,
