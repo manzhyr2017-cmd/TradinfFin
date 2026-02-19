@@ -163,7 +163,10 @@ class TitanBotUltimateFinal:
         # ФИЛЬТРЫ (быстрая проверка)
         # ══════════════════════════════════════════
         
-        if not self._pass_filters(symbol):
+        pass_filters, filter_msg = self._pass_filters(symbol)
+        if not pass_filters:
+            # Если сигнал сильный, но фильтры не пустили - логгируем почему
+            print(f"[{symbol}] ⏭️ Trade skipped by filter: {filter_msg}")
             self._manage_positions(symbol)
             return
         
@@ -222,8 +225,7 @@ class TitanBotUltimateFinal:
         # Cooldown
         cooldown = self.cooldown.can_trade()
         if cooldown.is_active:
-            print(f"[Filter] ⏸️ Cooldown: {cooldown.message}")
-            return False
+            return False, f"Cooldown: {cooldown.message}"
         
         # Session
         if self.mode_settings.get("session_filter", True):
@@ -231,8 +233,7 @@ class TitanBotUltimateFinal:
                 min_quality=self.mode_settings.get("session_min_quality", 5)
             )
             if not can_trade:
-                print(f"[Filter] 🕐 Session: {msg}")
-                return False
+                return False, f"Session: {msg}"
         else:
             print("[Filter] 🕐 Session: IGNORED (Aggressive Mode)")
         
@@ -240,17 +241,15 @@ class TitanBotUltimateFinal:
         if self.mode_settings.get("news_filter", True):
             news = self.news.check()
             if not news.can_trade:
-                print(f"[Filter] 📰 News: {news.message}")
-                return False
+                return False, f"News: {news.message}"
         
         # Risk limits
         risk = self.risk.check_risk_limits()
         if not risk.can_trade:
-            print(f"[Filter] 💰 Risk: {risk.reason}")
-            return False
+            return False, f"Risk: {risk.reason}"
         
         print("[Filter] ✅ Все фильтры пройдены")
-        return True
+        return True, "OK"
     
     def _execute_trade(self, symbol, composite, smc_signal, regime):
         """Исполняет сделку."""
@@ -280,7 +279,7 @@ class TitanBotUltimateFinal:
                     description="Market Entry (High Score)"
                 )
             else:
-                print(f"[Trade] {symbol}: Нет точки входа от SMC")
+                print(f"[Trade] {symbol}: ❌ Нет точки входа от SMC и Score ({composite.total_score}) недостаточно высокий для входа по рынку")
                 return
         
         # Определяем тип ордера
@@ -293,12 +292,16 @@ class TitanBotUltimateFinal:
         )
         
         if not base_position.is_valid:
-            print(f"[Trade] {symbol}: ❌ {base_position.rejection_reason}")
+            error_msg = f"Rejection: {base_position.rejection_reason}"
+            print(f"[Trade] {symbol}: ❌ {error_msg}")
+            # Уведомляем в ТГ если сигнал был очень сильный
+            if is_very_strong:
+                self.telegram.send_message(f"⚠️ <b>SKIP TRADE {symbol}</b>\nScore: {composite.total_score}\nReason: {base_position.rejection_reason}")
             return
         
         # Применяем модификаторы
         final_qty = base_position.quantity * composite.position_size_modifier * regime.position_size_multiplier
-        final_qty = round(final_qty, 3)
+        final_qty = self.risk._round_quantity(final_qty, symbol)
         
         if final_qty * smc_signal.entry_price < 5:
             print(f"[Trade] {symbol}: ❌ Позиция слишком мала")

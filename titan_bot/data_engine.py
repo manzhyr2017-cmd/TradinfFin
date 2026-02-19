@@ -32,9 +32,60 @@ class DataEngine:
         self.orderbook_cache = {}
         self.trades_cache = []
         self.last_update = {}
+        self.symbol_info_cache = {}
         
         mode = "DEMO" if getattr(config, 'BYBIT_DEMO', False) else ("TESTNET" if config.TESTNET else "MAINNET")
         print(f"[DataEngine] Инициализирован. Режим: {mode}")
+
+    # ==========================================
+    # ИНФОРМАЦИЯ ОБ ИНСТРУМЕНТАХ
+    # ==========================================
+    def get_symbol_info(self, symbol: str) -> dict:
+        """
+        Получает правила торговли для символа (точность цены, шаги лота).
+        """
+        if symbol in self.symbol_info_cache:
+            return self.symbol_info_cache[symbol]
+            
+        try:
+            response = self.session.get_instruments_info(
+                category=config.CATEGORY,
+                symbol=symbol
+            )
+            
+            if response['retCode'] == 0:
+                info = response['result']['list'][0]
+                
+                # Извлекаем нужные параметры для удобства
+                formatted_info = {
+                    'price_precision': int(info.get('priceScale', 2)),
+                    'qty_step': float(info.get('lotSizeFilter', {}).get('qtyStep', 0.001)),
+                    'min_qty': float(info.get('lotSizeFilter', {}).get('minOrderQty', 0.001)),
+                    'tick_size': float(info.get('priceFilter', {}).get('tickSize', 0.01)),
+                    'raw': info
+                }
+                
+                # Считаем количество знаков после запятой для кол-ва
+                qty_step_str = str(formatted_info['qty_step']).rstrip('0')
+                if '.' in qty_step_str:
+                    formatted_info['qty_precision'] = len(qty_step_str.split('.')[1])
+                else:
+                    formatted_info['qty_precision'] = 0
+                
+                self.symbol_info_cache[symbol] = formatted_info
+                return formatted_info
+                
+        except Exception as e:
+            print(f"[DataEngine] Ошибка получения инфо о символе {symbol}: {e}")
+            
+        # Fallback на дефолты
+        return {
+            'price_precision': 2,
+            'qty_precision': 3,
+            'qty_step': 0.001,
+            'min_qty': 0.001,
+            'tick_size': 0.01
+        }
     
     # ==========================================
     # СВЕЧИ (KLINES / OHLCV)

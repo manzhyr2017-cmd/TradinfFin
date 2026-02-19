@@ -79,6 +79,10 @@ class OrderExecutor:
                 'positionIdx': 0  # One-way mode
             }
             
+            # Получаем инфо о символе для правильного округления
+            symbol_info = self.data.get_symbol_info(symbol)
+            p_prec = symbol_info['price_precision']
+            
             # Для лимитного ордера нужна цена
             if order_type == 'Limit':
                 if price is None:
@@ -91,15 +95,15 @@ class OrderExecutor:
                     else:
                         price = price * 1.0005
                 
-                params['price'] = str(round(price, 2))
+                params['price'] = f"{price:.{p_prec}f}"
             
-            # Добавляем SL/TP
+            # Добавляем SL/TP с правильным округлением
             if stop_loss:
-                params['stopLoss'] = str(round(stop_loss, 2))
+                params['stopLoss'] = f"{stop_loss:.{p_prec}f}"
                 params['slTriggerBy'] = 'LastPrice'
             
             if take_profit:
-                params['takeProfit'] = str(round(take_profit, 2))
+                params['takeProfit'] = f"{take_profit:.{p_prec}f}"
                 params['tpTriggerBy'] = 'LastPrice'
             
             # Выставляем ордер
@@ -123,6 +127,11 @@ class OrderExecutor:
                 error_msg = response['retMsg']
                 print(f"[Executor] ❌ Ошибка ордера: {error_msg}")
                 
+                # Добавляем уведомление в ТГ об ошибке
+                from telegram_bridge import TitanTelegramBridge
+                tg = TitanTelegramBridge()
+                tg.send_message(f"❌ <b>ORDER ERROR: {symbol}</b>\nSide: {side}\nError: {error_msg}")
+                
                 return OrderResult(
                     success=False,
                     order_id="",
@@ -135,6 +144,9 @@ class OrderExecutor:
                 
         except Exception as e:
             print(f"[Executor] ❌ Exception: {e}")
+            from telegram_bridge import TitanTelegramBridge
+            tg = TitanTelegramBridge()
+            tg.send_message(f"❌ <b>EXECUTOR EXCEPTION: {symbol}</b>\nError: {str(e)}")
             return OrderResult(
                 success=False,
                 order_id="",

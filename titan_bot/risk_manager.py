@@ -239,19 +239,21 @@ class RiskManager:
     
     def _round_quantity(self, quantity: float, symbol: str) -> float:
         """
-        Округляет количество до допустимой точности.
-        Разные инструменты имеют разный шаг.
+        Округляет количество до допустимой точности на основе данных биржи.
         """
-        # Примерные значения для популярных пар
-        precision_map = {
-            'BTCUSDT': 3,
-            'ETHUSDT': 2,
-            'SOLUSDT': 1,
-            'DOGEUSDT': 0
-        }
+        symbol_info = self.data.get_symbol_info(symbol)
+        precision = symbol_info['qty_precision']
         
-        precision = precision_map.get(symbol, 3)
-        return round(quantity, precision)
+        # Округляем до нужного количества знаков
+        qty = round(quantity, precision)
+        
+        # Проверяем на кратность qty_step (Bybit требует, чтобы qty был кратен шагу)
+        qty_step = symbol_info['qty_step']
+        if qty_step > 0:
+            qty = (qty // qty_step) * qty_step
+            qty = round(qty, precision) # Еще раз от микро-ошибок float
+            
+        return qty
     
     def get_risk_report(self) -> str:
         """Генерирует отчет о рисках."""
