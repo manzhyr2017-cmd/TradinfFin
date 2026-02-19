@@ -9,7 +9,7 @@ echo "🚀 Starting Titan Bot Deployment..."
 sudo apt update && sudo apt install -y python3-pip python3-venv git
 
 # 2. Setup directory structure
-TRADING_DIR="$HOME/Trading"
+TRADING_DIR="/root/TradinfFin"
 BOT_DIR="$TRADING_DIR/titan_bot"
 
 echo "📂 Setting up directory: $TRADING_DIR"
