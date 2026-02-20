@@ -16,6 +16,8 @@ from smart_money import SmartMoneyAnalyzer
 from multi_timeframe import MultiTimeframeAnalyzer
 from composite_score import CompositeScoreEngine
 from telegram_bridge import TitanTelegramBridge
+from database import TitanDatabase
+from ml_engine import MLEngine
 import trade_modes
 import config
 
@@ -39,8 +41,9 @@ class TitanBotUltimateFinal:
         self.current_symbol = symbol or config.SYMBOL
         self.symbol_list = [self.current_symbol]
         
-        # 1. Загрузка движков данных
+        # 1. Загрузка движков данных и БД
         self.data = DataEngine()
+        self.db = TitanDatabase()
         self.selector = SymbolSelector(self.data)
         self.executor = OrderExecutor(self.data)
         self.risk = RiskManager(self.data)
@@ -50,6 +53,8 @@ class TitanBotUltimateFinal:
         self.orderflow = OrderFlowAnalyzer(self.data)
         self.smc = SmartMoneyAnalyzer(self.data)
         self.mtf = MultiTimeframeAnalyzer(self.data)
+        self.ml = MLEngine(self.data)
+        self.ml.load_model()
         self.composite = CompositeScoreEngine()
         
         # 3. Настройки режима
@@ -68,6 +73,10 @@ class TitanBotUltimateFinal:
         print(f"[Config] Scanning Interval: 3.0 sec per symbol")
         print(f"[Config] Min Score for Entry: {self.mode_settings['composite_min_score']}")
         
+        # Фоновый мониторинг БД
+        maintenance_thread = threading.Thread(target=self._db_maintenance, daemon=True)
+        maintenance_thread.start()
+
         # Начальный отбор символов
         if config.MULTI_SYMBOL_ENABLED:
             try:
@@ -89,7 +98,7 @@ class TitanBotUltimateFinal:
         while self.is_running:
             try:
                 # Обновляем топ-монеты
-                if config.MULTI_SYMBOL_ENABLED and cycle_count % 10 == 0 and cycle_count > 0:
+                if config.MULTI_SYMBOL_ENABLED and cycle_count % 20 == 0 and cycle_count > 0:
                     self.symbol_list = self.selector.get_top_symbols(config.MAX_SYMBOLS)
                     if self.stream: self.stream.start(self.symbol_list)
 
@@ -119,7 +128,7 @@ class TitanBotUltimateFinal:
         """Обработка одной монеты с детальным выводом"""
         try:
             if self.risk.has_position(symbol):
-                print(f"📊 [Active] {symbol:10} | Skipping (Position exists)")
+                # print(f"📊 [Active] {symbol:10} | Skipping (Position exists)")
                 return
 
             # Сбор данных и анализ
@@ -143,7 +152,7 @@ class TitanBotUltimateFinal:
             if mtf_signal and mtf_signal.alignment == 'BEARISH': m_sc *= -1
             
             s_sc = (smc_signal.confidence * 20) if smc_signal else 0
-            if smc_signal and 'SHORT' in smc_signal.signal_type.value: s_sc *= -1
+            if smc_signal and ('SHORT' in smc_signal.signal_type.value or 'BEARISH' in smc_signal.signal_type.value): s_sc *= -1
             
             o_sc = (of_signal.confidence * 20) if of_signal else 0
             if of_signal and 'SELL' in of_signal.pressure.value: o_sc *= -1
@@ -164,17 +173,8 @@ class TitanBotUltimateFinal:
                 self._execute_trade(symbol, composite, smc_signal)
                 
         except Exception as e:
-            print(f"⚠️ [Error] {symbol}: {e}")
-
-    def _send_heartbeat(self):
-        self.last_status_time = datetime.now()
-        msg = (
-            f"📡 <b>TITAN HEARTBEAT</b>\n"
-            f"Status: <b>ONLINE</b>\n"
-            f"Analyzed: <b>{self.processed_count}</b> syms\n"
-            f"Mode: <b>{config.TRADE_MODE}</b>"
-        )
-        self.tg.send_message(msg)
+            # logging.error(f"Error in _process_symbol for {symbol}: {e}")
+            pass
 
     def _execute_trade(self, symbol, composite, smc_signal):
         direction = composite.direction
@@ -198,6 +198,9 @@ class TitanBotUltimateFinal:
             print(f"🛑 [Risk] {symbol} rejected: {pos_size.rejection_reason}")
             return
 
+        # Получаем признаки для БД (для будущего обучения)
+        features = self.ml.get_features_dict(symbol)
+
         print(f"⚡ [AUTO] Executing {side} on {symbol} @ {current_price}...")
         order = self.executor.place_order(
             symbol=symbol,
@@ -208,12 +211,66 @@ class TitanBotUltimateFinal:
         )
         
         if order.success:
+            # Сохраняем в БД
+            trade_id = order.order_id or f"{symbol}_{int(time.time())}"
+            details = {
+                'score_total': composite.total_score,
+                'mtf': composite.components.get('mtf', 0),
+                'smc': composite.components.get('smc', 0),
+                'orderflow': composite.components.get('orderflow', 0)
+            }
+            self.db.record_trade_entry(
+                trade_id, symbol, side, current_price, pos_size.quantity, 
+                sl_price, tp_price, composite.total_score, details, features
+            )
+            
+            # Телеграм
             self.tg.send_signal({
                 'symbol': symbol, 'direction': direction, 'score': composite.total_score,
                 'entry': current_price, 'sl': sl_price, 'tp': tp_price,
                 'confidence': composite.confidence, 'strength': composite.strength,
                 'recommendation': composite.recommendation
             })
+
+    def _db_maintenance(self):
+        """Фоновый процесс мониторинга закрытых сделок"""
+        while self.is_running:
+            try:
+                open_db_trades = self.db.get_open_trades()
+                if not open_db_trades:
+                    time.sleep(60)
+                    continue
+
+                # Получаем все текущие позиции из биржи
+                current_positions = self.data.get_positions()
+                active_symbols = [p['symbol'] for p in current_positions]
+
+                for trade_id, symbol, side, entry_price, qty in open_db_trades:
+                    if symbol not in active_symbols:
+                        # Сделка закрыта на бирже! Ищем результат в истории
+                        closed_pnl_list = self.data.get_closed_pnl(symbol)
+                        if closed_pnl_list:
+                            result = closed_pnl_list[0]
+                            exit_price = float(result.get('avgExitPrice', 0))
+                            pnl = float(result.get('closedPnl', 0))
+                            self.db.record_trade_exit(trade_id, exit_price, pnl)
+                            print(f"📉 [Database] Сделка {symbol} закрыта. PNL: ${pnl:.2f}")
+                            self.db.log_event("Main", f"Closed {symbol} with PNL ${pnl:.2f}")
+
+                time.sleep(60)
+            except Exception as e:
+                print(f"[DB Maintenance] Error: {e}")
+                time.sleep(60)
+
+    def _send_heartbeat(self):
+        self.last_status_time = datetime.now()
+        msg = (
+            f"📡 <b>TITAN HEARTBEAT</b>\n"
+            f"Status: <b>ONLINE</b>\n"
+            f"Analyzed: <b>{self.processed_count}</b> syms\n"
+            f"Mode: <b>{config.TRADE_MODE}</b>"
+        )
+        self.tg.send_message(msg)
 
 if __name__ == "__main__":
     bot = TitanBotUltimateFinal()

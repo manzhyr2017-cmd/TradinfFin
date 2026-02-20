@@ -161,6 +161,16 @@ class DataEngine:
             print(f"[DataEngine] Error funding: {e}")
             return {}
 
+    def get_closed_pnl(self, symbol: str, limit: int = 1) -> list:
+        """Получает результат последних закрытых сделок."""
+        try:
+            response = self.session.get_closed_pnl(category=config.CATEGORY, symbol=symbol, limit=limit)
+            if response['retCode'] != 0: return []
+            return response['result']['list']
+        except Exception as e:
+            print(f"[DataEngine] Error closed pnl: {e}")
+            return []
+
 class RealtimeDataStream:
     def __init__(self, on_trade_callback=None):
         self.ws = None

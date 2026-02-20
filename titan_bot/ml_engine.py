@@ -269,6 +269,17 @@ class MLEngine:
             'signal': 'LONG' if prediction == 1 else 'NEUTRAL'
         }
     
+    def get_features_dict(self, symbol: str) -> dict:
+        """Возвращает текущий вектор признаков в виде словаря для БД."""
+        try:
+            df = self.data.get_klines(symbol, limit=100)
+            if df is None: return {}
+            features = self.prepare_features(df)
+            last_row = features.iloc[-1].fillna(0).to_dict()
+            return last_row
+        except:
+            return {}
+
     def save_model(self):
         """Сохраняет модель на диск."""
         os.makedirs(os.path.dirname(config.ML_MODEL_PATH), exist_ok=True)
