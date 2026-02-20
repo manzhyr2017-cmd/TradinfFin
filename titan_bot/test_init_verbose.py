@@ -18,8 +18,8 @@ print("Importing SessionFilter...")
 from session_filter import SessionFilter
 print("Importing TradingAnalytics...")
 from analytics import TradingAnalytics
-print("Importing TitanBotV2...")
-from main import TitanBotV2
+print("Importing TitanBotUltimateFinal...")
+from main import TitanBotUltimateFinal
 print("All imports successful")
-bot = TitanBotV2()
+bot = TitanBotUltimateFinal()
 print("Bot initialized")
