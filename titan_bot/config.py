@@ -1,3 +1,4 @@
+
 import os
 import sys
 from pathlib import Path
@@ -45,8 +46,8 @@ if not API_SECRET or API_SECRET == "your_secret":
 SYMBOL = "ETHUSDT"           # Дефолтная пара
 BENCHMARK = "BTCUSDT"        # На что смотрим как на индикатор рынка
 MULTI_SYMBOL_ENABLED = True  # Сканировать несколько монет
-MAX_SYMBOLS = 10             # Сколько монет в топе перебирать
-TIMEFRAME = "15"             # Таймфрейм в минутах
+MAX_SYMBOLS = 20             # Сколько монет в топе перебирать (было 10)
+TIMEFRAME = "5"              # Таймфрейм в минутах (было 15)
 CATEGORY = "linear"          # linear = фьючерсы USDT
 
 # === ТЕКУЩИЙ РЕЖИМ ТОРГОВЛИ ===
@@ -57,7 +58,7 @@ INITIAL_DEPOSIT = 300        # Начальный депозит
 RISK_PER_TRADE = 0.02        # Риск на сделку (2%)
 MAX_DAILY_LOSS = 0.10        # Макс. дневная потеря (было 6%, теперь 10% для агрессивного)
 MIN_RR_RATIO = 2.0           # Минимальный Risk/Reward (было 2.5, теперь 2.0)
-MAX_POSITIONS = 3            # Макс. одновременных позиций (было 1, теперь 3)
+MAX_POSITIONS = 10           # Макс. одновременных позиций (было 3, теперь 10)
 
 # === ФИЛЬТРЫ - НАСТРОЙКИ ДЛЯ AGGRESSIVE ===
 SESSION_FILTER_ENABLED = False  # Отключаем для агрессивного режима
@@ -72,7 +73,7 @@ CORRELATION_MIN_SAFE = 0.3      # Ослаблено (было 0.5)
 COMPOSITE_MIN_FOR_ENTRY = 35      # Минимальный скор для входа (был 30)
 COMPOSITE_STRONG_THRESHOLD = 45   # Скор для СИЛЬНОГО сигнала (был 35)
 COMPOSITE_MODERATE_THRESHOLD = 35 # Скор для умеренного сигнала (был 30)
-MTF_STRICT_MODE = False          # Не требуем идеального совпадения всех ТФ
+MTF_STRICT_MODE = False           # Не требуем идеального совпадения всех ТФ
 
 # === ORDER FLOW ===
 ORDERBOOK_DEPTH = 25         # Глубина стакана (было 50)
@@ -84,7 +85,7 @@ FUNDING_LONG_THRESHOLD = 0.02    # Ослаблено
 FUNDING_SHORT_THRESHOLD = -0.01  # Ослаблено
 
 # === SMC (Smart Money Concepts) ===
-SWING_LOOKBACK = 15          # Было 20
+SWING_LOOKBACK = 10            # Было 15 (уменьшили для чувствительности)
 SFP_CONFIRMATION_PIPS = 0.0005 # Было 0.001
 
 # === MACHINE LEARNING ===
@@ -93,5 +94,5 @@ ML_TRAINING_DAYS = 30        # Дней данных для обучения
 ML_CONFIDENCE_THRESHOLD = 0.6 # Было 0.7
 
 # === ТАЙМЕРЫ ===
-ANALYSIS_INTERVAL = 30       # Секунд между анализами (было 60)
+ANALYSIS_INTERVAL = 15       # Секунд между анализами (было 30)
 WEBSOCKET_ENABLED = True     # Использовать WebSocket для реалтайма
