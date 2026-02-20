@@ -181,8 +181,9 @@ class TitanBotUltimateFinal:
         tp_price = smc_signal.take_profit if smc_signal and smc_signal.take_profit else 0
 
         pos_size = self.risk.calculate_position_size(
+            entry_price=current_price,
+            stop_loss=sl_price,
             symbol=symbol,
-            stop_loss_price=sl_price,
             risk_percent=self.mode_settings['risk_per_trade']
         )
         

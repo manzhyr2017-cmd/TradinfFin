@@ -51,7 +51,8 @@ class RiskManager:
         self,
         entry_price: float,
         stop_loss: float,
-        symbol: str = None
+        symbol: str = None,
+        risk_percent: float = None
     ) -> PositionSize:
         """
         Рассчитывает оптимальный размер позиции.
@@ -93,7 +94,8 @@ class RiskManager:
             )
         
         # Сумма риска
-        risk_amount = balance * config.RISK_PER_TRADE
+        r_percent = risk_percent if risk_percent is not None else config.RISK_PER_TRADE
+        risk_amount = balance * r_percent
         
         # Размер позиции в базовой валюте (ETH, BTC и т.д.)
         quantity = risk_amount / stop_distance
@@ -255,6 +257,15 @@ class RiskManager:
             
         return qty
     
+
+    def has_position(self, symbol: str) -> bool:
+        """Проверяет, есть ли открытая позиция по конкретному символу."""
+        try:
+            positions = self.data.get_positions(symbol)
+            return len(positions) > 0
+        except:
+            return False
+
     def get_risk_report(self) -> str:
         """Генерирует отчет о рисках."""
         metrics = self.check_risk_limits()
