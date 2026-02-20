@@ -64,7 +64,7 @@ class TitanTelegramBot:
         text = update.message.text
         
         if text == "🚀 START SCANNER":
-            await self.run_scanner(update, context) # Добавил context
+            await self.run_scanner(update, context)
         elif text == "🛑 STOP SYSTEM":
             await self.stop_system(update)
         elif text == "📊 STATUS":
@@ -81,81 +81,68 @@ class TitanTelegramBot:
     async def run_scanner(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Запуск сканера в фоновом потоке"""
         if self.trading_bot.is_running:
-            await update.message.reply_text("⚠️ Система уже работает! (Игнорирую повторный запуск)")
+            await update.message.reply_text("⚠️ Система уже работает!")
             return
 
         msg = await update.message.reply_text("🔄 Запуск TITAN AGGRESSIVE SCANNER...")
         
-        # Запускаем в отдельном потоке
         self.bot_thread = threading.Thread(target=self.trading_bot.start)
         self.bot_thread.daemon = True
         self.bot_thread.start()
         
-        # Ожидание инициализации
         await asyncio.sleep(7)
         
         if self.trading_bot.is_running:
-            # Используем msg.edit_text вместо context.bot
             await msg.edit_text(
                 text=(
                     f"🚀 <b>SCANNER STARTED!</b>\n"
-                    f"Monitoring Top-{config.MAX_SYMBOLS} coins by Volatility.\n"
-                    f"Status: <b>ONLINE</b> 🟢\n"
-                    f"Start Time: {datetime.now().strftime('%H:%M:%S')}"
+                    f"Monitoring Top-{config.MAX_SYMBOLS} coins.\n"
+                    f"Status: <b>ONLINE</b> 🟢"
                 ),
                 parse_mode=ParseMode.HTML
             )
         else:
-            await msg.edit_text(text="❌ Ошибка запуска Scanner (см. логи сервера).")
+            await msg.edit_text(text="❌ Ошибка запуска Scanner.")
 
     async def stop_system(self, update: Update):
-        """Остановка"""
-        if not self.trading_bot.is_running:
-            await update.message.reply_text("💤 Система и так спит.")
-            return
-            
         self.trading_bot.is_running = False 
-        if self.trading_bot.stream and self.trading_bot.stream.ws:
-            self.trading_bot.stream.ws.exit()
-            
-        await update.message.reply_text("🛑 Остановка сканера... (завершение текущего цикла)")
+        await update.message.reply_text("🛑 Остановка сканера...")
 
     async def show_status(self, update: Update):
-        """Статус работы"""
         status = "🟢 ONLINE" if self.trading_bot.is_running else "🔴 OFFLINE"
-        current_coin = self.trading_bot.current_symbol
-        total_coins = len(self.trading_bot.symbol_list)
-        
         msg = (
             f"🖥️ <b>SYSTEM STATUS:</b> {status}\n"
-            f"Current Target: <b>{current_coin}</b>\n"
-            f"Watchlist Size: <b>{total_coins} coins</b>\n"
-            f"Uptime: {(datetime.now()).strftime('%H:%M:%S')}\n"
+            f"Current: <b>{self.trading_bot.current_symbol}</b>\n"
+            f"Watchlist: <b>{len(self.trading_bot.symbol_list)} symbols</b>"
         )
         await update.message.reply_text(msg, parse_mode=ParseMode.HTML)
 
     async def show_top_coins(self, update: Update):
-        """Показать текущий список монет"""
         coins = self.trading_bot.symbol_list
         if not coins:
-            await update.message.reply_text("📭 Список пуст (сканер не запущен).")
+            await update.message.reply_text("📭 Список пуст.")
             return
-            
-        display_coins = coins[:15]
-        msg = f"📋 <b>TOP VOLATILE COINS (Active):</b>\n\n"
-        msg += ", ".join(display_coins)
-        if len(coins) > 15:
-            msg += f"\n...and {len(coins)-15} more."
-            
+        msg = f"📋 <b>ACTIVE WATCHLIST:</b>\n\n" + ", ".join(coins[:15])
         await update.message.reply_text(msg, parse_mode=ParseMode.HTML)
 
     async def show_balance(self, update: Update):
         try:
             balance = self.trading_bot.data.get_balance()
-            msg = f"💰 <b>WALLET:</b> ${balance:.2f}"
-            await update.message.reply_text(msg, parse_mode=ParseMode.HTML)
+            await update.message.reply_text(f"💰 <b>WALLET:</b> ${balance:.2f}", parse_mode=ParseMode.HTML)
         except:
-            await update.message.reply_text("⚠️ Ошибка баланса (проверьте API).")
+            await update.message.reply_text("⚠️ Ошибка получения баланса.")
+
+    async def show_settings(self, update: Update):
+        msg = (
+            f"⚙️ <b>TITAN CONFIG:</b>\n"
+            f"───────────────────\n"
+            f"Mode: <b>{config.TRADE_MODE}</b>\n"
+            f"Min Score: <b>{self.trading_bot.mode_settings['composite_min_score']}</b>\n"
+            f"Max Positions: <b>{self.trading_bot.mode_settings['max_positions']}</b>\n"
+            f"Risk per Trade: <b>{self.trading_bot.mode_settings['risk_per_trade']*100}%</b>\n"
+            f"MTF Strict: <b>{self.trading_bot.mode_settings['mtf_strict']}</b>\n"
+        )
+        await update.message.reply_text(msg, parse_mode=ParseMode.HTML)
 
     def run(self):
         print("🚀 Titan Telegram Control Listening...")

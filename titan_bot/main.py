@@ -6,7 +6,7 @@ TITAN BOT 2026 - Main Controller (ULTIMATE FINAL)
 import time
 import threading
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from data_engine import DataEngine, RealtimeDataStream
 from selector import SymbolSelector
 from executor import OrderExecutor
@@ -37,7 +37,7 @@ class TitanBotUltimateFinal:
         self.risk = RiskManager(self.data)
         self.tg = TitanTelegramBridge()
         
-        # 2. Движки анализа (ИСПОЛЬЗУЕМ КОРРЕКТНЫЕ НАЗВАНИЯ КЛАССОВ)
+        # 2. Движки анализа
         self.orderflow = OrderFlowAnalyzer(self.data)
         self.smc = SmartMoneyAnalyzer(self.data)
         self.mtf = MultiTimeframeAnalyzer(self.data)
@@ -46,8 +46,10 @@ class TitanBotUltimateFinal:
         # 3. Настройки режима
         self.mode_settings = trade_modes.apply_mode(config.TRADE_MODE)
         
-        # 4. Потоки данных
+        # 4. Состояние
         self.stream = None
+        self.last_status_time = datetime.now()
+        self.processed_count = 0
 
     def start(self):
         """Запуск торгового цикла"""
@@ -67,33 +69,33 @@ class TitanBotUltimateFinal:
         if config.WEBSOCKET_ENABLED:
             try:
                 self.stream = RealtimeDataStream()
-                # Мы передаем список всех монет для подписки
                 self.stream.start(self.symbol_list)
             except Exception as e:
-                print(f"[Stream] WebSocket Error: {e}. Falling back to REST.")
-                self.stream = None
+                print(f"[Stream] WebSocket Error: {e}")
         
         cycle_count = 0
         while self.is_running:
             try:
-                # Обновляем топ-монеты раз в 10 циклов (~150 сек в агрессивке)
+                # Обновляем топ-монеты
                 if config.MULTI_SYMBOL_ENABLED and cycle_count % 10 == 0 and cycle_count > 0:
-                    new_symbols = self.selector.get_top_symbols(config.MAX_SYMBOLS)
-                    if set(new_symbols) != set(self.symbol_list):
-                        print("[Selector] Watchlist updated.")
-                        self.symbol_list = new_symbols
-                        # Перезапускаем WebSocket на новый список
-                        if self.stream: self.stream.start(self.symbol_list)
+                    self.symbol_list = self.selector.get_top_symbols(config.MAX_SYMBOLS)
+                    if self.stream: self.stream.start(self.symbol_list)
 
                 for symbol in self.symbol_list:
                     if not self.is_running: break
                     self.current_symbol = symbol
-                    print(f"🔍 [Scanning] {symbol:10}...", end="\r")
+                    # Убрали \r для честных логов
+                    print(f"🔍 [Scanning] {symbol:10}...")
                     self._process_symbol(symbol)
-                    time.sleep(0.5) # Пауза чтобы не перегрузить API
+                    self.processed_count += 1
+                    
+                    # Отчет в Телеграм каждые 30 минут
+                    if (datetime.now() - self.last_status_time) > timedelta(minutes=30):
+                        self._send_heartbeat()
+                    
+                    time.sleep(0.5)
                 
                 cycle_count += 1
-                # Небольшой отдых между полными кругами
                 time.sleep(config.ANALYSIS_INTERVAL)
                 
             except Exception as e:
@@ -103,18 +105,11 @@ class TitanBotUltimateFinal:
     def _process_symbol(self, symbol):
         """Обработка одной монеты"""
         try:
-            # 1. Если уже есть открытая поза - не ищем новый вход
-            if self.risk.has_position(symbol):
-                return
+            if self.risk.has_position(symbol): return
 
-            # 2. Быстрые фильтры
-            if not self._pass_pre_checks(symbol):
-                return
-            
-            # 3. Полный анализ
+            # Полный анализ
             mtf_signal = self.mtf.analyze(symbol)
             smc_signal = self.smc.analyze(symbol)
-            # Передаем поток данных в OrderFlow если он есть
             of_signal = self.orderflow.analyze(symbol, realtime_stream=self.stream)
             
             # Считаем балл
@@ -125,43 +120,48 @@ class TitanBotUltimateFinal:
                 orderflow_signal=of_signal
             )
 
-            # --- ПРОЗРАЧНЫЙ ЛОГ ---
             score = composite.total_score
             min_score = self.mode_settings['composite_min_score']
             
-            # Выводим балл если он хоть немного интересен
-            if abs(score) >= 15:
-                status_icon = "🔥" if abs(score) >= min_score else "🔍"
-                print(f"{status_icon} [Analysis] {symbol:10} | Score: {score:+.1f} | Need: {min_score}")
+            # Логируем если есть хоть какой-то балл
+            if abs(score) >= 10:
+                icon = "🔥" if abs(score) >= min_score else "�"
+                print(f"{icon} [Score] {symbol:10} | {score:+.1f} | need {min_score}")
             
-            # 4. Решение
+            # Решение
             if abs(score) >= min_score:
-                print(f"💰 [SIGNAL] {symbol} Triggered! Score: {score:+.1f}. Direction: {composite.direction}")
+                print(f"💰 [SIGNAL] {symbol} Triggered! Score: {score:+.1f}")
                 self._execute_trade(symbol, composite, smc_signal)
                 
         except Exception as e:
-            # logging.error(f"Error {symbol}: {e}")
             pass
 
-    def _pass_pre_checks(self, symbol):
-        """Убрали лишние блокировки для режима Aggressive"""
-        return True
+    def _send_heartbeat(self):
+        """Отправка статуса в Телеграм"""
+        self.last_status_time = datetime.now()
+        msg = (
+            f"📡 <b>TITAN HEARTBEAT</b>\n"
+            f"───────────────────\n"
+            f"Status: <b>ONLINE</b> 🟢\n"
+            f"Checks: <b>{self.processed_count}</b> syms analyzed.\n"
+            f"Current: <b>{self.current_symbol}</b>\n"
+            f"Mode: <b>{config.TRADE_MODE}</b>\n"
+        )
+        self.tg.send_message(msg)
+        print("[TITAN] Heartbeat sent to Telegram.")
 
     def _execute_trade(self, symbol, composite, smc_signal):
-        """Вход в позицию"""
         direction = composite.direction
         side = "Buy" if direction == "LONG" else "Sell"
         
-        # Текущая цена
+        # Получаем объем
         klines = self.data.get_klines(symbol, limit=2)
         if klines is None or klines.empty: return
         current_price = klines['close'].iloc[-1]
         
-        # Стоп-лосс и Тейк (по приоритету SMC)
         sl_price = smc_signal.stop_loss if smc_signal and smc_signal.stop_loss else 0
         tp_price = smc_signal.take_profit if smc_signal and smc_signal.take_profit else 0
 
-        # Расчет объема через риск-менеджер
         pos_size = self.risk.calculate_position_size(
             symbol=symbol,
             stop_loss_price=sl_price,
@@ -172,34 +172,22 @@ class TitanBotUltimateFinal:
             print(f"🛑 [Risk] {symbol} rejected: {pos_size.rejection_reason}")
             return
 
-        # ИСПОЛНЕНИЕ
         print(f"⚡ [AUTO] Executing {side} on {symbol} @ {current_price}...")
         order = self.executor.place_order(
             symbol=symbol,
             side=side,
             quantity=pos_size.quantity,
-            price=current_price,
             stop_loss=sl_price,
             take_profit=tp_price
         )
         
         if order.success:
-            # Шлем сигнал в Telegram
             self.tg.send_signal({
-                'symbol': symbol,
-                'direction': direction,
-                'score': composite.total_score,
-                'entry': current_price,
-                'sl': sl_price,
-                'tp': tp_price,
-                'confidence': composite.confidence,
-                'strength': composite.strength,
+                'symbol': symbol, 'direction': direction, 'score': composite.total_score,
+                'entry': current_price, 'sl': sl_price, 'tp': tp_price,
+                'confidence': composite.confidence, 'strength': composite.strength,
                 'recommendation': composite.recommendation
             })
-
-    def _shutdown(self):
-        self.is_running = False
-        if self.stream: self.stream.stop()
 
 if __name__ == "__main__":
     bot = TitanBotUltimateFinal()
