@@ -180,12 +180,33 @@ class TitanBotUltimateFinal:
         direction = composite.direction
         side = "Buy" if direction == "LONG" else "Sell"
         
-        klines = self.data.get_klines(symbol, limit=2)
-        if klines is None or klines.empty: return
-        current_price = klines['close'].iloc[-1]
-        
+        # Получаем текущую цену и ATR для безопасных уровней
+        df = self.data.get_klines(symbol, limit=20)
+        if df is None or df.empty: return
+        current_price = df['close'].iloc[-1]
+        atr = df['atr'].iloc[-1] if 'atr' in df.columns else current_price * 0.01
+
+        # ЛОГИКА SL/TP:
+        # 1. Сначала пробуем уровни от SMC
         sl_price = smc_signal.stop_loss if smc_signal and smc_signal.stop_loss else 0
         tp_price = smc_signal.take_profit if smc_signal and smc_signal.take_profit else 0
+        
+        # 2. ПРОВЕРКА НАПРАВЛЕНИЯ: Если уровни SMC противоречат стороне сделки - сбрасываем их
+        if side == "Buy":
+            if sl_price >= current_price: sl_price = 0
+            if tp_price <= current_price: tp_price = 0
+        else: # side == "Sell"
+            if sl_price <= current_price and sl_price > 0: sl_price = 0
+            if tp_price >= current_price and tp_price > 0: tp_price = 0
+
+        # 3. ФОЛЛБЭК НА ATR: Если уровней нет или они некорректны
+        if sl_price == 0:
+            sl_dist = atr * 1.5
+            sl_price = current_price - sl_dist if side == "Buy" else current_price + sl_dist
+            
+        if tp_price == 0:
+            tp_dist = abs(current_price - sl_price) * config.MIN_RR_RATIO
+            tp_price = current_price + tp_dist if side == "Buy" else current_price - tp_dist
 
         pos_size = self.risk.calculate_position_size(
             entry_price=current_price,
@@ -198,7 +219,7 @@ class TitanBotUltimateFinal:
             print(f"🛑 [Risk] {symbol} rejected: {pos_size.rejection_reason}")
             return
 
-        # Получаем признаки для БД (для будущего обучения)
+        # Получаем признаки для БД
         features = self.ml.get_features_dict(symbol)
 
         print(f"⚡ [AUTO] Executing {side} on {symbol} @ {current_price}...")
@@ -215,7 +236,7 @@ class TitanBotUltimateFinal:
             trade_id = order.order_id or f"{symbol}_{int(time.time())}"
             details = {
                 'score_total': composite.total_score,
-                'mtf': composite.components.get('mtf', 0),
+                'mtf': (mtf_sc := composite.components.get('mtf', 0)),
                 'smc': composite.components.get('smc', 0),
                 'orderflow': composite.components.get('orderflow', 0)
             }

@@ -97,13 +97,26 @@ class RiskManager:
         r_percent = risk_percent if risk_percent is not None else config.RISK_PER_TRADE
         risk_amount = balance * r_percent
         
-        # Размер позиции в базовой валюте (ETH, BTC и т.д.)
-        quantity = risk_amount / stop_distance
+        # Минимальный стоп (0.1% от цены) чтобы избежать деления на микро-число
+        min_stop_distance = entry_price * 0.001
+        actual_stop_distance = max(stop_distance, min_stop_distance)
+
+        # Размер позиции в базовой валюте
+        quantity = risk_amount / actual_stop_distance
         
         # Стоимость позиции в USDT
         position_value = quantity * entry_price
         
-        # Проверка минимального размера (Bybit обычно требует минимум $5)
+        # ПРОВЕРКА ПЛЕЧА: Не более 10x от баланса (Bybit Demo или лимиты монет)
+        max_leverage = 10 
+        max_pos_value = balance * max_leverage
+        
+        if position_value > max_pos_value:
+            position_value = max_pos_value
+            quantity = position_value / entry_price
+            risk_amount = quantity * actual_stop_distance
+        
+        # Проверка минимального размера
         min_order_value = 5.0
         if position_value < min_order_value:
             return PositionSize(
@@ -112,14 +125,13 @@ class RiskManager:
                 position_value=position_value,
                 leverage_suggested=1,
                 is_valid=False,
-                rejection_reason=f"Position value ${position_value:.2f} below minimum ${min_order_value}"
+                rejection_reason=f"Value ${position_value:.2f} < ${min_order_value}"
             )
         
-        # Рассчитываем рекомендуемое плечо
-        # Плечо = Стоимость позиции / Доступный баланс
-        leverage = max(1, min(10, int(position_value / balance) + 1))
+        # Рекомендуемое плечо
+        leverage = max(1, min(max_leverage, int(position_value / balance) + 1))
         
-        # Округляем quantity до нужной точности (зависит от инструмента)
+        # Округляем
         quantity = self._round_quantity(quantity, symbol)
         
         return PositionSize(
