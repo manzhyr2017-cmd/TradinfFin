@@ -70,9 +70,9 @@ CORRELATION_FILTER_ENABLED = True
 CORRELATION_MIN_SAFE = 0.3      # Ослаблено (было 0.5)
 
 # === COMPOSITE SCORE - КЛЮЧЕВОЕ! ===
-COMPOSITE_MIN_FOR_ENTRY = 30      # Минимальный скор для входа (был 35)
-COMPOSITE_STRONG_THRESHOLD = 45   # Скор для СИЛЬНОГО сигнала (был 35)
-COMPOSITE_MODERATE_THRESHOLD = 30 # Скор для умеренного сигнала (был 35)
+COMPOSITE_MIN_FOR_ENTRY = 35      # Минимальный скор для входа (был 30)
+COMPOSITE_STRONG_THRESHOLD = 50   # Скор для СИЛЬНОГО сигнала
+COMPOSITE_MODERATE_THRESHOLD = 35 # Скор для умеренного сигнала
 MTF_STRICT_MODE = False           # Не требуем идеального совпадения всех ТФ
 
 # === ORDER FLOW ===

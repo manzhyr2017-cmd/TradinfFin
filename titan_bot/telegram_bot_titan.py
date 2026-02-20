@@ -75,8 +75,34 @@ class TitanTelegramBot:
             await self.show_top_coins(update)
         elif text == "⚙️ SETTINGS":
             await self.show_settings(update)
+        elif "SCORE" in text:
+            await self.handle_score_adjust(update, text)
         else:
             await update.message.reply_text("🤔 Unknown command")
+
+    async def handle_score_adjust(self, update: Update, text: str):
+        """Изменение порога скора через ТГ"""
+        current = self.trading_bot.mode_settings['composite_min_score']
+        
+        if "+5 SCORE" in text:
+            new_score = current + 5
+        elif "-5 SCORE" in text:
+            new_score = max(5, current - 5)
+        elif "SET SCORE" in text:
+            try:
+                new_score = int(text.split()[-1])
+            except:
+                await update.message.reply_text("❌ Формат: SET SCORE 35")
+                return
+        else:
+            return
+
+        self.trading_bot.mode_settings['composite_min_score'] = new_score
+        # Также обновляем в объекте композитного движка для синхронности
+        self.trading_bot.composite.thresholds['conflict_zone'] = new_score
+        
+        await update.message.reply_text(f"✅ <b>Min Score обновлен: {current} ➜ {new_score}</b>", parse_mode=ParseMode.HTML)
+        await self.show_settings(update)
 
     async def run_scanner(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Запуск сканера в фоновом потоке"""
@@ -140,9 +166,19 @@ class TitanTelegramBot:
             f"Min Score: <b>{self.trading_bot.mode_settings['composite_min_score']}</b>\n"
             f"Max Positions: <b>{self.trading_bot.mode_settings['max_positions']}</b>\n"
             f"Risk per Trade: <b>{self.trading_bot.mode_settings['risk_per_trade']*100}%</b>\n"
-            f"MTF Strict: <b>{self.trading_bot.mode_settings['mtf_strict']}</b>\n"
+            f"MTF Strict: <b>{self.trading_bot.mode_settings['mtf_strict']}</b>\n\n"
+            f"<i>💡 Ты можешь менять порог кнопками ниже:</i>"
         )
-        await update.message.reply_text(msg, parse_mode=ParseMode.HTML)
+        
+        keyboard = [
+            [KeyboardButton("+5 SCORE"), KeyboardButton("-5 SCORE")],
+            [KeyboardButton("🚀 START SCANNER"), KeyboardButton("🛑 STOP SYSTEM")],
+            [KeyboardButton("📊 STATUS"), KeyboardButton("💰 BALANCE")],
+            [KeyboardButton("📋 TOP COINS"), KeyboardButton("⚙️ SETTINGS")]
+        ]
+        reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+        
+        await update.message.reply_text(msg, reply_markup=reply_markup, parse_mode=ParseMode.HTML)
 
     def run(self):
         print("🚀 Titan Telegram Control Listening...")
