@@ -27,9 +27,7 @@ class TitanTelegramBot:
         self.token = os.getenv("TELEGRAM_BOT_TOKEN")
         self.channel_id = os.getenv("TELEGRAM_CHANNEL")
         
-        # === ГЛАВНОЕ ИЗМЕНЕНИЕ ===
-        # Мы создаем ОДИН экземпляр Умного Бота, который сам умеет сканировать рынок
-        # Ему не нужно передавать symbol, он сам найдет топ-30 через Selector
+        # Мы создаем ОДИН экземпляр Умного Бота
         self.trading_bot = TitanBotUltimateFinal()
         self.bot_thread = None
         
@@ -41,8 +39,6 @@ class TitanTelegramBot:
         
     def _setup_handlers(self):
         self.app.add_handler(CommandHandler("start", self.start_cmd))
-        
-        # Кнопки
         self.app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.text_handler))
 
     async def start_cmd(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -68,7 +64,7 @@ class TitanTelegramBot:
         text = update.message.text
         
         if text == "🚀 START SCANNER":
-            await self.run_scanner(update)
+            await self.run_scanner(update, context) # Добавил context
         elif text == "🛑 STOP SYSTEM":
             await self.stop_system(update)
         elif text == "📊 STATUS":
@@ -82,7 +78,7 @@ class TitanTelegramBot:
         else:
             await update.message.reply_text("🤔 Unknown command")
 
-    async def run_scanner(self, update: Update):
+    async def run_scanner(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Запуск сканера в фоновом потоке"""
         if self.trading_bot.is_running:
             await update.message.reply_text("⚠️ Система уже работает! (Игнорирую повторный запуск)")
@@ -95,15 +91,12 @@ class TitanTelegramBot:
         self.bot_thread.daemon = True
         self.bot_thread.start()
         
-        # Увеличиваем время ожидания до 7 секунд
-        # Потому что в main.py start() есть sleep(5) + инициализация
+        # Ожидание инициализации
         await asyncio.sleep(7)
         
-        # Проверяем не по is_running (он сразу True), а по факту наличия списка монет
         if self.trading_bot.is_running:
-            await context.bot.edit_message_text(
-                chat_id=update.effective_chat.id,
-                message_id=msg.message_id,
+            # Используем msg.edit_text вместо context.bot
+            await msg.edit_text(
                 text=(
                     f"🚀 <b>SCANNER STARTED!</b>\n"
                     f"Monitoring Top-{config.MAX_SYMBOLS} coins by Volatility.\n"
@@ -113,11 +106,7 @@ class TitanTelegramBot:
                 parse_mode=ParseMode.HTML
             )
         else:
-            await context.bot.edit_message_text(
-                chat_id=update.effective_chat.id,
-                message_id=msg.message_id,
-                text="❌ Ошибка запуска Scanner (см. логи сервера)."
-            )
+            await msg.edit_text(text="❌ Ошибка запуска Scanner (см. логи сервера).")
 
     async def stop_system(self, update: Update):
         """Остановка"""
@@ -125,8 +114,7 @@ class TitanTelegramBot:
             await update.message.reply_text("💤 Система и так спит.")
             return
             
-        self.trading_bot.is_running = False # Флаг остановки цикла
-        # Важно: stream тоже надо убить
+        self.trading_bot.is_running = False 
         if self.trading_bot.stream and self.trading_bot.stream.ws:
             self.trading_bot.stream.ws.exit()
             
@@ -153,7 +141,6 @@ class TitanTelegramBot:
             await update.message.reply_text("📭 Список пуст (сканер не запущен).")
             return
             
-        # Показываем первые 15
         display_coins = coins[:15]
         msg = f"📋 <b>TOP VOLATILE COINS (Active):</b>\n\n"
         msg += ", ".join(display_coins)
@@ -165,20 +152,10 @@ class TitanTelegramBot:
     async def show_balance(self, update: Update):
         try:
             balance = self.trading_bot.data.get_balance()
-            # PnL считать сложно без подключенной базы, пока покажем баланс
             msg = f"💰 <b>WALLET:</b> ${balance:.2f}"
             await update.message.reply_text(msg, parse_mode=ParseMode.HTML)
         except:
             await update.message.reply_text("⚠️ Ошибка баланса (проверьте API).")
-
-    async def show_settings(self, update: Update):
-        msg = (
-            f"⚙️ <b>CONFIG:</b>\n"
-            f"Mode: {config.TRADE_MODE}\n"
-            f"Score: >{config.COMPOSITE_MIN_FOR_ENTRY}\n"
-            f"Positions: Max {config.MAX_POSITIONS}\n"
-        )
-        await update.message.reply_text(msg)
 
     def run(self):
         print("🚀 Titan Telegram Control Listening...")
@@ -187,6 +164,5 @@ class TitanTelegramBot:
 if __name__ == "__main__":
     from dotenv import load_dotenv
     load_dotenv()
-    
     bot = TitanTelegramBot()
     bot.run()
