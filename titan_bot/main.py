@@ -9,12 +9,12 @@ import logging
 from datetime import datetime
 from data_engine import DataEngine, RealtimeDataStream
 from selector import SymbolSelector
-from execution import OrderExecutor
+from executor import OrderExecutor
 from risk_manager import RiskManager
-from order_flow import OrderFlowAnalyzer
+from orderflow import OrderFlowAnalyzer
 from smart_money import SmartMoneyAnalyzer
-from mtf_engine import MTFAnalyzer
-from composite_engine import CompositeEngine
+from multi_timeframe import MTFAnalyzer
+from composite_score import CompositeEngine
 from telegram_bridge import TitanTelegramBridge
 import trade_modes
 import config
@@ -57,13 +57,20 @@ class TitanBotUltimateFinal:
         
         # Начальный отбор символов
         if config.MULTI_SYMBOL_ENABLED:
-            self.symbol_list = self.selector.get_top_symbols(config.MAX_SYMBOLS)
-            print(f"[Selector] Отобрано {len(self.symbol_list)} монет.")
+            try:
+                self.symbol_list = self.selector.get_top_symbols(config.MAX_SYMBOLS)
+                print(f"[Selector] Отобрано {len(self.symbol_list)} монет.")
+            except Exception as e:
+                print(f"[Selector] Ошибка отбора: {e}")
+                self.symbol_list = [config.SYMBOL]
 
-        # WebSocket (Один на все символы)
+        # WebSocket
         if config.WEBSOCKET_ENABLED:
-            self.stream = RealtimeDataStream()
-            self.stream.start(self.symbol_list)
+            try:
+                self.stream = RealtimeDataStream()
+                self.stream.start(self.symbol_list)
+            except Exception as e:
+                print(f"[Stream] Ошибка WS: {e}")
         
         cycle_count = 0
         while self.is_running:
@@ -79,8 +86,9 @@ class TitanBotUltimateFinal:
                 for symbol in self.symbol_list:
                     if not self.is_running: break
                     self.current_symbol = symbol
+                    print(f"🔍 [Scanning] {symbol}...", end="\r")
                     self._process_symbol(symbol)
-                    time.sleep(0.5) # Мини-пауза между тикерами
+                    time.sleep(0.5)
                 
                 cycle_count += 1
                 time.sleep(config.ANALYSIS_INTERVAL)
@@ -93,7 +101,6 @@ class TitanBotUltimateFinal:
         """Обработка одной монеты"""
         try:
             # 1. Позиции
-            self._manage_positions(symbol)
             if self.risk.has_position(symbol):
                 return
 
@@ -118,44 +125,34 @@ class TitanBotUltimateFinal:
             score = composite.total_score
             min_score = self.mode_settings['composite_min_score']
             
-            # Выводим в консоль статус анализа каждой монеты
-            # Только если балл > 10, чтобы не забивать экран мусором
-            if abs(score) >= 15:
-                status_icon = "🔥" if abs(score) >= min_score else "🔍"
+            # Выводим балл если он хоть сколько-то значимый
+            if abs(score) >= 10:
+                status_icon = "🔥" if abs(score) >= min_score else "�"
                 print(f"{status_icon} [Analysis] {symbol:10} | Score: {score:+.1f} | Need: {min_score}")
             
             # 4. Решение
             if abs(score) >= min_score:
-                print(f"💰 [SIGNAL] Target Score Reached for {symbol}! Initiating trade...")
+                print(f"💰 [SIGNAL] {symbol} Triggered! Score: {score}")
                 self._execute_trade(symbol, composite, smc_signal)
                 
         except Exception as e:
-            # logging.error(f"Error {symbol}: {e}")
+            # print(f"Error {symbol}: {e}")
             pass
 
     def _pass_pre_checks(self, symbol):
-        """Быстрые проверки"""
-        # Session Filter
-        if self.mode_settings.get('session_filter', False):
-            # Тут могла быть блокировка. Если False - проходим.
-            pass
         return True
 
     def _execute_trade(self, symbol, composite, smc_signal):
-        """Вход в позицию"""
         direction = composite.direction
         side = "Buy" if direction == "LONG" else "Sell"
         
-        # Получаем данные для входа
         klines = self.data.get_klines(symbol, limit=2)
         if klines is None or klines.empty: return
         current_price = klines['close'].iloc[-1]
         
-        # Стоп-лосс (по SMC или ATR)
-        sl_price = smc_signal.stop_loss if smc_signal and smc_signal.stop_loss else current_price * 0.99
-        tp_price = smc_signal.take_profit if smc_signal and smc_signal.take_profit else current_price * 1.02
+        sl_price = smc_signal.stop_loss if smc_signal and smc_signal.stop_loss else 0
+        tp_price = smc_signal.take_profit if smc_signal and smc_signal.take_profit else 0
 
-        # Расчет объема через риск-менеджер
         pos_size = self.risk.calculate_position_size(
             symbol=symbol,
             stop_loss_price=sl_price,
@@ -163,23 +160,19 @@ class TitanBotUltimateFinal:
         )
         
         if not pos_size.is_valid:
-            print(f"🛑 [Risk] Trade rejected: {pos_size.rejection_reason}")
+            print(f"🛑 [Risk] {symbol} rejected: {pos_size.rejection_reason}")
             return
 
-        # ИСПОЛНЕНИЕ
-        print(f"⚡ [AUTO] Executing {side} on {symbol} @ {current_price}...")
+        print(f"⚡ [AUTO] Executing {side} on {symbol}...")
         order = self.executor.place_order(
             symbol=symbol,
             side=side,
             quantity=pos_size.quantity,
-            price=current_price,
             stop_loss=sl_price,
-            take_profit=tp_price,
-            leverage=10
+            take_profit=tp_price
         )
         
         if order.success:
-            # Уведомление в ТГ через новый метод
             self.tg.send_signal({
                 'symbol': symbol,
                 'direction': direction,
@@ -188,18 +181,15 @@ class TitanBotUltimateFinal:
                 'sl': sl_price,
                 'tp': tp_price,
                 'confidence': 0.85,
-                'strength': "Aggressive Confluence",
+                'strength': "Aggressive",
                 'recommendation': composite.recommendation
             })
 
-    def _manage_positions(self, symbol):
-        """Тут будет логика трейлинга и выхода"""
-        pass
+    def start_scanner_mode(self):
+        self.start()
 
     def _shutdown(self):
-        print("\n[TITAN] Shutting down...")
         self.is_running = False
-        if self.stream: self.stream.stop()
 
 if __name__ == "__main__":
     bot = TitanBotUltimateFinal()
