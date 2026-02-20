@@ -85,7 +85,7 @@ class TitanTelegramBot:
     async def run_scanner(self, update: Update):
         """Запуск сканера в фоновом потоке"""
         if self.trading_bot.is_running:
-            await update.message.reply_text("⚠️ Система уже работает!")
+            await update.message.reply_text("⚠️ Система уже работает! (Игнорирую повторный запуск)")
             return
 
         msg = await update.message.reply_text("🔄 Запуск TITAN AGGRESSIVE SCANNER...")
@@ -95,8 +95,11 @@ class TitanTelegramBot:
         self.bot_thread.daemon = True
         self.bot_thread.start()
         
-        await asyncio.sleep(2) # Даем время на старт
+        # Увеличиваем время ожидания до 7 секунд
+        # Потому что в main.py start() есть sleep(5) + инициализация
+        await asyncio.sleep(7)
         
+        # Проверяем не по is_running (он сразу True), а по факту наличия списка монет
         if self.trading_bot.is_running:
             await context.bot.edit_message_text(
                 chat_id=update.effective_chat.id,
@@ -104,8 +107,8 @@ class TitanTelegramBot:
                 text=(
                     f"🚀 <b>SCANNER STARTED!</b>\n"
                     f"Monitoring Top-{config.MAX_SYMBOLS} coins by Volatility.\n"
-                    f"Looking for: <b>SMC + FVG + OrderFlow</b> patterns.\n"
-                    f"Good luck! 💸"
+                    f"Status: <b>ONLINE</b> 🟢\n"
+                    f"Start Time: {datetime.now().strftime('%H:%M:%S')}"
                 ),
                 parse_mode=ParseMode.HTML
             )
@@ -123,6 +126,10 @@ class TitanTelegramBot:
             return
             
         self.trading_bot.is_running = False # Флаг остановки цикла
+        # Важно: stream тоже надо убить
+        if self.trading_bot.stream and self.trading_bot.stream.ws:
+            self.trading_bot.stream.ws.exit()
+            
         await update.message.reply_text("🛑 Остановка сканера... (завершение текущего цикла)")
 
     async def show_status(self, update: Update):
