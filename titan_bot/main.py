@@ -93,7 +93,7 @@ class TitanBotUltimateFinal:
                     if (datetime.now() - self.last_status_time) > timedelta(minutes=30):
                         self._send_heartbeat()
                     
-                    time.sleep(0.5)
+                    time.sleep(3.0) # Замедлили до 3 сек для обхода лимитов Bybit
                 
                 cycle_count += 1
                 time.sleep(config.ANALYSIS_INTERVAL)

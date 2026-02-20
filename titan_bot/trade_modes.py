@@ -36,7 +36,7 @@ TRADE_MODES = {
     
     "AGGRESSIVE": {
         # Много сделок, выше риск (Professional Aggressive)
-        "composite_min_score": 35,    # Был 30. Повысили качество входа
+        "composite_min_score": 30,    # Был 35. Порог входа снижен для частоты сделок
         "session_filter": False,
         "session_min_quality": 1,     # Любая сессия
         "news_filter": True,          # Новости все еще важны

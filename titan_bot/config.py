@@ -46,7 +46,7 @@ if not API_SECRET or API_SECRET == "your_secret":
 SYMBOL = "ETHUSDT"           # Дефолтная пара
 BENCHMARK = "BTCUSDT"        # На что смотрим как на индикатор рынка
 MULTI_SYMBOL_ENABLED = True  # Сканировать несколько монет
-MAX_SYMBOLS = 20             # Сколько монет в топе перебирать (было 10)
+MAX_SYMBOLS = 30             # Сколько монет в топе перебирать (было 20)
 TIMEFRAME = "5"              # Таймфрейм в минутах (было 15)
 CATEGORY = "linear"          # linear = фьючерсы USDT
 
@@ -70,9 +70,9 @@ CORRELATION_FILTER_ENABLED = True
 CORRELATION_MIN_SAFE = 0.3      # Ослаблено (было 0.5)
 
 # === COMPOSITE SCORE - КЛЮЧЕВОЕ! ===
-COMPOSITE_MIN_FOR_ENTRY = 35      # Минимальный скор для входа (был 30)
+COMPOSITE_MIN_FOR_ENTRY = 30      # Минимальный скор для входа (был 35)
 COMPOSITE_STRONG_THRESHOLD = 45   # Скор для СИЛЬНОГО сигнала (был 35)
-COMPOSITE_MODERATE_THRESHOLD = 35 # Скор для умеренного сигнала (был 30)
+COMPOSITE_MODERATE_THRESHOLD = 30 # Скор для умеренного сигнала (был 35)
 MTF_STRICT_MODE = False           # Не требуем идеального совпадения всех ТФ
 
 # === ORDER FLOW ===
