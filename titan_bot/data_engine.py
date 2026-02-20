@@ -94,12 +94,26 @@ class DataEngine:
             result = response['result']
             bids = pd.DataFrame(result['b'], columns=['price', 'size']).astype(float)
             asks = pd.DataFrame(result['a'], columns=['price', 'size']).astype(float)
+            
+            # Детекция "стенок" (Order Walls)
+            avg_bid_size = bids['size'].mean()
+            avg_ask_size = asks['size'].mean()
+            bid_walls = bids[bids['size'] > avg_bid_size * 3]
+            ask_walls = asks[asks['size'] > avg_ask_size * 3]
+            
             bid_volume, ask_volume = bids['size'].sum(), asks['size'].sum()
             total_volume = bid_volume + ask_volume
             imbalance = bid_volume / total_volume if total_volume > 0 else 0.5
+            
             return {
-                'bids': bids, 'asks': asks, 'bid_volume': bid_volume, 'ask_volume': ask_volume,
-                'imbalance': imbalance, 'spread': asks['price'].iloc[0] - bids['price'].iloc[0],
+                'bids': bids, 
+                'asks': asks, 
+                'bid_walls': bid_walls,
+                'ask_walls': ask_walls,
+                'bid_volume': bid_volume, 
+                'ask_volume': ask_volume,
+                'imbalance': imbalance, 
+                'spread': asks['price'].iloc[0] - bids['price'].iloc[0],
                 'mid_price': (asks['price'].iloc[0] + bids['price'].iloc[0]) / 2
             }
         except Exception as e:
@@ -132,6 +146,20 @@ class DataEngine:
         except Exception as e:
             print(f"[DataEngine] Error positions: {e}")
             return []
+
+    def get_funding_rate(self, symbol: str) -> dict:
+        """Получает текущую ставку финансирования."""
+        try:
+            response = self.session.get_tickers(category=config.CATEGORY, symbol=symbol)
+            if response['retCode'] != 0: return {}
+            ticker = response['result']['list'][0]
+            return {
+                'funding_rate': float(ticker.get('fundingRate', 0)),
+                'next_funding_time': ticker.get('nextFundingTime', "")
+            }
+        except Exception as e:
+            print(f"[DataEngine] Error funding: {e}")
+            return {}
 
 class RealtimeDataStream:
     def __init__(self, on_trade_callback=None):
@@ -179,6 +207,10 @@ class RealtimeDataStream:
         delta = self.delta_volume
         if reset: self.delta_volume = 0
         return delta
+    
+    def get_recent_trades(self, limit: int = 50) -> list:
+        """Возвращает последние сделки из буфера."""
+        return self.trades_buffer[-limit:]
 
     def stop(self):
         if self.ws: self.ws.exit()
