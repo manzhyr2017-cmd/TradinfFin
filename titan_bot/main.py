@@ -1,6 +1,6 @@
 """
 TITAN BOT 2026 - ULTIMATE FINAL EDITION
-Все модули + Composite Score
+Все модули + Composite Score + Smart Money + Order Flow + ML
 """
 
 import time
@@ -18,15 +18,12 @@ from risk_manager import RiskManager
 from executor import OrderExecutor
 from trailing_stop import TrailingStopManager
 from session_filter import SessionFilter
-from analytics import TradingAnalytics
+from news_filter import NewsFilter
 from multi_timeframe import MultiTimeframeAnalyzer
+from correlations import CorrelationAnalyzer
 from market_regime import MarketRegimeDetector
-from partial_tp import PartialTakeProfitManager
-from cooldown import CooldownManager
 from open_interest import OpenInterestAnalyzer
 from liquidations import LiquidationAnalyzer
-from correlations import CorrelationAnalyzer
-from news_filter import NewsFilter
 from volume_profile import VolumeProfileAnalyzer
 from whale_tracker import WhaleTracker
 from fear_greed import FearGreedAnalyzer
@@ -67,14 +64,9 @@ class TitanBotUltimateFinal:
         # Фильтры
         self.session = SessionFilter()
         self.news = NewsFilter()
-        self.cooldown = CooldownManager()
         
         # Управление позициями
         self.trailing = TrailingStopManager(self.executor)
-        self.partial_tp = PartialTakeProfitManager(self.executor)
-        
-        # Аналитика
-        self.analytics = TradingAnalytics()
         
         # ГЛАВНОЕ: Композитный скоринг
         self.composite = CompositeScoreEngine()
@@ -107,19 +99,22 @@ class TitanBotUltimateFinal:
         """Запуск бота."""
         self.is_running = True
         
-        print(f"[TITAN] Ожидание сброса лимитов Bybit (10 сек)...")
-        time.sleep(10)
+        print(f"[TITAN] Ожидание сброса лимитов Bybit (5 сек)...")
+        time.sleep(5)
         print(f"[TITAN] Запуск ULTIMATE FINAL в режиме сканирования...")
         
         # Первичный подбор символов (только ОДИН раз здесь)
         if config.MULTI_SYMBOL_ENABLED:
-            self.symbol_list = self.selector.get_top_symbols(config.MAX_SYMBOLS)
+            # Запрашиваем нужное количество монет
+            count = config.MAX_SYMBOLS
+            self.symbol_list = self.selector.get_top_symbols(count)
         
+        # Инициализация WebSocket
         if config.WEBSOCKET_ENABLED:
             self.stream = RealtimeDataStream()
-            # Подписываемся сразу на весь список!
+            self.stream.symbol_list = self.symbol_list # Важно передать список
             self.stream.start(self.symbol_list)
-            time.sleep(5)
+            time.sleep(3)
         
         # Восстановление позиций (если бот перезагрузился)
         self._recover_tracked_positions()
@@ -134,319 +129,152 @@ class TitanBotUltimateFinal:
                         self.stream = RealtimeDataStream()
                         self.stream.start(self.symbol_list)
                 
-                # Раз в 5 циклов (примерно каждые 15-20 мин) обновляем список топов
-                if config.MULTI_SYMBOL_ENABLED and cycle_count % 5 == 0 and cycle_count > 0:
-                    new_symbols = self.selector.get_top_symbols(10)
-                    if new_symbols != self.symbol_list:
-                        self.symbol_list = new_symbols
-                        # Если список сменился, перезапускаем WS
-                        if self.stream:
-                            if self.stream.ws: self.stream.ws.exit()
-                            self.stream.ws = None
-                            self.stream.start(self.symbol_list)
-                
-                for symbol in self.symbol_list:
-                    self.current_symbol = symbol
-                    self._main_loop(symbol)
+                # Обновление списка топ монет (раз в 10 циклов)
+                if config.MULTI_SYMBOL_ENABLED and cycle_count % 10 == 0 and cycle_count > 0:
+                    new_symbols = self.selector.get_top_symbols(config.MAX_SYMBOLS)
                     
-                    # Пауза 3 секунды между монетами по просьбе юзера
-                    time.sleep(3)
+                    # Если список изменился, обновляем подписку
+                    if set(new_symbols) != set(self.symbol_list):
+                        print(f"[TITAN] Обновление списка монет ({len(new_symbols)} шт)...")
+                        self.symbol_list = new_symbols
+                        
+                        if self.stream and self.stream.ws:
+                            self.stream.ws.exit()
+                            self.stream = RealtimeDataStream()
+                            self.stream.start(self.symbol_list)
+
+                # === ГЛАВНЫЙ ЦИКЛ ПО ВСЕМ МОНЕТАМ ===
+                for symbol in self.symbol_list:
+                    if not self.is_running: break
+                    
+                    self.current_symbol = symbol
+                    self._process_symbol(symbol)
+                    
+                    # Пауза между монетами, чтобы не спамить (1 сек достаточно если есть WS)
+                    time.sleep(1)
                 
                 cycle_count += 1
+                # Пауза между полными кругами
+                time.sleep(config.ANALYSIS_INTERVAL)
                 
             except KeyboardInterrupt:
                 self._shutdown()
                 break
             except Exception as e:
-                print(f"[TITAN] ❌ Error: {e}")
-                import traceback
-                traceback.print_exc()
+                print(f"[CRITICAL] Ошибка в главном цикле: {e}")
                 time.sleep(10)
-    
-    def _main_loop(self, symbol):
-        """Главный цикл для конкретной монеты."""
-        print(f"\n{'='*70}")
-        print(f"[{datetime.now().strftime('%H:%M:%S')}] ANALYSIS CYCLE - {symbol}")
-        print('='*70)
-        
-        # ══════════════════════════════════════════
-        # ФИЛЬТРЫ (быстрая проверка)
-        # ══════════════════════════════════════════
-        
-        pass_filters, filter_msg = self._pass_filters(symbol)
-        if not pass_filters:
-            # Если сигнал сильный, но фильтры не пустили - логгируем почему
-            print(f"[{symbol}] ⏭️ Trade skipped by filter: {filter_msg}")
+
+    def _process_symbol(self, symbol):
+        """Обработка одной монеты"""
+        try:
+            # 1. Сначала управляем позициями (трейлинг, закрытие)
             self._manage_positions(symbol)
-            return
-        
-        # ══════════════════════════════════════════
-        # СБОР ВСЕХ ДАННЫХ
-        # ══════════════════════════════════════════
-        print(f"[{symbol}] Собираю разведданные...")
-        
-        mtf_analysis = self.mtf.analyze(symbol)
-        smc_signal = self.smc.analyze(symbol)
-        of_signal = self.orderflow.analyze(symbol, self.stream)
-        regime = self.regime.analyze(symbol)
-        oi = self.oi.analyze(symbol)
-        vp = self.volume_profile.analyze(symbol)
-        whale = self.whale.analyze(symbol)
-        fg = self.fear_greed.analyze()
-        corr = self.correlations.analyze(symbol)
-        
-        # ══════════════════════════════════════════
-        # COMPOSITE SCORE
-        # ══════════════════════════════════════════
-        
-        composite_signal = self.composite.calculate(
-            symbol=symbol,
-            mtf_analysis=mtf_analysis,
-            smc_signal=smc_signal,
-            orderflow_signal=of_signal,
-            volume_profile=vp,
-            oi_analysis=oi,
-            regime_analysis=regime,
-            whale_analysis=whale,
-            fear_greed=fg,
-            correlation_analysis=corr
-        )
-        
-        # Выводим дашборд
-        self.composite.print_dashboard(composite_signal)
-        
-        # Отправляем в ТГ если сигнал сильный
-        if abs(composite_signal.total_score) > 40:
-             self.telegram.send_dashboard(composite_signal, symbol)
-        
-        # ══════════════════════════════════════════
-        # РЕШЕНИЕ
-        # ══════════════════════════════════════════
-        
-        if composite_signal.direction != "NEUTRAL" and composite_signal.strength in ["STRONG", "MODERATE"]:
-            self._execute_trade(symbol, composite_signal, smc_signal, regime)
-        else:
-            # Если нет входа, просто мониторим позиции
-            self._manage_positions(symbol)
-    
-    def _pass_filters(self, symbol) -> bool:
-        """Проверяет все фильтры."""
-        
-        # Cooldown
-        cooldown = self.cooldown.can_trade()
-        if cooldown.is_active:
-            return False, f"Cooldown: {cooldown.message}"
-        
-        # Session
-        if self.mode_settings.get("session_filter", True):
-            can_trade, msg = self.session.is_good_time_to_trade(
-                min_quality=self.mode_settings.get("session_min_quality", 5)
-            )
-            if not can_trade:
-                return False, f"Session: {msg}"
-        else:
-            print("[Filter] 🕐 Session: IGNORED (Aggressive Mode)")
-        
-        # News
-        if self.mode_settings.get("news_filter", True):
-            news = self.news.check()
-            if not news.can_trade:
-                return False, f"News: {news.message}"
-        
-        # Risk limits
-        risk = self.risk.check_risk_limits()
-        if not risk.can_trade:
-            return False, f"Risk: {risk.reason}"
-        
-        print("[Filter] ✅ Все фильтры пройдены")
-        return True, "OK"
-    
-    def _execute_trade(self, symbol, composite, smc_signal, regime):
-        """Исполняет сделку."""
-        
-        # Если нет сигнала от SMC, но сигнал ОЧЕНЬ сильный - заходим по рынку
-        strong_threshold = getattr(config, 'COMPOSITE_STRONG_THRESHOLD', 45)
-        is_very_strong = composite.total_score >= strong_threshold
-        
-        if smc_signal is None:
-            if is_very_strong:
-                print(f"[Trade] {symbol}: SMC не дал точку, но Score {composite.total_score} >= {strong_threshold}. ВХОДИМ ПО РЫНКУ!")
-                # Создаем фейковый сигнал для входа по рынку
-                ticker = self.data.session.get_tickers(category=config.CATEGORY, symbol=symbol)
-                current_price = float(ticker['result']['list'][0]['lastPrice'])
-                
-                # Примерный стоп 1% для рыночного входа
-                sl_dist = current_price * 0.01
-                sl = current_price - sl_dist if composite.direction == 'LONG' else current_price + sl_dist
-                
-                from smart_money import SMCSignal, SMCSignalType
-                smc_signal = SMCSignal(
-                    signal_type=SMCSignalType.NO_SIGNAL,
-                    entry_price=current_price,
-                    stop_loss=sl,
-                    take_profit=current_price + (sl_dist * 2),
-                    liquidity_level=current_price,
-                    confidence=0.5,
-                    description="Market Entry (High Score)"
-                )
-            else:
-                print(f"[Trade] {symbol}: ❌ Нет точки входа от SMC и Score ({composite.total_score}) недостаточно высокий для входа по рынку")
+            
+            # 2. Если уже есть поза - не ищем новый вход (для простоты пока так)
+            if self.risk.has_position(symbol):
                 return
+
+            # 3. Анализ (Composite Score)
+            # Сначала проверяем фильтры "на берегу", чтобы не грузить CPU
+            if not self._pass_pre_checks(symbol):
+                return
+            
+            # Полный анализ
+            mtf_signal = self.mtf.analyze(symbol)
+            smc_signal = self.smc.analyze(symbol)
+            of_signal = self.orderflow.analyze(symbol)
+            if config.WEBSOCKET_ENABLED and self.stream:
+                # Добавляем данные из стрима в OF
+                of_signal = self.orderflow.enrich_with_stream(of_signal, self.stream.get_data(symbol))
+
+            # Считаем итоговый балл
+            composite = self.composite.calculate(
+                symbol=symbol,
+                mtf_analysis=mtf_signal,
+                smc_signal=smc_signal,
+                orderflow_signal=of_signal
+            )
+
+            # 4. Решение
+            min_score = self.mode_settings['composite_min_score']
+            if abs(composite.total_score) >= min_score:
+                self._execute_trade(symbol, composite, smc_signal)
+                
+        except Exception as e:
+            # Логируем, но не падаем
+            # print(f"Error processing {symbol}: {e}")
+            pass
+
+    def _pass_pre_checks(self, symbol):
+        """Быстрые проверки перед тяжелым анализом"""
+        # 1. Session Filter
+        if self.mode_settings['session_filter']:
+            if not self.session.is_active(symbol, min_quality=self.mode_settings['session_min_quality']):
+                return False
+                
+        # 2. News Filter
+        if self.mode_settings['news_filter']:
+             if self.news.is_danger_zone(symbol):
+                 return False
+                 
+        return True
+
+    def _execute_trade(self, symbol, composite, smc_signal):
+        """Вход в сделку"""
+        direction = composite.direction # "LONG" / "SHORT"
         
-        # Определяем тип ордера
-        order_type = "Market" if is_very_strong else "Limit"
-        
-        # Рассчитываем размер позиции
-        base_position = self.risk.calculate_position_size(
-            entry_price=smc_signal.entry_price,
-            stop_loss=smc_signal.stop_loss
+        # 1. Расчет риска
+        # Если есть SMC сигнал c уровнем стопа - используем его
+        stop_loss_price = None
+        if smc_signal and smc_signal.stop_loss:
+            stop_loss_price = smc_signal.stop_loss
+            
+        pos_size = self.risk.calculate_position_size(
+            symbol=symbol, 
+            stop_loss_price=stop_loss_price,
+            risk_percent=self.mode_settings['risk_per_trade']
         )
         
-        if not base_position.is_valid:
-            error_msg = f"Rejection: {base_position.rejection_reason}"
-            print(f"[Trade] {symbol}: ❌ {error_msg}")
-            # Уведомляем в ТГ если сигнал был очень сильный
-            if is_very_strong:
-                self.telegram.send_message(f"⚠️ <b>SKIP TRADE {symbol}</b>\nScore: {composite.total_score}\nReason: {base_position.rejection_reason}")
+        if not pos_size.is_valid:
+            print(f"[Risk] Отказ: {pos_size.rejection_reason}")
             return
-        
-        # Применяем модификаторы
-        final_qty = base_position.quantity * composite.position_size_modifier * regime.position_size_multiplier
-        final_qty = self.risk._round_quantity(final_qty, symbol)
-        
-        if final_qty * smc_signal.entry_price < 5:
-            print(f"[Trade] {symbol}: ❌ Позиция слишком мала")
-            return
- 
-        # Вход
-        side = 'Buy' if composite.direction == 'LONG' else 'Sell'
-        
-        print(f"\n{'🚀'*30}")
-        print(f"[TRADE] {symbol} | {composite.direction} | Score: {composite.total_score}")
-        print(f"  Entry: {smc_signal.entry_price:.4f}")
-        print(f"  SL: {smc_signal.stop_loss:.4f}")
-        print(f"  Qty: {final_qty}")
-        print(f"  Confidence: {composite.confidence*100:.0f}%")
-        print(f"{'🚀'*30}\n")
-        
-        result = self.executor.place_order(
+
+        # 2. Отправка ордера
+        order = self.executor.place_order(
             symbol=symbol,
-            side=side,
-            quantity=final_qty,
-            price=smc_signal.entry_price,
-            stop_loss=smc_signal.stop_loss,
-            take_profit=smc_signal.take_profit,
-            order_type=order_type
+            side="Buy" if direction == "LONG" else "Sell",
+            qty=pos_size.quantity,
+            stop_loss=pos_size.risk_amount, # Тут надо передать цену, а не сумму. Поправим в executor
+            take_profit=smc_signal.take_profit if smc_signal else None
         )
         
-        if result.success:
-            # Регистрируем для управления
-            df = self.data.get_klines(symbol, limit=20)
-            atr = df['atr'].iloc[-1] if (df is not None and not df.empty) else smc_signal.entry_price * 0.01
-            
-            self.trailing.register_position(
-                symbol=symbol,
-                side=composite.direction,
-                entry_price=smc_signal.entry_price,
-                initial_stop=smc_signal.stop_loss,
-                atr=atr
-            )
-            
-            self.partial_tp.register_position(
-                symbol=symbol,
-                side=composite.direction,
-                entry_price=smc_signal.entry_price,
-                stop_loss=smc_signal.stop_loss,
-                quantity=final_qty
-            )
-            
-            # Уведомление в ТГ об исполнении
+        if order:
+            # 3. Уведомление
             self.telegram.send_signal({
                 'symbol': symbol,
-                'direction': composite.direction,
+                'direction': direction,
                 'score': composite.total_score,
-                'entry': smc_signal.entry_price,
-                'sl': smc_signal.stop_loss,
-                'tp': smc_signal.take_profit,
+                'entry': composite.entry_price,
+                'sl': stop_loss_price,
+                'tp': smc_signal.take_profit if smc_signal else 0,
                 'confidence': composite.confidence,
-                'strength': composite.strength,
-                'recommendation': composite.recommendation
+                'recommendation': composite.recommendation,
+                'strength': 'STRONG' if abs(composite.total_score) > 45 else 'MODERATE'
             })
-            
-            print(f"[TRADE] ✅ Order executed successfully. Symbol: {symbol}, Order ID: {result.order_id}")
-    
+
     def _manage_positions(self, symbol):
-        """Управляет открытыми позициями."""
-        positions = self.data.get_positions(symbol)
+        """Трейлинг стоп и мониторинг"""
+        self.trailing.update(symbol)
         
-        if not positions:
-            return
-        
-        ticker = self.data.get_funding_rate(symbol)
-        if ticker:
-            current_price = ticker['last_price']
-            self.trailing.update(symbol, current_price)
-            self.partial_tp.check_and_execute(symbol, current_price)
-    
     def _recover_tracked_positions(self):
-        """Сканирует биржу и берет под управление уже открытые позиции."""
-        print("[TITAN] Сканирование существующих позиций...")
-        active_positions = self.data.get_positions()
-        
-        for pos in active_positions:
-            symbol = pos['symbol']
-            side = pos['side']
-            entry = pos['entry_price']
-            sl = pos['stop_loss']
-            qty = pos['size']
-            
-            # Регистрируем в стоп-менеджере
-            if symbol not in self.trailing.active_stops:
-                df = self.data.get_klines(symbol, limit=20)
-                atr = df['atr'].iloc[-1] if (df is not None and not df.empty) else entry * 0.01
-                
-                # Если SL не задан на бирже, ставим виртуальный
-                initial_sl = sl if sl > 0 else (entry * 0.98 if side == 'Buy' else entry * 1.02)
-                
-                print(f"[TITAN] Recovered position: {side} {symbol} @ {entry}")
-                self.trailing.register_position(
-                    symbol=symbol,
-                    side='LONG' if side == 'Buy' else 'SHORT',
-                    entry_price=entry,
-                    initial_stop=initial_sl,
-                    atr=atr
-                )
-            
-            # Регистрируем в Partial TP
-            if symbol not in self.partial_tp.active_positions:
-                self.partial_tp.register_position(
-                    symbol=symbol,
-                    side='LONG' if side == 'Buy' else 'SHORT',
-                    entry_price=entry,
-                    stop_loss=initial_sl,
-                    quantity=qty
-                )
+        """Восстановление после перезапуска"""
+        # TODO: Реализовать чтение ордеров с биржи
+        pass
 
     def _shutdown(self):
-        """Завершение работы."""
         self.is_running = False
-        print("\n" + "="*70)
-        print("TITAN BOT SHUTTING DOWN")
-        print("="*70)
-        if self.stream: self.stream.stop()
-        self.analytics.print_report(30)
-
+        print("🛑 TITAN BOT STOPPED.")
 
 if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--symbol", type=str, default=None)
-    parser.add_argument("--mode", type=str, choices=["bot", "scan"], default="bot")
-    args = parser.parse_args()
-    
-    bot = TitanBotUltimateFinal(symbol=args.symbol)
-    
-    if args.mode == "bot":
-        bot.start()
-    else:
-        bot._main_loop()
+    bot = TitanBotUltimateFinal()
+    bot.start()

@@ -27,7 +27,7 @@ TRADE_MODES = {
         "session_min_quality": 4,
         "news_filter": True,
         "mtf_strict": False,
-        "max_positions": 2,
+        "max_positions": 3,
         "risk_per_trade": 0.015,
         "min_rr": 2.5,
         "cooldown_after_losses": 2,
@@ -35,17 +35,17 @@ TRADE_MODES = {
     },
     
     "AGGRESSIVE": {
-        # Много сделок, выше риск
-        "composite_min_score": 30,
+        # Много сделок, выше риск (Professional Aggressive)
+        "composite_min_score": 35,    # Был 30. Повысили качество входа
         "session_filter": False,
-        "session_min_quality": 2,
-        "news_filter": True,  # Это оставляем!
+        "session_min_quality": 1,     # Любая сессия
+        "news_filter": True,          # Новости все еще важны
         "mtf_strict": False,
-        "max_positions": 3,
+        "max_positions": 10,          # Был 3. Теперь до 10 позиций
         "risk_per_trade": 0.02,
         "min_rr": 2.0,
         "cooldown_after_losses": 3,
-        "expected_trades_per_day": "5-15"
+        "expected_trades_per_day": "10-25"
     },
     
     "SCALPER": {
@@ -55,11 +55,11 @@ TRADE_MODES = {
         "session_min_quality": 1,
         "news_filter": False,
         "mtf_strict": False,
-        "max_positions": 5,
-        "risk_per_trade": 0.01,  # Меньше риск на сделку
+        "max_positions": 10,          # Был 5
+        "risk_per_trade": 0.01,       # Меньше риск на сделку
         "min_rr": 1.5,
         "cooldown_after_losses": 4,
-        "expected_trades_per_day": "10-30"
+        "expected_trades_per_day": "20-50"
     }
 }
 
