@@ -77,8 +77,40 @@ class TitanTelegramBot:
             await self.show_settings(update)
         elif "SCORE" in text:
             await self.handle_score_adjust(update, text)
+        elif text == "🔄 SWITCH MODE":
+            await self.show_mode_menu(update)
+        elif text in ["CONSERVATIVE", "MODERATE", "AGGRESSIVE", "SCALPER", "ACCEL"]:
+            await self.handle_mode_switch(update, text)
         else:
             await update.message.reply_text("🤔 Unknown command")
+
+    async def show_mode_menu(self, update: Update):
+        keyboard = [
+            [KeyboardButton("CONSERVATIVE"), KeyboardButton("MODERATE")],
+            [KeyboardButton("AGGRESSIVE"), KeyboardButton("SCALPER")],
+            [KeyboardButton("ACCEL")],
+            [KeyboardButton("⚙️ SETTINGS")]
+        ]
+        reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+        await update.message.reply_text("🎮 <b>Выберите режим торговли:</b>", reply_markup=reply_markup, parse_mode=ParseMode.HTML)
+
+    async def handle_mode_switch(self, update: Update, mode_name: str):
+        """Переключение режима на лету"""
+        try:
+            # Применяем режим
+            self.trading_bot.mode_settings = trade_modes.apply_mode(mode_name)
+            
+            # Обновляем конфиг (виртуально)
+            import config
+            config.TRADE_MODE = mode_name
+            
+            # Синхронизируем пороги в движках
+            self.trading_bot.composite.set_mode(mode_name)
+            
+            await update.message.reply_text(f"✅ <b>Режим переключен на: {mode_name}</b>", parse_mode=ParseMode.HTML)
+            await self.show_settings(update)
+        except Exception as e:
+            await update.message.reply_text(f"❌ Ошибка переключения: {e}")
 
     async def handle_score_adjust(self, update: Update, text: str):
         """Изменение порога скора через ТГ"""
@@ -172,6 +204,7 @@ class TitanTelegramBot:
         
         keyboard = [
             [KeyboardButton("+5 SCORE"), KeyboardButton("-5 SCORE")],
+            [KeyboardButton("🔄 SWITCH MODE")],
             [KeyboardButton("🚀 START SCANNER"), KeyboardButton("🛑 STOP SYSTEM")],
             [KeyboardButton("📊 STATUS"), KeyboardButton("💰 BALANCE")],
             [KeyboardButton("📋 TOP COINS"), KeyboardButton("⚙️ SETTINGS")]

@@ -60,6 +60,21 @@ TRADE_MODES = {
         "min_rr": 1.5,
         "cooldown_after_losses": 4,
         "expected_trades_per_day": "20-50"
+    },
+
+    "ACCEL": {
+        # РАЗГОН ДЕПОЗИТА (Sniper Trend)
+        # Качество выше количества, высокий риск, длинный тейк
+        "composite_min_score": 55,    # Только топовые сигналы
+        "session_filter": True,       # Только в ликвидное время
+        "session_min_quality": 5,     
+        "news_filter": True,
+        "mtf_strict": True,           # ОБЯЗАТЕЛЬНОЕ совпадение трендов
+        "max_positions": 3,           # Не распыляемся
+        "risk_per_trade": 0.05,       # 5% на сделку (РАЗГОН)
+        "min_rr": 3.0,                # Берем только 1:3 и выше
+        "cooldown_after_losses": 5,   # После 2-х стопов - перерыв 5 часов
+        "expected_trades_per_day": "1-5"
     }
 }
 

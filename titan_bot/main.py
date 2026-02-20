@@ -144,6 +144,15 @@ class TitanBotUltimateFinal:
                 orderflow_signal=of_signal
             )
 
+            # ПРОВЕРКА MTF_STRICT: В режиме разгона или консервативном
+            if self.mode_settings.get('mtf_strict', False):
+                if composite.direction == 'LONG' and mtf_signal.alignment != 'BULLISH':
+                    # print(f"🔘 {symbol:10} | Mixed MTF (Long forbidden)")
+                    return
+                if composite.direction == 'SHORT' and mtf_signal.alignment != 'BEARISH':
+                    # print(f"🔘 {symbol:10} | Mixed MTF (Short forbidden)")
+                    return
+
             score = composite.total_score
             min_score = self.mode_settings['composite_min_score']
             
@@ -205,7 +214,7 @@ class TitanBotUltimateFinal:
             sl_price = current_price - sl_dist if side == "Buy" else current_price + sl_dist
             
         if tp_price == 0:
-            tp_dist = abs(current_price - sl_price) * config.MIN_RR_RATIO
+            tp_dist = abs(current_price - sl_price) * self.mode_settings.get('min_rr', 2.0)
             tp_price = current_price + tp_dist if side == "Buy" else current_price - tp_dist
 
         pos_size = self.risk.calculate_position_size(

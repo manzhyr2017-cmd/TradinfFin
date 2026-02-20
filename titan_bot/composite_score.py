@@ -72,16 +72,16 @@ class CompositeScoreEngine:
             'fear_greed': 0.05,
             'correlation': 0.05
         }
+        self.set_mode(getattr(config, 'TRADE_MODE', 'MODERATE'))
         
-        # Пороги для решений (динамически подстраиваются под TRADE_MODE)
-        mode = getattr(config, 'TRADE_MODE', 'MODERATE')
-        
-        if mode == 'AGGRESSIVE':
+    def set_mode(self, mode: str):
+        """Динамически обновляет пороги на основе режима."""
+        if mode == 'AGGRESSIVE' or mode == 'ACCEL':
             self.thresholds = {
-                'strong_signal': getattr(config, 'COMPOSITE_STRONG_THRESHOLD', 35),
-                'moderate_signal': getattr(config, 'COMPOSITE_MODERATE_THRESHOLD', 20),
-                'weak_signal': getattr(config, 'COMPOSITE_WEAK_THRESHOLD', 10),
-                'conflict_zone': getattr(config, 'COMPOSITE_MIN_FOR_ENTRY', 15)
+                'strong_signal': getattr(config, 'COMPOSITE_STRONG_THRESHOLD', 50),
+                'moderate_signal': getattr(config, 'COMPOSITE_MODERATE_THRESHOLD', 35),
+                'weak_signal': 25,
+                'conflict_zone': getattr(config, 'COMPOSITE_MIN_FOR_ENTRY', 35)
             }
         elif mode == 'SCALPER':
             self.thresholds = {
@@ -92,10 +92,10 @@ class CompositeScoreEngine:
             }
         else: # CONSERVATIVE or MODERATE
             self.thresholds = {
-                'strong_signal': getattr(config, 'COMPOSITE_STRONG_THRESHOLD', 50),
-                'moderate_signal': getattr(config, 'COMPOSITE_MODERATE_THRESHOLD', 35),
-                'weak_signal': 20,
-                'conflict_zone': 15
+                'strong_signal': 60,
+                'moderate_signal': 45,
+                'weak_signal': 30,
+                'conflict_zone': 25
             }
     
     def calculate(
