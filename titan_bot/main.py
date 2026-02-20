@@ -138,10 +138,16 @@ class TitanBotUltimateFinal:
             score = composite.total_score
             min_score = self.mode_settings['composite_min_score']
             
-            # ВИЗУАЛИЗАЦИЯ ДЛЯ ТЕРМИНАЛА (Безопасно!)
+            # ВИЗУАЛИЗАЦИЯ С УЧЕТОМ НАПРАВЛЕНИЯ
             m_sc = (mtf_signal.confidence * 20) if mtf_signal else 0
+            if mtf_signal and mtf_signal.alignment == 'BEARISH': m_sc *= -1
+            
             s_sc = (smc_signal.confidence * 20) if smc_signal else 0
+            if smc_signal and 'SHORT' in smc_signal.signal_type.value: s_sc *= -1
+            
             o_sc = (of_signal.confidence * 20) if of_signal else 0
+            if of_signal and 'SELL' in of_signal.pressure.value: o_sc *= -1
+            
             details = f"M:{m_sc:+2.0f} S:{s_sc:+2.0f} O:{o_sc:+2.0f}"
             
             if abs(score) >= min_score:
