@@ -97,8 +97,7 @@ class TitanBotUltimateFinal:
                     if not self.is_running: break
                     self.current_symbol = symbol
                     
-                    # ПРЯМОЙ ЛОГ АНАЛИЗА (Мгновенно!)
-                    start_time = time.time()
+                    # ПРЯМОЙ ЛОГ АНАЛИЗА
                     self._process_symbol(symbol)
                     self.processed_count += 1
                     
@@ -139,12 +138,14 @@ class TitanBotUltimateFinal:
             score = composite.total_score
             min_score = self.mode_settings['composite_min_score']
             
-            # ВИЗУАЛИЗАЦИЯ ДЛЯ ТЕРМИНАЛА
-            # [MTF +10 | SMC +15 | OF +5]
-            details = f"M:{mtf_signal.confidence*20:+2.0f} S:{smc_signal.confidence*20:+2.0f} O:{of_signal.confidence*20:+2.0f}"
+            # ВИЗУАЛИЗАЦИЯ ДЛЯ ТЕРМИНАЛА (Безопасно!)
+            m_sc = (mtf_signal.confidence * 20) if mtf_signal else 0
+            s_sc = (smc_signal.confidence * 20) if smc_signal else 0
+            o_sc = (of_signal.confidence * 20) if of_signal else 0
+            details = f"M:{m_sc:+2.0f} S:{s_sc:+2.0f} O:{o_sc:+2.0f}"
             
             if abs(score) >= min_score:
-                status = "� [ENTRY]"
+                status = "💰 [ENTRY]"
             elif abs(score) >= (min_score / 2):
                 status = "🔍 [WATCH]"
             else:
