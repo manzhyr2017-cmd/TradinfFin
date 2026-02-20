@@ -19,10 +19,19 @@ from telegram_bridge import TitanTelegramBridge
 import trade_modes
 import config
 
+ASCII_ART = """
+████████╗██╗████████╗ █████╗ ███╗   ██╗
+╚══██╔══╝██║╚══██╔══╝██╔══██╗████╗  ██║
+   ██║   ██║   ██║   ███████║██╔██╗ ██║
+   ██║   ██║   ██║   ██╔══██║██║╚██╗██║
+   ██║   ██║   ██║   ██║  ██║██║ ╚████║
+   ╚═╝   ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═══╝
+      TITAN BOT 2026 | ULTIMATE TRADING
+"""
+
 class TitanBotUltimateFinal:
     """
     Главный оркестратор системы TITAN.
-    Управляет многосимвольным сканированием, анализом и исполнением.
     """
     
     def __init__(self, symbol=None):
@@ -54,13 +63,16 @@ class TitanBotUltimateFinal:
     def start(self):
         """Запуск торгового цикла"""
         self.is_running = True
-        print(f"[TITAN] Запуск {config.TRADE_MODE} в режиме сканирования...")
+        print(ASCII_ART)
+        print(f"[TITAN] Запуск {config.TRADE_MODE} (Professional Mode)")
+        print(f"[Config] Scanning Interval: 3.0 sec per symbol")
+        print(f"[Config] Min Score for Entry: {self.mode_settings['composite_min_score']}")
         
         # Начальный отбор символов
         if config.MULTI_SYMBOL_ENABLED:
             try:
                 self.symbol_list = self.selector.get_top_symbols(config.MAX_SYMBOLS)
-                print(f"[Selector] Отобрано {len(self.symbol_list)} монет.")
+                print(f"[Selector] Отобрано {len(self.symbol_list)} монет по волатильности.")
             except Exception as e:
                 print(f"[Selector] Ошибка отбора: {e}")
                 self.symbol_list = [config.SYMBOL]
@@ -84,18 +96,20 @@ class TitanBotUltimateFinal:
                 for symbol in self.symbol_list:
                     if not self.is_running: break
                     self.current_symbol = symbol
-                    # Убрали \r для честных логов
-                    print(f"🔍 [Scanning] {symbol:10}...")
+                    
+                    # ПРЯМОЙ ЛОГ АНАЛИЗА (Мгновенно!)
+                    start_time = time.time()
                     self._process_symbol(symbol)
                     self.processed_count += 1
                     
-                    # Отчет в Телеграм каждые 30 минут
-                    if (datetime.now() - self.last_status_time) > timedelta(minutes=30):
-                        self._send_heartbeat()
-                    
-                    time.sleep(3.0) # Замедлили до 3 сек для обхода лимитов Bybit
+                    # Принудительная пауза 3 секунды
+                    time.sleep(3.0)
                 
                 cycle_count += 1
+                # Отчет в ТГ раз в полчаса
+                if (datetime.now() - self.last_status_time) > timedelta(minutes=30):
+                    self._send_heartbeat()
+                
                 time.sleep(config.ANALYSIS_INTERVAL)
                 
             except Exception as e:
@@ -103,16 +117,18 @@ class TitanBotUltimateFinal:
                 time.sleep(10)
 
     def _process_symbol(self, symbol):
-        """Обработка одной монеты"""
+        """Обработка одной монеты с детальным выводом"""
         try:
-            if self.risk.has_position(symbol): return
+            if self.risk.has_position(symbol):
+                print(f"📊 [Active] {symbol:10} | Skipping (Position exists)")
+                return
 
-            # Полный анализ
+            # Сбор данных и анализ
             mtf_signal = self.mtf.analyze(symbol)
             smc_signal = self.smc.analyze(symbol)
             of_signal = self.orderflow.analyze(symbol, realtime_stream=self.stream)
             
-            # Считаем балл
+            # Композитный балл
             composite = self.composite.calculate(
                 symbol=symbol,
                 mtf_analysis=mtf_signal,
@@ -123,38 +139,40 @@ class TitanBotUltimateFinal:
             score = composite.total_score
             min_score = self.mode_settings['composite_min_score']
             
-            # Логируем если есть хоть какой-то балл
-            if abs(score) >= 10:
-                icon = "🔥" if abs(score) >= min_score else "�"
-                print(f"{icon} [Score] {symbol:10} | {score:+.1f} | need {min_score}")
+            # ВИЗУАЛИЗАЦИЯ ДЛЯ ТЕРМИНАЛА
+            # [MTF +10 | SMC +15 | OF +5]
+            details = f"M:{mtf_signal.confidence*20:+2.0f} S:{smc_signal.confidence*20:+2.0f} O:{of_signal.confidence*20:+2.0f}"
+            
+            if abs(score) >= min_score:
+                status = "� [ENTRY]"
+            elif abs(score) >= (min_score / 2):
+                status = "🔍 [WATCH]"
+            else:
+                status = "🔘 [WAIT ]"
+
+            print(f"{status} {symbol:10} | TOTAL: {score:+.1f} | {details} | need {min_score}")
             
             # Решение
             if abs(score) >= min_score:
-                print(f"💰 [SIGNAL] {symbol} Triggered! Score: {score:+.1f}")
                 self._execute_trade(symbol, composite, smc_signal)
                 
         except Exception as e:
-            pass
+            print(f"⚠️ [Error] {symbol}: {e}")
 
     def _send_heartbeat(self):
-        """Отправка статуса в Телеграм"""
         self.last_status_time = datetime.now()
         msg = (
             f"📡 <b>TITAN HEARTBEAT</b>\n"
-            f"───────────────────\n"
-            f"Status: <b>ONLINE</b> 🟢\n"
-            f"Checks: <b>{self.processed_count}</b> syms analyzed.\n"
-            f"Current: <b>{self.current_symbol}</b>\n"
-            f"Mode: <b>{config.TRADE_MODE}</b>\n"
+            f"Status: <b>ONLINE</b>\n"
+            f"Analyzed: <b>{self.processed_count}</b> syms\n"
+            f"Mode: <b>{config.TRADE_MODE}</b>"
         )
         self.tg.send_message(msg)
-        print("[TITAN] Heartbeat sent to Telegram.")
 
     def _execute_trade(self, symbol, composite, smc_signal):
         direction = composite.direction
         side = "Buy" if direction == "LONG" else "Sell"
         
-        # Получаем объем
         klines = self.data.get_klines(symbol, limit=2)
         if klines is None or klines.empty: return
         current_price = klines['close'].iloc[-1]
