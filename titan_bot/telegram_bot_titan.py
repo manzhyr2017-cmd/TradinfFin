@@ -7,6 +7,7 @@ import os
 import asyncio
 import logging
 import threading
+import time
 from datetime import datetime
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes, MessageHandler, filters
@@ -26,12 +27,11 @@ class TitanTelegramBot:
         self.token = os.getenv("TELEGRAM_BOT_TOKEN")
         self.channel_id = os.getenv("TELEGRAM_CHANNEL")
         
-        # Список мониторимых пар
-        self.symbols = ["ETHUSDT", "BTCUSDT", "SOLUSDT"]
-        
-        # Инициализация ботов (пока в режиме ожидания)
-        self.bots = {s: TitanBotUltimateFinal(symbol=s) for s in self.symbols}
-        self.bot_threads = {}
+        # === ГЛАВНОЕ ИЗМЕНЕНИЕ ===
+        # Мы создаем ОДИН экземпляр Умного Бота, который сам умеет сканировать рынок
+        # Ему не нужно передавать symbol, он сам найдет топ-30 через Selector
+        self.trading_bot = TitanBotUltimateFinal()
+        self.bot_thread = None
         
         # Build app
         self.app = Application.builder().token(self.token).build()
@@ -40,226 +40,141 @@ class TitanTelegramBot:
         print("🤖 TITAN TELEGRAM CONTROL CENTER ЗАПУЩЕН")
         
     def _setup_handlers(self):
-        # Команды
         self.app.add_handler(CommandHandler("start", self.start_cmd))
-        self.app.add_handler(CommandHandler("help", self.help_cmd))
         
-        # Текстовые обработчики (для кнопок меню)
+        # Кнопки
         self.app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.text_handler))
-        
-        # Callback query (для инлайн кнопок, если будут)
-        self.app.add_handler(CallbackQueryHandler(self.button_handler))
 
     async def start_cmd(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Приветствие и главное меню"""
         user = update.effective_user
         
-        # Главное меню клавиатуры
         keyboard = [
-            [KeyboardButton("🚀 ЗАПУСК ВСЕХ"), KeyboardButton("🛑 СТОП ВСЕХ")],
-            [KeyboardButton("📊 СТАТУС"), KeyboardButton("💰 БАЛАНС")],
-            [KeyboardButton("📈 АНАЛИЗ (BTC)"), KeyboardButton("📈 АНАЛИЗ (ETH)")],
-            [KeyboardButton("⚙️ НАСТРОЙКИ")]
+            [KeyboardButton("🚀 START SCANNER"), KeyboardButton("🛑 STOP SYSTEM")],
+            [KeyboardButton("📊 STATUS"), KeyboardButton("💰 BALANCE")],
+            [KeyboardButton("📋 TOP COINS"), KeyboardButton("⚙️ SETTINGS")]
         ]
         reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True, one_time_keyboard=False)
         
         welcome_msg = (
             f"👋 <b>Привет, {user.first_name}!</b>\n\n"
-            f"⚡ <b>TITAN BOT CONTROL CENTER</b> готов к работе.\n"
-            f"Режим торговли: <b>{config.TRADE_MODE}</b>\n"
-            f"Таймфрейм: <b>{config.TIMEFRAME}m</b>\n\n"
-            f"Выберите действие в меню 👇"
+            f"⚡ <b>TITAN CONTROL CENTER</b> ready.\n"
+            f"Mode: <b>{config.TRADE_MODE}</b>\n"
+            f"Scanning: <b>Top-{config.MAX_SYMBOLS} Volatile Assets</b>\n"
         )
-        
         await update.message.reply_text(welcome_msg, reply_markup=reply_markup, parse_mode=ParseMode.HTML)
 
     async def text_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Обработка нажатий на кнопки меню"""
         text = update.message.text
         
-        if text == "🚀 ЗАПУСК ВСЕХ":
-            await self.run_all_bots(update)
-        elif text == "🛑 СТОП ВСЕХ":
-            await self.stop_all_bots(update)
-        elif text == "📊 СТАТУС":
+        if text == "🚀 START SCANNER":
+            await self.run_scanner(update)
+        elif text == "🛑 STOP SYSTEM":
+            await self.stop_system(update)
+        elif text == "📊 STATUS":
             await self.show_status(update)
-        elif text == "💰 БАЛАНС":
+        elif text == "💰 BALANCE":
             await self.show_balance(update)
-        elif "📈 АНАЛИЗ" in text:
-            # Извлекаем монету из текста кнопки "📈 АНАЛИЗ (BTC)"
-            symbol_key = "BTCUSDT" if "BTC" in text else ("ETHUSDT" if "ETH" in text else config.SYMBOL)
-            await self.show_analysis(update, symbol_key)
-        elif text == "⚙️ НАСТРОЙКИ":
+        elif text == "📋 TOP COINS":
+            await self.show_top_coins(update)
+        elif text == "⚙️ SETTINGS":
             await self.show_settings(update)
         else:
-            await update.message.reply_text("🤔 Неизвестная команда. Используйте меню.")
+            await update.message.reply_text("🤔 Unknown command")
 
-    async def run_all_bots(self, update: Update):
-        """Запуск всех инстансов ботов"""
-        started_list = []
+    async def run_scanner(self, update: Update):
+        """Запуск сканера в фоновом потоке"""
+        if self.trading_bot.is_running:
+            await update.message.reply_text("⚠️ Система уже работает!")
+            return
+
+        msg = await update.message.reply_text("🔄 Запуск TITAN AGGRESSIVE SCANNER...")
         
-        msg = await update.message.reply_text("🔄 Инициализация систем...")
+        # Запускаем в отдельном потоке
+        self.bot_thread = threading.Thread(target=self.trading_bot.start)
+        self.bot_thread.daemon = True
+        self.bot_thread.start()
         
-        for s, bot in self.bots.items():
-            if not bot.is_running:
-                # Запускаем в отдельном потоке
-                thread = threading.Thread(target=bot.start) # Предполагаем метод start() в main.py
-                thread.daemon = True
-                thread.start()
-                self.bot_threads[s] = thread
-                bot.is_running = True # Флаг должен меняться внутри bot.start(), но для UI меняем тут
-                started_list.append(s)
-                await asyncio.sleep(1) # Пауза чтобы не спамить API при старте
+        await asyncio.sleep(2) # Даем время на старт
         
-        if started_list:
+        if self.trading_bot.is_running:
             await context.bot.edit_message_text(
                 chat_id=update.effective_chat.id,
                 message_id=msg.message_id,
-                text=f"🚀 <b>СИСТЕМЫ ЗАПУЩЕНЫ:</b> {', '.join(started_list)}\nУдачи на рынке! Profit is coming. 💸",
+                text=(
+                    f"🚀 <b>SCANNER STARTED!</b>\n"
+                    f"Monitoring Top-{config.MAX_SYMBOLS} coins by Volatility.\n"
+                    f"Looking for: <b>SMC + FVG + OrderFlow</b> patterns.\n"
+                    f"Good luck! 💸"
+                ),
                 parse_mode=ParseMode.HTML
             )
         else:
             await context.bot.edit_message_text(
                 chat_id=update.effective_chat.id,
                 message_id=msg.message_id,
-                text="✅ Все системы уже работают в штатном режиме."
+                text="❌ Ошибка запуска Scanner (см. логи сервера)."
             )
 
-    async def stop_all_bots(self, update: Update):
-        """Остановка всех ботов"""
-        stopped_list = []
-        for s, bot in self.bots.items():
-            if bot.is_running:
-                bot.is_running = False # Это должно остановить цикл в main.py
-                stopped_list.append(s)
-        
-        if stopped_list:
-            await update.message.reply_text(f"🛑 <b>ОСТАНОВЛЕНО:</b> {', '.join(stopped_list)}", parse_mode=ParseMode.HTML)
-        else:
-            await update.message.reply_text("💤 Системы уже спят.")
+    async def stop_system(self, update: Update):
+        """Остановка"""
+        if not self.trading_bot.is_running:
+            await update.message.reply_text("💤 Система и так спит.")
+            return
+            
+        self.trading_bot.is_running = False # Флаг остановки цикла
+        await update.message.reply_text("🛑 Остановка сканера... (завершение текущего цикла)")
 
     async def show_status(self, update: Update):
-        """Показ статуса"""
-        msg = "🖥️ <b>SYSTEM STATUS</b>\n\n"
+        """Статус работы"""
+        status = "🟢 ONLINE" if self.trading_bot.is_running else "🔴 OFFLINE"
+        current_coin = self.trading_bot.current_symbol
+        total_coins = len(self.trading_bot.symbol_list)
         
-        active_count = 0
-        for s, bot in self.bots.items():
-            status_icon = "🟢" if bot.is_running else "🔴"
-            status_text = "ONLINE" if bot.is_running else "OFFLINE"
-            msg += f"{status_icon} <b>{s}:</b> {status_text}\n"
-            if bot.is_running: active_count += 1
+        msg = (
+            f"🖥️ <b>SYSTEM STATUS:</b> {status}\n"
+            f"Current Target: <b>{current_coin}</b>\n"
+            f"Watchlist Size: <b>{total_coins} coins</b>\n"
+            f"Uptime: {(datetime.now()).strftime('%H:%M:%S')}\n"
+        )
+        await update.message.reply_text(msg, parse_mode=ParseMode.HTML)
+
+    async def show_top_coins(self, update: Update):
+        """Показать текущий список монет"""
+        coins = self.trading_bot.symbol_list
+        if not coins:
+            await update.message.reply_text("📭 Список пуст (сканер не запущен).")
+            return
             
-        msg += f"\n🤖 Active Bots: {active_count}/{len(self.bots)}"
-        msg += f"\n⏳ Uptime: {(datetime.now()).strftime('%H:%M:%S')}"
-        
+        # Показываем первые 15
+        display_coins = coins[:15]
+        msg = f"📋 <b>TOP VOLATILE COINS (Active):</b>\n\n"
+        msg += ", ".join(display_coins)
+        if len(coins) > 15:
+            msg += f"\n...and {len(coins)-15} more."
+            
         await update.message.reply_text(msg, parse_mode=ParseMode.HTML)
 
     async def show_balance(self, update: Update):
-        """Показ баланса (берем у первого бота, т.к. счет один)"""
-        # Берем любой инстанс для запроса к API
-        bot = list(self.bots.values())[0]
-        
         try:
-            balance = bot.data.get_balance()
-            pnl_today = bot.risk.trades_today # Это нужно брать из risk manager
-            # Считаем PnL по списку сделок сегодня
-            pnl_sum = sum(t['pnl'] for t in pnl_today) if hasattr(bot.risk, 'trades_today') else 0.0
-            
-            msg = (
-                f"💰 <b>WALLET BALANCE</b>\n\n"
-                f"💵 Total: <b>${balance:.2f}</b>\n"
-                f"📅 Today PnL: <b>${pnl_sum:+.2f}</b>\n"
-                f"🔒 Risk per Trade: {config.RISK_PER_TRADE*100}%\n"
-            )
+            balance = self.trading_bot.data.get_balance()
+            # PnL считать сложно без подключенной базы, пока покажем баланс
+            msg = f"💰 <b>WALLET:</b> ${balance:.2f}"
             await update.message.reply_text(msg, parse_mode=ParseMode.HTML)
-            
-        except Exception as e:
-            await update.message.reply_text(f"⚠️ Ошибка получения баланса: {str(e)}")
-
-    async def show_analysis(self, update: Update, symbol: str):
-        """Запрашивает анализ у конкретного бота"""
-        msg = await update.message.reply_text(f"🔍 Анализирую рынок {symbol}...")
-        
-        bot = self.bots.get(symbol)
-        if not bot:
-            await context.bot.edit_message_text("❌ Бот для этого символа не найден.", chat_id=update.effective_chat.id, message_id=msg.message_id)
-            return
-
-        try:
-            # Запускаем анализ вручную
-            # ВАЖНО: Это синхронный вызов, может блокировать на пару секунд. 
-            # В идеале нужно делать это в executor'е, но пока так.
-            
-            # Получаем свежие данные
-            df = bot.data.get_klines(symbol, limit=100)
-            
-            # Считаем Composite Score
-            # (Здесь мы эмулируем то, что делает bot.run(), но только для отчета)
-            mtf = bot.mtf.analyze(symbol)
-            smc = bot.smc.analyze(symbol)
-            of = bot.orderflow.analyze(symbol)
-            
-            # Расчет скора
-            composite_signal = bot.composite.calculate(
-                symbol=symbol,
-                mtf_analysis=mtf,
-                smc_signal=smc,
-                orderflow_signal=of
-                # ... остальные компоненты можно добавить
-            )
-            
-            # Формируем красивый отчет
-            report = (
-                f"📊 <b>ANALYSIS REPORT: {symbol}</b>\n"
-                f"{'═'*20}\n"
-                f"🏆 <b>SCORE:</b> {composite_signal.total_score:+.1f}\n"
-                f"🎯 <b>Direction:</b> {composite_signal.direction} ({composite_signal.strength})\n"
-                f"🧠 <b>Confidence:</b> {composite_signal.confidence*100:.0f}%\n\n"
-                f"<b>Components:</b>\n"
-                f"• MTF: {composite_signal.components.get('mtf', 0):+.2f}\n"
-                f"• SMC: {composite_signal.components.get('smc', 0):+.2f}\n"
-                f"• OrderFlow: {composite_signal.components.get('orderflow', 0):+.2f}\n\n"
-                f"<i>{composite_signal.recommendation}</i>"
-            )
-            
-            await context.bot.edit_message_text(
-                chat_id=update.effective_chat.id, 
-                message_id=msg.message_id, 
-                text=report, 
-                parse_mode=ParseMode.HTML
-            )
-            
-        except Exception as e:
-            logger.error(f"Analysis error: {e}")
-            await context.bot.edit_message_text(f"❌ Ошибка анализа: {e}", chat_id=update.effective_chat.id, message_id=msg.message_id)
+        except:
+            await update.message.reply_text("⚠️ Ошибка баланса (проверьте API).")
 
     async def show_settings(self, update: Update):
-        """Показывает текущие настройки"""
         msg = (
-            f"⚙️ <b>BOT SETTINGS</b>\n\n"
-            f"Mode: <b>{config.TRADE_MODE}</b>\n"
-            f"Timeframe: <b>{config.TIMEFRAME}m</b>\n"
-            f"Leverage: <b>Cross (Auto)</b>\n"
-            f"Risk/Trade: <b>{config.RISK_PER_TRADE*100}%</b>\n"
-            f"Stop Loss: <b>Dynamic (ATR)</b>\n"
-            f"Take Profit: <b>RR > {config.MIN_RR_RATIO}</b>\n"
+            f"⚙️ <b>CONFIG:</b>\n"
+            f"Mode: {config.TRADE_MODE}\n"
+            f"Score: >{config.COMPOSITE_MIN_FOR_ENTRY}\n"
+            f"Positions: Max {config.MAX_POSITIONS}\n"
         )
-        await update.message.reply_text(msg, parse_mode=ParseMode.HTML)
-
-    async def help_cmd(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        await update.message.reply_text(
-            "🆘 <b>HELP</b>\n\n"
-            "Используйте кнопки меню для управления.\n"
-            "Если бот завис, попробуйте перезапустить скрипт на сервере.",
-            parse_mode=ParseMode.HTML
-        )
-
-    async def button_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        query = update.callback_query
-        await query.answer()
+        await update.message.reply_text(msg)
 
     def run(self):
-        print("🚀 Titan Telegram Bot Listening...")
+        print("🚀 Titan Telegram Control Listening...")
         self.app.run_polling()
 
 if __name__ == "__main__":

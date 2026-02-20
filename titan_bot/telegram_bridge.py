@@ -51,7 +51,7 @@ class TitanTelegramBridge:
         score_bar = self._get_score_bar(score)
         
         msg = f"""
-{color} <b>TITAN SIGNAL: {signal_data['symbol']}</b> │ {signal_data['direction']}
+{color} <b>TITAN SIGNAL: {signal_data['symbol']}</b> │ {signal_data['direction']} │ ⚡ <b>[AUTO]</b>
 {'═' * 30}
 
 <b>TOTAL SCORE:</b> <code>[{score_bar}]</code> <b>{score:+.1f}</b>
@@ -64,10 +64,10 @@ class TitanTelegramBridge:
 🎯 <b>TP:</b> <code>{signal_data['tp']:.4f}</code>
 
 {'─' * 30}
-💡 <b>Recommendation:</b>
+💡 <b>Reason:</b>
 <i>{signal_data['recommendation']}</i>
 
-🤖 <i>TITAN BOT 2026 | ULTIMATE FINAL</i>
+🤖 <i>TITAN BOT 2026 | AUTONOMOUS EXECUTION</i>
 """
         return self.send_message(msg.strip())
 
@@ -92,5 +92,7 @@ class TitanTelegramBridge:
         # -100 to 100 map to 10 chars
         normalized = (score + 100) / 200
         pos = int(normalized * 10)
+        # Clamp value
+        pos = max(0, min(9, pos))
         bar = "─" * pos + "●" + "─" * (9 - pos)
         return bar
