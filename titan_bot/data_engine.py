@@ -121,15 +121,24 @@ class DataEngine:
             return None
 
     def get_balance(self) -> float:
+        """Получает доступный баланс (Available Margin) для торговли."""
         try:
             for acc in ["UNIFIED", "CONTRACT"]:
                 response = self.session.get_wallet_balance(accountType=acc, coin="USDT")
                 if response['retCode'] == 0 and response['result']['list']:
                     res = response['result']['list'][0]
-                    if acc == "UNIFIED" and res.get('totalEquity'): return float(res['totalEquity'])
+                    # Для UNIFIED аккаунта берем доступную маржу (Available Margin)
+                    if acc == "UNIFIED":
+                        for c in res.get('coin', []):
+                            if c.get('coin') == 'USDT':
+                                # availableToWithdraw - это то, что реально свободно для новых ордеров
+                                return float(c.get('availableToWithdraw', c.get('walletBalance', 0.0)))
+                    
+                    # Для обычного CONTRACT аккаунта
                     for c in res.get('coin', []):
-                        if c.get('coin') == 'USDT': return float(c.get('walletBalance', 0.0))
-            return getattr(config, 'INITIAL_DEPOSIT', 300.0)
+                        if c.get('coin') == 'USDT':
+                            return float(c.get('walletBalance', 0.0))
+            return float(config.INITIAL_DEPOSIT)
         except Exception as e:
             print(f"[DataEngine] Error balance: {e}")
             return 300.0

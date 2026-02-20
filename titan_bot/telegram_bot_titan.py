@@ -13,6 +13,7 @@ from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes, MessageHandler, filters
 from telegram.constants import ParseMode
 from main import TitanBotUltimateFinal
+import trade_modes
 import config
 
 # Настройка логирования
