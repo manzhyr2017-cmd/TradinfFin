@@ -36,7 +36,7 @@ TRADE_MODES = {
     
     "AGGRESSIVE": {
         # Много сделок, выше риск (Professional Aggressive)
-        "composite_min_score": 40,    # Был 35. Данные показали: скор 30-40 = 29% WR. Нужно 40+
+        "composite_min_score": 65,    # v4: Был 40 при макс=43. Теперь макс=100.
         "session_filter": False,
         "session_min_quality": 1,     # Любая сессия
         "news_filter": True,          # Новости все еще важны
@@ -65,7 +65,7 @@ TRADE_MODES = {
     "ACCEL": {
         # РАЗГОН ДЕПОЗИТА (Sniper Trend) v2
         # Качество выше количества, высокий риск, длинный тейк
-        "composite_min_score": 42,    # Данные: макс скор ~43. Берём только топ
+        "composite_min_score": 75,    # v4: Был 42 при макс=43. Теперь макс=100.
         "session_filter": True,       # Только в ликвидное время
         "session_min_quality": 5,     
         "news_filter": True,

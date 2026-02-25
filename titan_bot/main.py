@@ -236,6 +236,15 @@ class TitanBotUltimateFinal:
                     print(f"🕐 TOXIC HOUR {current_hour_utc:02d}:00 UTC — торговля заблокирована")
                 return
             
+            # DAY FILTER: Sun=10% WR(-$71), Wed=21% WR(-$145)
+            TOXIC_DAYS = {2, 6}  # 2=Wednesday, 6=Sunday
+            current_day = datetime.utcnow().weekday()
+            if current_day in TOXIC_DAYS:
+                if self.processed_count % 200 == 0:
+                    day_names = {2: 'WED', 6: 'SUN'}
+                    print(f"📅 TOXIC DAY {day_names.get(current_day, '?')} — торговля заблокирована")
+                return
+            
             if self.risk.has_position(symbol):
                 return
 
@@ -323,7 +332,7 @@ class TitanBotUltimateFinal:
 
         # 3. ФОЛЛБЭК НА ATR: Если уровней нет или они некорректны
         if sl_price == 0:
-            sl_dist = atr * 1.5
+            sl_dist = atr * 2.0  # Был 1.5. Данные: лузеры закрывались за 2.7мин = стоп слишком тесный
             sl_price = current_price - sl_dist if side == "Buy" else current_price + sl_dist
             
         if tp_price == 0:
