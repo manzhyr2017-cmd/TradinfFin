@@ -17,6 +17,12 @@ from orderflow import OrderFlowAnalyzer
 from smart_money import SmartMoneyAnalyzer
 from multi_timeframe import MultiTimeframeAnalyzer
 from composite_score import CompositeScoreEngine
+from volume_profile import VolumeProfileAnalyzer
+from open_interest import OpenInterestAnalyzer
+from market_regime import MarketRegimeDetector
+from whale_tracker import WhaleTracker
+from fear_greed import FearGreedAnalyzer
+from correlations import CorrelationAnalyzer
 from telegram_bridge import TitanTelegramBridge
 from database import TitanDatabase
 from ml_engine import MLEngine
@@ -51,10 +57,16 @@ class TitanBotUltimateFinal:
         self.risk = RiskManager(self.data)
         self.tg = TitanTelegramBridge()
         
-        # 2. Движки анализа
+        # 2. Движки анализа (ВСЕ 9 компонентов)
         self.orderflow = OrderFlowAnalyzer(self.data)
         self.smc = SmartMoneyAnalyzer(self.data)
         self.mtf = MultiTimeframeAnalyzer(self.data)
+        self.volume_profile = VolumeProfileAnalyzer(self.data)
+        self.oi = OpenInterestAnalyzer(self.data)
+        self.regime = MarketRegimeDetector(self.data)
+        self.whale = WhaleTracker()
+        self.fear_greed = FearGreedAnalyzer()
+        self.correlation = CorrelationAnalyzer(self.data)
         self.ml = MLEngine(self.data)
         self.ml.load_model()
         self.composite = CompositeScoreEngine()
@@ -248,17 +260,49 @@ class TitanBotUltimateFinal:
             if self.risk.has_position(symbol):
                 return
 
-            # Сбор данных и анализ
+            # Сбор данных и анализ — ВСЕ 9 компонентов
             mtf_signal = self.mtf.analyze(symbol)
             smc_signal = self.smc.analyze(symbol)
             of_signal = self.orderflow.analyze(symbol, realtime_stream=self.stream)
             
-            # Композитный балл
+            # Дополнительные компоненты (v5: подключены)
+            try:
+                vp_signal = self.volume_profile.analyze(symbol)
+            except:
+                vp_signal = None
+            try:
+                oi_signal = self.oi.analyze(symbol)
+            except:
+                oi_signal = None
+            try:
+                regime_signal = self.regime.analyze(symbol)
+            except:
+                regime_signal = None
+            try:
+                whale_signal = self.whale.analyze()
+            except:
+                whale_signal = None
+            try:
+                fg_signal = self.fear_greed.analyze()
+            except:
+                fg_signal = None
+            try:
+                corr_signal = self.correlation.analyze(symbol)
+            except:
+                corr_signal = None
+            
+            # Композитный балл — ВСЕ 9
             composite = self.composite.calculate(
                 symbol=symbol,
                 mtf_analysis=mtf_signal,
                 smc_signal=smc_signal,
-                orderflow_signal=of_signal
+                orderflow_signal=of_signal,
+                volume_profile=vp_signal,
+                oi_analysis=oi_signal,
+                regime_analysis=regime_signal,
+                whale_analysis=whale_signal,
+                fear_greed=fg_signal,
+                correlation_analysis=corr_signal
             )
 
             # ПРОВЕРКА MTF_STRICT: В режиме разгона или консервативном
