@@ -33,13 +33,16 @@ from ml_engine import MLEngine
 import trade_modes
 import config
 
-# PERMANENT BLACKLIST: Монеты с 0% WR за десятки сделок. Суммарно -$324.
+# PERMANENT BLACKLIST: Монеты с 0% WR за десятки сделок. Суммарно -$375+.
 PERMANENT_BLACKLIST = {
     'RAVEUSDT',   # 12 trades, 0% WR, -$147
     'LAUSDT',     # 11 trades, 0% WR, -$65
     'ZROUSDT',    # 8 trades, 0% WR, -$46
     'AGLDUSDT',   # 4 trades, 0% WR, -$34
     'ENSOUSDT',   # 5 trades, 0% WR, -$32
+    'SENTUSDT',   # 3 trades, 0% WR, -$19  (v8)
+    'SKRUSDT',    # 3 trades, 0% WR, -$17  (v8)
+    'SOMIUSDT',   # 3 trades, 0% WR, -$15  (v8)
 }
 
 ASCII_ART = """
