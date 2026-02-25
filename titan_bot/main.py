@@ -23,11 +23,22 @@ from market_regime import MarketRegimeDetector
 from whale_tracker import WhaleTracker
 from fear_greed import FearGreedAnalyzer
 from correlations import CorrelationAnalyzer
+from trailing_stop import TrailingStopManager
+from partial_tp import PartialTakeProfitManager
 from telegram_bridge import TitanTelegramBridge
 from database import TitanDatabase
 from ml_engine import MLEngine
 import trade_modes
 import config
+
+# PERMANENT BLACKLIST: Монеты с 0% WR за десятки сделок. Суммарно -$324.
+PERMANENT_BLACKLIST = {
+    'RAVEUSDT',   # 12 trades, 0% WR, -$147
+    'LAUSDT',     # 11 trades, 0% WR, -$65
+    'ZROUSDT',    # 8 trades, 0% WR, -$46
+    'AGLDUSDT',   # 4 trades, 0% WR, -$34
+    'ENSOUSDT',   # 5 trades, 0% WR, -$32
+}
 
 ASCII_ART = """
 ████████╗██╗████████╗ █████╗ ███╗   ██╗
@@ -71,7 +82,11 @@ class TitanBotUltimateFinal:
         self.ml.load_model()
         self.composite = CompositeScoreEngine()
         
-        # 3. Настройки режима
+        # 3. Trailing Stop + Partial TP (v6)
+        self.trailing = TrailingStopManager(self.executor)
+        self.partial_tp = PartialTakeProfitManager(self.executor)
+        
+        # 4. Настройки режима
         self.mode_settings = trade_modes.apply_mode(config.TRADE_MODE)
         
         # 4. Состояние
@@ -127,6 +142,17 @@ class TitanBotUltimateFinal:
                     self.symbol_list = self.selector.get_top_symbols(config.MAX_SYMBOLS)
                     if self.stream: self.stream.start(self.symbol_list)
 
+                # TRAILING STOP UPDATE: проверяем ВСЕ активные позиции
+                try:
+                    for pos in self.data.get_positions():
+                        sym = pos['symbol']
+                        price = float(pos.get('markPrice', 0))
+                        if price > 0:
+                            self.trailing.update(sym, price)
+                            self.partial_tp.check_and_execute(sym, price)
+                except:
+                    pass
+
                 for symbol in self.symbol_list:
                     if not self.is_running: break
                     self.current_symbol = symbol
@@ -155,6 +181,10 @@ class TitanBotUltimateFinal:
         Возвращает причину отказа или пустую строку если всё ОК.
         """
         now = datetime.now()
+        
+        # 0. PERMANENT BLACKLIST
+        if symbol in PERMANENT_BLACKLIST:
+            return f"BLACKLISTED (0% WR history)"
         
         # 1. Сброс дневного PNL в полночь
         if now.date() != self.daily_pnl_reset_date:
@@ -420,6 +450,21 @@ class TitanBotUltimateFinal:
                 sl_price, tp_price, composite.total_score, details, features
             )
             
+            # Регистрируем в Trailing Stop + Partial TP
+            try:
+                direction_str = 'LONG' if side == 'Buy' else 'SHORT'
+                self.trailing.register_position(
+                    symbol=symbol, side=direction_str,
+                    entry_price=current_price, initial_stop=sl_price, atr=atr
+                )
+                self.partial_tp.register_position(
+                    symbol=symbol, side=direction_str,
+                    entry_price=current_price, stop_loss=sl_price,
+                    quantity=pos_size.quantity
+                )
+            except Exception as e:
+                print(f"[TrailingStop/PartialTP] Register error: {e}")
+            
             # Обновляем circuit breaker state
             self.last_trade_time[symbol] = datetime.now()
             self.trade_count_today += 1
@@ -457,6 +502,10 @@ class TitanBotUltimateFinal:
                             
                             # CIRCUIT BREAKER: Обновляем трекер
                             self._register_trade_result(symbol, pnl)
+                            
+                            # Убираем из Trailing/PartialTP
+                            self.trailing.remove_position(symbol)
+                            self.partial_tp.remove_position(symbol)
                             
                             icon = '✅' if pnl > 0 else '❌'
                             print(f"{icon} [Closed] {symbol} PNL: ${pnl:+.2f} | Day: ${self.daily_pnl:+.2f} | Streak: {self.consecutive_losses}L")
