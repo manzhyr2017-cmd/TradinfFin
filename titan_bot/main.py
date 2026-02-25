@@ -244,10 +244,10 @@ class TitanBotUltimateFinal:
             cutoff = datetime.now() - timedelta(hours=24)
             self.coin_losses[symbol] = [t for t in self.coin_losses[symbol] if t > cutoff]
             
-            # 2 убытка на одной монете за 24ч → бан на 6 часов
+            # 2 убытка на одной монете за 24ч → бан на 1 час (v8: было 6ч — лишнее с time filter)
             if len(self.coin_losses[symbol]) >= 2:
-                self.coin_cooldown[symbol] = datetime.now() + timedelta(hours=6)
-                print(f"� [BLACKLIST] {symbol} заблокирован на 6ч (2+ убытка)")
+                self.coin_cooldown[symbol] = datetime.now() + timedelta(hours=1)
+                print(f"🚫 [COOLDOWN] {symbol} пауза 1ч (2+ убытка)")
             
             # 3 убытка подряд → cooldown 2 часа
             cooldown_trigger = self.mode_settings.get('cooldown_after_losses', 3)
