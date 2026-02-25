@@ -65,7 +65,7 @@ TRADE_MODES = {
     "ACCEL": {
         # РАЗГОН ДЕПОЗИТА (Sniper Trend) v2
         # Качество выше количества, высокий риск, длинный тейк
-        "composite_min_score": 50,    # Был 55. Данные: score 40-50 имеет 38% WR
+        "composite_min_score": 42,    # Данные: макс скор ~43. Берём только топ
         "session_filter": True,       # Только в ликвидное время
         "session_min_quality": 5,     
         "news_filter": True,

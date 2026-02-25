@@ -228,6 +228,14 @@ class TitanBotUltimateFinal:
                     print(f"🛡️ {symbol:10} | BLOCKED: {cb_reason}")
                 return
             
+            # TIME FILTER: Убитые часы UTC (данные: 7-20% WR, суммарно -$400+)
+            TOXIC_HOURS_UTC = {2, 4, 5, 6, 10, 11, 17, 18, 19, 21, 22}
+            current_hour_utc = datetime.utcnow().hour
+            if current_hour_utc in TOXIC_HOURS_UTC:
+                if self.processed_count % 200 == 0:
+                    print(f"🕐 TOXIC HOUR {current_hour_utc:02d}:00 UTC — торговля заблокирована")
+                return
+            
             if self.risk.has_position(symbol):
                 return
 
@@ -254,11 +262,12 @@ class TitanBotUltimateFinal:
             score = composite.total_score
             min_score = self.mode_settings['composite_min_score']
             
-            # КОРРЕКЦИЯ LONG BIAS: LONGs исторически имеют 25% WR
-            # Требуем +10 к порогу для LONGs чтобы выровнять качество
+            # КОРРЕКЦИЯ LONG BIAS: LONGs = 25% WR, R:R 1:1.38 (убыточно)
+            # SHORTs = 34% WR, R:R 1:2.01 (прибыльно)
+            # Требуем +8 к порогу для LONGs
             effective_min = min_score
             if composite.direction == 'LONG':
-                effective_min = min_score + 5  # Лонги нужен более сильный скор
+                effective_min = min_score + 8  # Данные: LONGs нужен значительно более сильный скор
             
             # ВИЗУАЛИЗАЦИЯ С УЧЕТОМ НАПРАВЛЕНИЯ
             m_sc = (mtf_signal.confidence * 20) if mtf_signal else 0
