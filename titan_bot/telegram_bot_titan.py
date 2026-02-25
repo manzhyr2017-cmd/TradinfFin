@@ -192,6 +192,17 @@ class TitanTelegramBot:
             await update.message.reply_text("⚠️ Ошибка получения баланса.")
 
     async def show_settings(self, update: Update):
+        cb_info = ""
+        if hasattr(self.trading_bot, 'daily_pnl'):
+            cb_info = (
+                f"\n───────────────────\n"
+                f"🛡️ <b>CIRCUIT BREAKERS:</b>\n"
+                f"Дневной PNL: <b>${self.trading_bot.daily_pnl:+.2f}</b>\n"
+                f"Убытков подряд: <b>{self.trading_bot.consecutive_losses}</b>\n"
+                f"Сделок сегодня: <b>{self.trading_bot.trade_count_today}</b>\n"
+                f"Блеклист: <b>{len(self.trading_bot.coin_cooldown)} монет</b>"
+            )
+        
         msg = (
             f"⚙️ <b>TITAN CONFIG:</b>\n"
             f"───────────────────\n"
@@ -199,8 +210,9 @@ class TitanTelegramBot:
             f"Min Score: <b>{self.trading_bot.mode_settings['composite_min_score']}</b>\n"
             f"Max Positions: <b>{self.trading_bot.mode_settings['max_positions']}</b>\n"
             f"Risk per Trade: <b>{self.trading_bot.mode_settings['risk_per_trade']*100}%</b>\n"
-            f"MTF Strict: <b>{self.trading_bot.mode_settings['mtf_strict']}</b>\n\n"
-            f"<i>💡 Ты можешь менять порог кнопками ниже:</i>"
+            f"MTF Strict: <b>{self.trading_bot.mode_settings['mtf_strict']}</b>"
+            f"{cb_info}\n\n"
+            f"<i>💡 Мено: +5/-5 Score, переключение режимов</i>"
         )
         
         keyboard = [

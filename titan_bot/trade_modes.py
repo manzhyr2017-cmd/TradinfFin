@@ -36,16 +36,16 @@ TRADE_MODES = {
     
     "AGGRESSIVE": {
         # Много сделок, выше риск (Professional Aggressive)
-        "composite_min_score": 35,    # Порог входа 35 для фильтрации шума
+        "composite_min_score": 40,    # Был 35. Данные показали: скор 30-40 = 29% WR. Нужно 40+
         "session_filter": False,
         "session_min_quality": 1,     # Любая сессия
         "news_filter": True,          # Новости все еще важны
         "mtf_strict": False,
-        "max_positions": 10,          # Был 3. Теперь до 10 позиций
+        "max_positions": 5,           # Был 10. Снижено для контроля
         "risk_per_trade": 0.02,
         "min_rr": 2.0,
-        "cooldown_after_losses": 3,
-        "expected_trades_per_day": "10-25"
+        "cooldown_after_losses": 3,   # 3 подряд = пауза
+        "expected_trades_per_day": "5-15"
     },
     
     "SCALPER": {
@@ -63,17 +63,17 @@ TRADE_MODES = {
     },
 
     "ACCEL": {
-        # РАЗГОН ДЕПОЗИТА (Sniper Trend)
+        # РАЗГОН ДЕПОЗИТА (Sniper Trend) v2
         # Качество выше количества, высокий риск, длинный тейк
-        "composite_min_score": 55,    # Только топовые сигналы
+        "composite_min_score": 50,    # Был 55. Данные: score 40-50 имеет 38% WR
         "session_filter": True,       # Только в ликвидное время
         "session_min_quality": 5,     
         "news_filter": True,
         "mtf_strict": True,           # ОБЯЗАТЕЛЬНОЕ совпадение трендов
-        "max_positions": 3,           # Не распыляемся
-        "risk_per_trade": 0.05,       # 5% на сделку (РАЗГОН)
+        "max_positions": 2,           # Макс 2 позиции
+        "risk_per_trade": 0.04,       # 4% на сделку (снижено с 5% по опыту)
         "min_rr": 3.0,                # Берем только 1:3 и выше
-        "cooldown_after_losses": 5,   # После 2-х стопов - перерыв 5 часов
+        "cooldown_after_losses": 2,   # 2 убытка = пауза 2 часа
         "expected_trades_per_day": "1-5"
     }
 }
