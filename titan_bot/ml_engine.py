@@ -277,7 +277,8 @@ class MLEngine:
             features = self.prepare_features(df)
             last_row = features.iloc[-1].fillna(0).to_dict()
             return last_row
-        except:
+        except Exception as e:
+            print(f"[ML] Features error for {symbol}: {e}")
             return {}
 
     def save_model(self):

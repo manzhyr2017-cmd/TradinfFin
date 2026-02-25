@@ -25,6 +25,8 @@ from fear_greed import FearGreedAnalyzer
 from correlations import CorrelationAnalyzer
 from trailing_stop import TrailingStopManager
 from partial_tp import PartialTakeProfitManager
+from session_filter import SessionFilter
+from news_filter import NewsFilter
 from telegram_bridge import TitanTelegramBridge
 from database import TitanDatabase
 from ml_engine import MLEngine
@@ -85,6 +87,8 @@ class TitanBotUltimateFinal:
         # 3. Trailing Stop + Partial TP (v6)
         self.trailing = TrailingStopManager(self.executor)
         self.partial_tp = PartialTakeProfitManager(self.executor)
+        self.session_filter = SessionFilter()
+        self.news_filter = NewsFilter()
         
         # 4. Настройки режима
         self.mode_settings = trade_modes.apply_mode(config.TRADE_MODE)
@@ -289,6 +293,26 @@ class TitanBotUltimateFinal:
             
             if self.risk.has_position(symbol):
                 return
+            
+            # SESSION FILTER: Режимы MODERATE/ACCEL требуют хорошую сессию
+            if self.mode_settings.get('session_filter', False):
+                min_q = self.mode_settings.get('session_min_quality', 5)
+                can_trade, reason = self.session_filter.is_good_time_to_trade(min_q)
+                if not can_trade:
+                    if self.processed_count % 200 == 0:
+                        print(f"🕑 {reason}")
+                    return
+            
+            # NEWS FILTER: Не торгуем перед FOMC/CPI
+            if self.mode_settings.get('news_filter', False):
+                try:
+                    news = self.news_filter.check()
+                    if not news.can_trade:
+                        if self.processed_count % 200 == 0:
+                            print(f"📰 {news.message}")
+                        return
+                except:
+                    pass  # Не блокируем если апи календаря недоступен
 
             # Сбор данных и анализ — ВСЕ 9 компонентов
             mtf_signal = self.mtf.analyze(symbol)
