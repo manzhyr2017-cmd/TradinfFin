@@ -253,6 +253,33 @@ def run_deep():
         wr = (data['wins'] / total * 100) if total else 0
         print(f"  {label:25}: {total:3} trades | WR: {wr:.1f}%")
 
+    # 9. RECENT TRADES (Last 48 hours)
+    print(f"\n{'='*65}")
+    print("📈 9. ПОСЛЕДНИЕ 48 ЧАСОВ: Новейшие сделки (v8/v9)")
+    print(f"{'='*65}")
+    
+    from datetime import timedelta
+    cutoff_48h = (datetime.now() - timedelta(hours=48)).isoformat()
+    
+    c.execute("SELECT symbol, side, score_total, pnl, entry_time FROM trades WHERE status='CLOSED' AND entry_time > ? ORDER BY entry_time ASC", (cutoff_48h,))
+    recent_trades = c.fetchall()
+    
+    if not recent_trades:
+        print("  📭 Нет сделок за последние 48 часов!")
+    else:
+        wins_48h = sum(1 for t in recent_trades if (t['pnl'] or 0) > 0)
+        losses_48h = sum(1 for t in recent_trades if (t['pnl'] or 0) < 0)
+        total_pnl_48h = sum((t['pnl'] or 0) for t in recent_trades)
+        wr_48h = (wins_48h / len(recent_trades)) * 100 if len(recent_trades) > 0 else 0
+        
+        print(f"  Всего сделок за 48ч: {len(recent_trades)} | WR: {wr_48h:.1f}% | PNL: ${total_pnl_48h:+.2f}\n")
+        
+        for t in recent_trades:
+            pnl = t['pnl'] or 0
+            icon = "🟢" if pnl > 0 else "🔴"
+            score = t['score_total'] or 0
+            print(f"  {t['entry_time'][5:16]} | {icon} {t['symbol']:10} | {t['side']:5} | Score: {score:4.1f} | PNL: ${pnl:+6.2f}")
+
     print(f"\n{'='*65}")
     print("  КОНЕЦ ГЛУБОКОГО АНАЛИЗА")
     print(f"{'='*65}")
