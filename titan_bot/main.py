@@ -43,6 +43,7 @@ PERMANENT_BLACKLIST = {
     'SENTUSDT',   # 3 trades, 0% WR, -$19  (v8)
     'SKRUSDT',    # 3 trades, 0% WR, -$17  (v8)
     'SOMIUSDT',   # 3 trades, 0% WR, -$15  (v8)
+    'ETHUSDT',    # 7 trades, 0% WR, -$53  (v9)
 }
 
 ASCII_ART = """
