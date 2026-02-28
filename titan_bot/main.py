@@ -277,13 +277,6 @@ class TitanBotUltimateFinal:
                     print(f"🛡️ {symbol:10} | BLOCKED: {cb_reason}")
                 return
             
-            # TIME FILTER: Убитые часы UTC (данные: 7-20% WR, суммарно -$400+)
-            TOXIC_HOURS_UTC = {2, 4, 5, 6, 10, 11, 17, 18, 19, 21, 22}
-            current_hour_utc = datetime.utcnow().hour
-            if current_hour_utc in TOXIC_HOURS_UTC:
-                if self.processed_count % 200 == 0:
-                    print(f"🕐 TOXIC HOUR {current_hour_utc:02d}:00 UTC — торговля заблокирована")
-                return
             
             # DAY FILTER: Sun=10% WR(-$71), Wed=21% WR(-$145)
             TOXIC_DAYS = {2, 6}  # 2=Wednesday, 6=Sunday
