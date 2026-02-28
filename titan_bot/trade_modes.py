@@ -9,7 +9,7 @@ TRADE_MODES = {
     
     "CONSERVATIVE": {
         # Мало сделок, но качественные. Для маленьких депо.
-        "composite_min_score": 70,    # v8: Было 60 при макс=43
+        "composite_min_score": 60,    # v10: Снижено (было 70), т.к. починили фундамент со стопами
         "session_filter": True,
         "session_min_quality": 6,
         "news_filter": True,
@@ -23,7 +23,7 @@ TRADE_MODES = {
     
     "MODERATE": {
         # Баланс между качеством и количеством
-        "composite_min_score": 55,    # v8: Было 40 при макс=43
+        "composite_min_score": 45,    # v10: Снижено (было 55)
         "session_filter": True,
         "session_min_quality": 4,
         "news_filter": True,
@@ -37,7 +37,7 @@ TRADE_MODES = {
     
     "AGGRESSIVE": {
         # Много сделок, умеренный риск. Для опытных.
-        "composite_min_score": 50,    # v8: Ниже чем MODERATE — берём больше сделок
+        "composite_min_score": 40,    # v10: Снижено (было 50)
         "session_filter": False,       # Торгуем в любое время (toxic hours уже заблочены)
         "session_min_quality": 1,
         "news_filter": True,
@@ -51,7 +51,7 @@ TRADE_MODES = {
     
     "SCALPER": {
         # Максимум сделок, минимум фильтров
-        "composite_min_score": 35,    # v8: Было 25 — слишком мало
+        "composite_min_score": 30,    # v10: Было 35 
         "session_filter": False,
         "session_min_quality": 1,
         "news_filter": False,
@@ -66,14 +66,14 @@ TRADE_MODES = {
     "ACCEL": {
         # РАЗГОН ДЕПОЗИТА — снайпер. Мало сделок, каждая на вес золота.
         # Данные: SHORT@15:00 UTC = 100% WR. Это ACCEL-стиль.
-        "composite_min_score": 65,    # v8: Было 75 — слишком жёстко, ≤2 сделки/день
+        "composite_min_score": 55,    # v10: Было 65. Снижено, так как теперь стоп безопасный
         "session_filter": True,       # Только в ликвидное время
         "session_min_quality": 5,     
         "news_filter": True,
         "mtf_strict": True,           # ОБЯЗАТЕЛЬНОЕ совпадение трендов
         "max_positions": 2,           # Макс 2 позиции
-        "risk_per_trade": 0.03,       # 3% на сделку (оптимум по Келли для 40% WR 1:3 RR)
-        "min_rr": 2.5,                # Берем 1:2.5 и выше (было 3.0 — слишком редко)
+        "risk_per_trade": 0.03,       # 3% на сделку
+        "min_rr": 2.5,                
         "cooldown_after_losses": 2,   # 2 убытка = пауза
         "expected_trades_per_day": "2-6"
     }

@@ -425,14 +425,24 @@ class TitanBotUltimateFinal:
             if sl_price <= current_price and sl_price > 0: sl_price = 0
             if tp_price >= current_price and tp_price > 0: tp_price = 0
 
-        # 3. ФОЛЛБЭК НА ATR: Если уровней нет или они некорректны
-        if sl_price == 0:
-            sl_dist = atr * 2.0  # Был 1.5. Данные: лузеры закрывались за 2.7мин = стоп слишком тесный
+        # 3. ФУНДАМЕНТАЛЬНОЕ ИСПРАВЛЕНИЕ СТОПА (Причина сливов):
+        # SMC-движок давал экстремально тесные стопы (0.2 ATR).
+        # Из-за этого происходило 2 вещи:
+        # A) Выбивало любым случайным шумом/тенью свечи
+        # Б) Trailing Stop включал "Безубыток" при профите +1R (что равнялось смешным 0.2 ATR), и цена тут же его сбивала.
+        # Решение: Ставим ЖЕСТКИЙ минимум для стопа в 2.0 ATR. Даём сделке дышать.
+        min_sl_dist = atr * 2.0
+        current_sl_dist = abs(current_price - sl_price) if sl_price > 0 else 0
+        
+        if sl_price == 0 or current_sl_dist < min_sl_dist:
+            sl_dist = min_sl_dist
             sl_price = current_price - sl_dist if side == "Buy" else current_price + sl_dist
             
-        if tp_price == 0:
-            tp_dist = abs(current_price - sl_price) * self.mode_settings.get('min_rr', 2.0)
-            tp_price = current_price + tp_dist if side == "Buy" else current_price - tp_dist
+        # 4. Жёстко пересчитываем TP от финального правильного стопа
+        actual_sl_dist = abs(current_price - sl_price)
+        target_rr = self.mode_settings.get('min_rr', 2.0)
+        tp_dist = actual_sl_dist * target_rr
+        tp_price = current_price + tp_dist if side == "Buy" else current_price - tp_dist
 
         pos_size = self.risk.calculate_position_size(
             entry_price=current_price,
