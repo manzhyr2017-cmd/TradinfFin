@@ -49,13 +49,13 @@ class PartialTakeProfitManager:
         self.executor = executor
         self.active_positions = {}  # symbol -> PartialTPState
         
-        # Стандартные уровни тейков (можно настроить в config)
+        # Стандартные уровни тейков (настроены с учетом нового широкого стопа 2.0 ATR)
+        # R теперь большой, поэтому фиксируем прибыль раньше
         self.default_tp_structure = [
-            {'r_multiple': 1.0, 'percent': 30},   # +1R = закрыть 30%
-            {'r_multiple': 2.0, 'percent': 40},   # +2R = закрыть 40%
-            {'r_multiple': 3.0, 'percent': 30},   # +3R = закрыть остаток
-        ]
-    
+            {'r_multiple': 0.8, 'percent': 30},   # +0.8R = закрыть 30% (быстрый тейк)
+            {'r_multiple': 1.5, 'percent': 40},   # +1.5R = закрыть 40% (основной профит)
+            {'r_multiple': 2.5, 'percent': 30},   # +2.5R = закрыть остаток (дальний тейк)
+        ]    
     def register_position(
         self,
         symbol: str,

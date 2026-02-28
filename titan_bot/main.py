@@ -33,8 +33,9 @@ from ml_engine import MLEngine
 import trade_modes
 import config
 
-# PERMANENT BLACKLIST: Монеты с 0% WR за десятки сделок. Суммарно -$375+.
-PERMANENT_BLACKLIST = {
+# PROBATION LIST (Ранее черный список)
+# Монеты, которые показывали 0% WR. Мы больше их не блочим, но логируем их отдельно.
+PROBATION_LIST = {
     'RAVEUSDT',   # 12 trades, 0% WR, -$147
     'LAUSDT',     # 11 trades, 0% WR, -$65
     'ZROUSDT',    # 8 trades, 0% WR, -$46
@@ -190,9 +191,9 @@ class TitanBotUltimateFinal:
         """
         now = datetime.now()
         
-        # 0. PERMANENT BLACKLIST
-        if symbol in PERMANENT_BLACKLIST:
-            return f"BLACKLISTED (0% WR history)"
+        # 0. PROBATION LIST (Больше не блокируем, просто помечаем в логах)
+        # Если монета в PROBATION_LIST, мы продолжаем анализ.
+        pass
         
         # 1. Сброс дневного PNL в полночь
         if now.date() != self.daily_pnl_reset_date:
@@ -391,6 +392,9 @@ class TitanBotUltimateFinal:
                 status = "🔍 [WATCH]"
             else:
                 status = "🔘 [WAIT ]"
+
+            if symbol in PROBATION_LIST:
+                status += "[PROBATION]"
 
             print(f"{status} {symbol:10} | TOTAL: {score:+.1f} | {details} | need {effective_min}")
             

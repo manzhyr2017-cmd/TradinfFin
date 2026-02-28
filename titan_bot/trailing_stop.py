@@ -109,8 +109,9 @@ class TrailingStopManager:
         profit = current_price - state.entry_price
         profit_in_r = profit / state.initial_risk
         
-        # === ЭТАП 1: Безубыток при +1R ===
-        if profit_in_r >= 1.0 and not state.breakeven_activated:
+        # === ЭТАП 1: Безубыток при +0.8R ===
+        # R теперь большой, так что +0.8R это уже солидный профит (1.6 ATR)
+        if profit_in_r >= 0.8 and not state.breakeven_activated:
             # Переносим стоп в точку входа + небольшой буфер
             new_stop = state.entry_price + (state.atr * 0.1)
             state.breakeven_activated = True
@@ -146,7 +147,7 @@ class TrailingStopManager:
         profit_in_r = profit / state.initial_risk
         
         # Безубыток
-        if profit_in_r >= 1.0 and not state.breakeven_activated:
+        if profit_in_r >= 0.8 and not state.breakeven_activated:
             new_stop = state.entry_price - (state.atr * 0.1)
             state.breakeven_activated = True
             print(f"[TrailingStop] ✅ БЕЗУБЫТОК активирован @ {new_stop:.6g}")

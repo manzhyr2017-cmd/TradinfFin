@@ -132,12 +132,16 @@ class DataEngine:
                         for c in res.get('coin', []):
                             if c.get('coin') == 'USDT':
                                 # availableToWithdraw - это то, что реально свободно для новых ордеров
-                                return float(c.get('availableToWithdraw', c.get('walletBalance', 0.0)))
+                                val = c.get('availableToWithdraw')
+                                if not val: 
+                                    val = c.get('walletBalance', '0')
+                                return float(val) if val else 0.0
                     
                     # Для обычного CONTRACT аккаунта
                     for c in res.get('coin', []):
                         if c.get('coin') == 'USDT':
-                            return float(c.get('walletBalance', 0.0))
+                            val = c.get('walletBalance', '0')
+                            return float(val) if val else 0.0
             return float(config.INITIAL_DEPOSIT)
         except Exception as e:
             print(f"[DataEngine] Error balance: {e}")
