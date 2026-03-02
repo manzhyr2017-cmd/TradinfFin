@@ -51,7 +51,7 @@ TIMEFRAME = "5"              # Таймфрейм в минутах (было 15
 CATEGORY = "linear"          # linear = фьючерсы USDT
 
 # === ТЕКУЩИЙ РЕЖИМ ТОРГОВЛИ ===
-TRADE_MODE = "AGGRESSIVE"    # "CONSERVATIVE", "MODERATE", "AGGRESSIVE", "SCALPER"
+TRADE_MODE = os.getenv("TRADE_MODE", "ACCEL")  # По умолчанию ACCEL (Разгон)
 
 # === РИСК-МЕНЕДЖМЕНТ ===
 INITIAL_DEPOSIT = 300        # Начальный депозит
