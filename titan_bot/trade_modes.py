@@ -37,7 +37,7 @@ TRADE_MODES = {
     
     "AGGRESSIVE": {
         # Много сделок, умеренный риск. Для опытных.
-        "composite_min_score": 40,    # v10: Снижено (было 50)
+        "composite_min_score": 40,    # v10: Возврат к стандарту 40
         "session_filter": False,       # Торгуем в любое время (toxic hours уже заблочены)
         "session_min_quality": 1,
         "news_filter": True,
@@ -66,7 +66,7 @@ TRADE_MODES = {
     "ACCEL": {
         # РАЗГОН ДЕПОЗИТА — снайпер. Мало сделок, каждая на вес золота.
         # Данные: SHORT@15:00 UTC = 100% WR. Это ACCEL-стиль.
-        "composite_min_score": 55,    # v10: Было 65. Снижено, так как теперь стоп безопасный
+        "composite_min_score": 48,    # v10: Снижено с 55 до 48 для чуть большей динамики в ACCEL (было 65)
         "session_filter": True,       # Только в ликвидное время
         "session_min_quality": 5,     
         "news_filter": True,
