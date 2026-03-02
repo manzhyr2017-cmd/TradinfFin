@@ -7,7 +7,7 @@ TITAN BOT 2026 - Main Controller (ULTIMATE FINAL v2)
 import time
 import threading
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from collections import defaultdict
 from data_engine import DataEngine, RealtimeDataStream
 from selector import SymbolSelector
@@ -118,9 +118,10 @@ class TitanBotUltimateFinal:
         """Запуск торгового цикла"""
         self.is_running = True
         print(ASCII_ART)
-        print(f"[TITAN] Запуск {config.TRADE_MODE} (Professional Mode)")
-        print(f"[Config] Scanning Interval: 3.0 sec per symbol")
-        print(f"[Config] Min Score for Entry: {self.mode_settings['composite_min_score']}")
+        print(f"[Config] Scanning Interval: 3.0 sec per symbol | Symbols: {len(self.symbol_list)}")
+        print(f"[Config] Mode: {config.TRADE_MODE} | Min Score: {self.mode_settings['composite_min_score']}")
+        if self.mode_settings.get('mtf_strict'):
+            print(f"[Config] MTF STRICT: ENABLED")
         
         # Фоновый мониторинг БД
         maintenance_thread = threading.Thread(target=self._db_maintenance, daemon=True)
@@ -282,7 +283,7 @@ class TitanBotUltimateFinal:
             
             # DAY FILTER: Sun=10% WR(-$71), Wed=21% WR(-$145)
             TOXIC_DAYS = {2, 6}  # 2=Wednesday, 6=Sunday
-            current_day = datetime.utcnow().weekday()
+            current_day = datetime.now(timezone.utc).weekday()
             if current_day in TOXIC_DAYS:
                 if self.processed_count % 200 == 0:
                     day_names = {2: 'WED', 6: 'SUN'}
