@@ -188,16 +188,24 @@ class GridExecutor:
             for acc_type in ["UNIFIED", "CONTRACT"]:
                 resp = self.session.get_wallet_balance(accountType=acc_type, coin="USDT")
                 if resp['retCode'] == 0 and resp['result']['list']:
-                    try:
-                        coin_list = resp['result']['list'][0]['coin']
-                    except (KeyError, IndexError):
-                        logger.error("[GridExecutor] Balance data structure error!")
-                        return 0.0
-
+                    res_data = resp['result']['list'][0]
+                    # Log raw data for debug
+                    logger.debug(f"[GridExecutor] Balance {acc_type} resp: {res_data}")
+                    
+                    coin_list = res_data.get('coin', [])
                     for coin_data in coin_list:
                         if coin_data['coin'] == "USDT":
-                            val = coin_data.get('availableToWithdraw', '0')
-                            return float(val) if val else 0.0
+                            # Check multiple fields because Bybit Demo can return different ones
+                            val = (coin_data.get('availableToWithdraw') or 
+                                   coin_data.get('walletBalance') or 
+                                   coin_data.get('availableToBorrow', '0'))
+                            
+                            balance = float(val) if val else 0.0
+                            if balance > 0:
+                                logger.info(f"[GridExecutor] Found balance ${balance} on {acc_type} account")
+                                return balance
+                            
+            logger.warning("[GridExecutor] All wallet balance checks returned 0 or were empty.")
         except Exception as e:
             logger.error(f"[GridExecutor] Ошибка получения баланса: {e}")
         return 0.0
