@@ -37,8 +37,6 @@ class GridExecutor:
     def get_price(self, symbol: str = None) -> float:
         """Текущая цена символа"""
         symbol = symbol or cfg.SYMBOL
-        if cfg.BYBIT_DEMO:
-            return 95000.0  # Dummy price
         try:
             resp = self.public_session.get_tickers(category=cfg.CATEGORY, symbol=symbol)
             if resp['retCode'] == 0:
@@ -52,14 +50,6 @@ class GridExecutor:
         symbol = symbol or cfg.SYMBOL
         if symbol in self._symbol_cache:
             return self._symbol_cache[symbol]
-        if cfg.BYBIT_DEMO:
-             return {
-                 'price_precision': 2,
-                 'tick_size': 0.1,
-                 'qty_step': 0.001,
-                 'min_qty': 0.001,
-                 'min_notional': 5.0,
-             }
         try:
             resp = self.public_session.get_instruments_info(category=cfg.CATEGORY, symbol=symbol)
             if resp['retCode'] == 0:
@@ -155,8 +145,6 @@ class GridExecutor:
     def get_funding_rate(self, symbol: str = None) -> float:
         """Fetches the current funding rate for the symbol."""
         symbol = symbol or cfg.SYMBOL
-        if cfg.BYBIT_DEMO:
-            return 0.0001
         try:
             resp = self.session.get_tickers(category=cfg.CATEGORY, symbol=symbol)
             if resp['retCode'] == 0:
@@ -169,9 +157,6 @@ class GridExecutor:
 
     def get_top_volatile_pairs(self, limit: int = 10, min_volume: float = 10_000_000) -> list:
         """Получает топ самых волатильных пар за 24 часа"""
-        if cfg.BYBIT_DEMO:
-            logger.info("[GridExecutor] DEMO Mode: Returning mock pairs")
-            return ["ETHUSDT", "BTCUSDT", "SOLUSDT"]
         try:
             resp = self.public_session.get_tickers(category=cfg.CATEGORY)
             if resp['retCode'] == 0:
