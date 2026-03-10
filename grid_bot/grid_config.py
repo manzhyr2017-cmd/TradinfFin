@@ -1,6 +1,6 @@
 """
 GRID BOT 2026 — Configuration
-Сеточный бот для Bybit Futures
+Сеточный бот для Bybit Futures (Мульти-Сканнер)
 """
 
 import os
@@ -11,7 +11,6 @@ from logger import logger
 
 # === Загрузка .env ===
 script_dir = Path(__file__).resolve().parent
-# Paths to check for .env (priority order)
 ENV_PATHS = [
     Path(".env"),
     Path(__file__).parent / ".env",
@@ -36,17 +35,21 @@ BYBIT_DEMO = os.getenv("BYBIT_DEMO", "False").lower() == "true"
 TG_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TG_CHANNEL = os.getenv("TELEGRAM_CHANNEL")
 
-# === GRID PARAMETERS ===
-SYMBOL = os.getenv("GRID_SYMBOL", "ETHUSDT")
-CATEGORY = "linear"  # Фьючерсы USDT
+# === SCANNER & GRID PARAMETERS ===
+# AUTO = сканер запускает топ пар, иначе (например ETHUSDT) = фокус на одну.
+SYMBOL = os.getenv("GRID_SYMBOL", "AUTO")
+CATEGORY = "linear"
 
-# Границы сетки (0 = авто-расчёт: ±GRID_RANGE_PCT от текущей цены)
+AUTO_SCAN_TOP = int(os.getenv("AUTO_SCAN_TOP", "10"))
+MAX_CONCURRENT_GRIDS = int(os.getenv("MAX_CONCURRENT_GRIDS", "3"))
+MIN_VOLUME_24H = float(os.getenv("MIN_VOLUME_24H", "10000000"))  # 10M
+ALLOCATION_PER_GRID = float(os.getenv("ALLOCATION_PER_GRID", "30.0"))  # 30% баланса на сетку
+
+# Границы сетки (0 = авто: ±GRID_RANGE_PCT от текущей цены)
 GRID_UPPER = float(os.getenv("GRID_UPPER", "0"))
 GRID_LOWER = float(os.getenv("GRID_LOWER", "0"))
-
-# --- Strategy Settings ---
 GRID_RANGE_PCT = float(os.getenv("GRID_RANGE_PCT", "10.0"))
-REBALANCE_MODE = os.getenv("REBALANCE_MODE", "CLOSE_ALL").upper()  # CLOSE_ALL or HOLD_POSITION
+REBALANCE_MODE = os.getenv("REBALANCE_MODE", "CLOSE_ALL").upper() 
 
 # ATR Adaptive Step
 USE_ATR_STEP = os.getenv("USE_ATR_STEP", "True").lower() == "true"
@@ -54,45 +57,28 @@ ATR_PERIOD = int(os.getenv("ATR_PERIOD", "14"))
 ATR_MULTIPLIER = float(os.getenv("ATR_MULTIPLIER", "1.5"))
 
 # Smart Entry & Compounding
-RSI_ENTRY_CHECK = os.getenv("RSI_ENTRY_CHECK", "False").lower() == "true"
+RSI_ENTRY_CHECK = os.getenv("RSI_ENTRY_CHECK", "True").lower() == "true"
 RSI_PERIOD = int(os.getenv("RSI_PERIOD", "14"))
 AUTO_COMPOUND = os.getenv("AUTO_COMPOUND", "False").lower() == "true"
 
 # Safety & Funding
-MAX_FUNDING_RATE = float(os.getenv("MAX_FUNDING_RATE", "0.005"))  # 0.5% per epoch
+MAX_FUNDING_RATE = float(os.getenv("MAX_FUNDING_RATE", "0.005")) 
 MAX_DRAWDOWN_PCT = float(os.getenv("MAX_DRAWDOWN_PCT", "15.0"))
-CHECK_INTERVAL = int(os.getenv("CHECK_INTERVAL", "10"))
+CHECK_INTERVAL = int(os.getenv("CHECK_INTERVAL", "5"))
 
-# Количество уровней сетки (больше = мельче шаг = больше сделок)
+# Сетка и плечо
 GRID_COUNT = int(os.getenv("GRID_COUNT", "10"))
-
-# Инвестиция (0 = весь доступный баланс)
 INVESTMENT = float(os.getenv("GRID_INVESTMENT", "0"))
-
-# Плечо
 LEVERAGE = int(os.getenv("GRID_LEVERAGE", "3"))
+REBALANCE_THRESHOLD = float(os.getenv("REBALANCE_THRESHOLD", "0.8")) 
 
-# === RISK MANAGEMENT ===
-MAX_DRAWDOWN_PCT = float(os.getenv("MAX_DRAWDOWN_PCT", "15.0"))  # Стоп при -15%
-REBALANCE_THRESHOLD = float(os.getenv("REBALANCE_THRESHOLD", "0.8"))  # Перестроить при 80% выхода
-
-# === GRID MODE ===
-# "neutral"    — равномерная сетка вокруг цены
-# "long_bias"  — 60% buy уровней, 40% sell (бычий)
-# "short_bias" — 40% buy уровней, 60% sell (медвежий)
 GRID_MODE = os.getenv("GRID_MODE", "neutral")
+HEARTBEAT_INTERVAL = int(os.getenv("HEARTBEAT_INTERVAL", "900"))  
 
-# === TIMING ===
-CHECK_INTERVAL = int(os.getenv("CHECK_INTERVAL", "5"))  # Секунд между проверками
-HEARTBEAT_INTERVAL = int(os.getenv("HEARTBEAT_INTERVAL", "900"))  # 15 мин heartbeat в ТГ
+STATE_FILE = str(script_dir / "data" / "grid_state.db")
 
-# === STATE ===
-STATE_FILE = str(script_dir / "data" / "grid_state.json")
-
-# === Валидация ===
 mode = "DEMO" if BYBIT_DEMO else ("TESTNET" if TESTNET else "MAINNET")
 if not API_KEY:
     logger.warning(f"[GridConfig] BYBIT_API_KEY NOT FOUND! (Mode: {mode})")
 else:
-    logger.info(f"[GridConfig] API Key: {API_KEY[:4]}**** | Mode: {mode}")
-    logger.info(f"[GridConfig] Symbol: {SYMBOL} | Grid: {GRID_COUNT} levels | Leverage: {LEVERAGE}x")
+    logger.info(f"[GridConfig] Mode: {mode} | Max Grids: {MAX_CONCURRENT_GRIDS} | Alloc: {ALLOCATION_PER_GRID}%")

@@ -167,6 +167,34 @@ class GridExecutor:
             logger.error(f"[GridExecutor] Funding rate error: {e}")
         return 0.0
 
+    def get_top_volatile_pairs(self, limit: int = 10, min_volume: float = 10_000_000) -> list:
+        """Получает топ самых волатильных пар за 24 часа"""
+        if cfg.BYBIT_DEMO:
+            logger.info("[GridExecutor] DEMO Mode: Returning mock pairs")
+            return ["ETHUSDT", "BTCUSDT", "SOLUSDT"]
+        try:
+            resp = self.public_session.get_tickers(category=cfg.CATEGORY)
+            if resp['retCode'] == 0:
+                tickers = resp['result']['list']
+                valid_pairs = []
+                for t in tickers:
+                    sym = t['symbol']
+                    if not sym.endswith('USDT'):
+                        continue
+                    high = float(t.get('highPrice24h', 0))
+                    low = float(t.get('lowPrice24h', 0))
+                    vol = float(t.get('turnover24h', 0)) # объем в базовой валиюте или usdt? тут обычно usdt 
+                    if low <= 0 or vol < min_volume:
+                        continue
+                    volatility = (high - low) / low
+                    valid_pairs.append({'symbol': sym, 'vol': volatility, 'volume': vol})
+                
+                valid_pairs.sort(key=lambda x: x['vol'], reverse=True)
+                return [p['symbol'] for p in valid_pairs[:limit]]
+        except Exception as e:
+            logger.error(f"[GridExecutor] Ошибка сканирования топ-пар: {e}")
+        return []
+
     # === Account ===
 
     def get_balance(self) -> float:
