@@ -7,7 +7,7 @@ import sys
 import os
 import signal
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List
 
 # Добавляем текущую директорию в path
@@ -37,9 +37,9 @@ class GridBotMulti:
         self.active_orders: Dict[str, Dict[str, GridLevel]] = {}
         
         self.running = False
-        self._started_at = datetime.utcnow()
-        self._last_heartbeat = datetime.utcnow()
-        self._last_funding_check = datetime.utcnow()
+        self._started_at = datetime.now(timezone.utc).replace(tzinfo=None) # Keep naive for compatibility if needed, but actually we use isoformat
+        self._last_heartbeat = datetime.now(timezone.utc).replace(tzinfo=None)
+        self._last_funding_check = datetime.now(timezone.utc).replace(tzinfo=None)
         self._last_scan = datetime.min
 
         signal.signal(signal.SIGINT, self._handle_shutdown)
@@ -178,7 +178,7 @@ class GridBotMulti:
         logger.info(f"\nМульти-Мониторинг запущен (check every {cfg.CHECK_INTERVAL}s)...")
         while self.running:
             try:
-                now = datetime.utcnow()
+                now = datetime.now(timezone.utc).replace(tzinfo=None)
                 
                 # 1. Сканируем новые пары для входа, если есть свободные слоты
                 if cfg.SYMBOL == "AUTO" and len(self.engines) < cfg.MAX_CONCURRENT_GRIDS:
@@ -254,7 +254,7 @@ class GridBotMulti:
         for oid in filled_ids:
             level = self.active_orders[symbol].pop(oid)
             level.status = "filled"
-            level.filled_at = datetime.utcnow().isoformat()
+            level.filled_at = datetime.now(timezone.utc).isoformat()
 
             logger.info(f"[{symbol}] ✅ FILLED: {level.side} @ {level.price}")
 
@@ -322,7 +322,7 @@ class GridBotMulti:
         )
 
     def _send_heartbeat(self, equity: float):
-        uptime = datetime.utcnow() - self._started_at
+        uptime = datetime.now(timezone.utc).replace(tzinfo=None) - self._started_at
         hours = int(uptime.total_seconds() // 3600)
         minutes = int((uptime.total_seconds() % 3600) // 60)
         

@@ -8,7 +8,7 @@ import os
 import math
 from dataclasses import dataclass, field, asdict
 from typing import List, Optional, Dict
-from datetime import datetime
+from datetime import datetime, timezone
 from logger import logger
 
 @dataclass
@@ -198,7 +198,7 @@ class GridEngine:
                     (symbol, upper, lower, qty_per_level, total_profit, total_trades, start_balance, updated_at)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 ''', (self.symbol, self.upper, self.lower, self.qty_per_level, 
-                      self.total_profit, self.total_trades, self.start_balance, datetime.utcnow().isoformat()))
+                      self.total_profit, self.total_trades, self.start_balance, datetime.now(timezone.utc).isoformat()))
                 
                 cursor.execute('DELETE FROM grid_levels WHERE symbol = ?', (self.symbol,))
                 for lvl in self.levels:
