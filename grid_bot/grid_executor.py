@@ -196,7 +196,8 @@ class GridExecutor:
 
                     for coin_data in coin_list:
                         if coin_data['coin'] == "USDT":
-                            return float(coin_data['availableToWithdraw'])
+                            val = coin_data.get('availableToWithdraw', '0')
+                            return float(val) if val else 0.0
         except Exception as e:
             logger.error(f"[GridExecutor] Ошибка получения баланса: {e}")
         return 0.0
@@ -213,7 +214,8 @@ class GridExecutor:
                         return float(eq)
                     for c in res.get('coin', []):
                         if c.get('coin') == 'USDT':
-                            return float(c.get('equity', c.get('walletBalance', '0')))
+                            eq_val = c.get('equity', c.get('walletBalance', '0'))
+                            return float(eq_val) if eq_val else 0.0
         except Exception as e:
             logger.error(f"[GridExecutor] Ошибка получения equity: {e}")
         return 0.0
