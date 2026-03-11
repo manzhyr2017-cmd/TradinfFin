@@ -33,13 +33,9 @@ class GridTelegram:
             logger.warning("[GridTG] Telegram disabled (no token/channel)")
 
     def _run_event_loop(self):
+        # Самый надежный способ запустить PTB в отдельном потоке
         asyncio.set_event_loop(self.loop)
-        # Инициализируем приложение правильно
-        self.loop.run_until_complete(self.app.initialize())
-        self.loop.run_until_complete(self.app.start())
-        # Используем run_polling, но в отдельном потоке
-        self.loop.run_until_complete(self.app.updater.start_polling())
-        self.loop.run_forever()
+        self.app.run_polling(close_loop=False)
 
     def _setup_handlers(self):
         self.app.add_handler(CommandHandler("start", self._cmd_status))
@@ -47,18 +43,27 @@ class GridTelegram:
         self.app.add_handler(CommandHandler("pairs", self._cmd_pairs))
         self.app.add_handler(CommandHandler("help", self._cmd_help))
 
+    async def _is_admin(self, update: Update) -> bool:
+        user_id = str(update.effective_user.id)
+        logger.info(f"[GridTG] Command from User ID: {user_id}")
+        
+        if cfg.TG_ADMIN_ID and user_id != str(cfg.TG_ADMIN_ID):
+            await update.message.reply_text(f"⛔ Доступ запрещен. Ваш ID: {user_id}")
+            return False
+        return True
+
     async def _cmd_help(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        if not self._is_admin(update): return
+        if not await self._is_admin(update): return
         text = (
             "🤖 <b>Grid Bot 2026 Commands:</b>\n\n"
             "/status - Общий статус всех сеток\n"
-            "/pairs - Список активных пар и баланс\n"
+            "/pairs - Список активных пар\n"
             "/help - Эта справка"
         )
         await update.message.reply_html(text)
 
     async def _cmd_status(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        if not self._is_admin(update): return
+        if not await self._is_admin(update): return
         if not self.main_bot:
             await update.message.reply_text("Бот еще инициализируется...")
             return
@@ -79,20 +84,11 @@ class GridTelegram:
         await update.message.reply_html(text)
 
     async def _cmd_pairs(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        if not self._is_admin(update): return
+        if not await self._is_admin(update): return
         if not self.main_bot: return
         pairs = list(self.main_bot.engines.keys())
         text = "🎯 <b>Active Pairs:</b>\n" + ("\n".join([f"• <code>{p}</code>" for p in pairs]) if pairs else "No active pairs")
         await update.message.reply_html(text)
-
-    def _is_admin(self, update: Update) -> bool:
-        user_id = str(update.effective_user.id)
-        logger.info(f"[GridTG] Incoming command from User ID: {user_id}")
-        if not cfg.TG_ADMIN_ID: return True 
-        if user_id != str(cfg.TG_ADMIN_ID):
-            logger.warning(f"[GridTG] Unauthorized command from {user_id}")
-            return False
-        return True
 
     # --- Синхронные методы отправки (для вызова из главного потока) ---
 
