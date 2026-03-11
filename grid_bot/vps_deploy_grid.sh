@@ -50,8 +50,8 @@ Type=simple
 User=$USER
 WorkingDirectory=$BOTDIR
 ExecStart=$BOTDIR/venv/bin/python main_grid.py
-Restart=on-failure
-RestartSec=30
+Restart=always
+RestartSec=10
 StandardOutput=journal
 StandardError=journal
 

@@ -363,23 +363,23 @@ class GridBotMulti:
     def _handle_shutdown(self, signum, frame):
         if not self.running: return
         self.running = False
-        logger.info("\n=== ГЛОБАЛЬНАЯ ОСТАНОВКА БОТА ===")
+        logger.info("\n=== ОСТАНОВКА БОТА (сохранение состояния) ===")
 
+        # НЕ отменяем ордера — они остаются на бирже!
+        # При следующем запуске бот восстановит их из БД
         for sym in list(self.engines.keys()):
-            logger.info(f"[{sym}] Отмена ордеров и позиций...")
-            self.executor.cancel_all_orders(sym)
-            time.sleep(0.3)
-            self.executor.close_all_positions(sym)
+            logger.info(f"[{sym}] Сохраняем состояние сетки (ордера остаются на бирже)...")
             self.engines[sym].save_state()
 
         eq = self.executor.get_equity()
         total_pnl = sum(e.total_profit for e in self.engines.values())
         total_tr = sum(e.total_trades for e in self.engines.values())
         
-        logger.info(f"Final Equity: ${eq:.2f} | Total Profit: ${total_pnl:.2f} | Trades: {total_tr}")
+        logger.info(f"Shutdown Equity: ${eq:.2f} | Total Profit: ${total_pnl:.2f} | Trades: {total_tr}")
+        logger.info("Ордера остались на бирже. При перезапуске бот восстановит сетку.")
         
         self.telegram.notify_stop(
-            reason="Manual multi-shutdown", total_profit=total_pnl, 
+            reason="Graceful shutdown (ордера сохранены на бирже)", total_profit=total_pnl, 
             total_trades=total_tr, final_balance=eq
         )
         sys.exit(0)
