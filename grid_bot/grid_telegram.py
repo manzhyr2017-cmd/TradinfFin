@@ -34,7 +34,8 @@ class GridTelegram:
 
     def _run_event_loop(self):
         asyncio.set_event_loop(self.loop)
-        self.app.initialize()
+        # Инициализируем приложение правильно
+        self.loop.run_until_complete(self.app.initialize())
         # Используем run_polling, но в отдельном потоке
         self.loop.run_until_complete(self.app.updater.start_polling())
         self.loop.run_forever()
