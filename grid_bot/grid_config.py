@@ -34,6 +34,7 @@ BYBIT_DEMO = os.getenv("BYBIT_DEMO", "False").lower() == "true"
 # === TELEGRAM ===
 TG_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 TG_CHANNEL = os.getenv("TELEGRAM_CHANNEL")
+TG_ADMIN_ID = os.getenv("TELEGRAM_ADMIN_ID")
 
 # === SCANNER & GRID PARAMETERS ===
 # AUTO = сканер запускает топ пар, иначе (например ETHUSDT) = фокус на одну.

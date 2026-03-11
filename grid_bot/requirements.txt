@@ -1,3 +1,4 @@
 pybit>=5.6.0
 python-dotenv
 requests
+python-telegram-bot

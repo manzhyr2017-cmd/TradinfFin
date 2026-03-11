@@ -29,7 +29,7 @@ from logger import logger
 class GridBotMulti:
     def __init__(self):
         self.executor = GridExecutor()
-        self.telegram = GridTelegram()
+        self.telegram = GridTelegram(self)
         
         # symbol -> GridEngine
         self.engines: Dict[str, GridEngine] = {}
