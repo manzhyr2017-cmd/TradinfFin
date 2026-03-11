@@ -36,6 +36,7 @@ class GridTelegram:
         asyncio.set_event_loop(self.loop)
         # Инициализируем приложение правильно
         self.loop.run_until_complete(self.app.initialize())
+        self.loop.run_until_complete(self.app.start())
         # Используем run_polling, но в отдельном потоке
         self.loop.run_until_complete(self.app.updater.start_polling())
         self.loop.run_forever()
@@ -85,8 +86,9 @@ class GridTelegram:
         await update.message.reply_html(text)
 
     def _is_admin(self, update: Update) -> bool:
-        if not cfg.TG_ADMIN_ID: return True # Если ID не задан, разрешаем (для обратной совместимости)
         user_id = str(update.effective_user.id)
+        logger.info(f"[GridTG] Incoming command from User ID: {user_id}")
+        if not cfg.TG_ADMIN_ID: return True 
         if user_id != str(cfg.TG_ADMIN_ID):
             logger.warning(f"[GridTG] Unauthorized command from {user_id}")
             return False
