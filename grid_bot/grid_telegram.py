@@ -33,9 +33,10 @@ class GridTelegram:
             logger.warning("[GridTG] Telegram disabled (no token/channel)")
 
     def _run_event_loop(self):
-        # Самый надежный способ запустить PTB в отдельном потоке
+        # В PTB 20+ run_polling по умолчанию ставит обработчики сигналов, 
+        # что запрещено в доп. потоках. Отключаем через stop_signals=False.
         asyncio.set_event_loop(self.loop)
-        self.app.run_polling(close_loop=False)
+        self.app.run_polling(close_loop=False, stop_signals=False)
 
     def _setup_handlers(self):
         self.app.add_handler(CommandHandler("start", self._cmd_status))
