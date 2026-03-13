@@ -208,14 +208,21 @@ class GridBotMulti:
 
                 # 3. Глобальные проверки (Drawdown)
                 equity = self.executor.get_equity()
-                has_global_drawdown = False
                 
-                # Проверим общий drawdown или индивидуальный
                 for sym in list(self.engines.keys()):
-                    # Если индивидуальная сетка слила больше чем разрешено - рубим ее
-                    if self.engines[sym].check_max_drawdown(equity, cfg.MAX_DRAWDOWN_PCT): # TODO: needs individual checking ideally
-                        logger.error(f"[{sym}] MAX DRAWDOWN!")
-                        self._stop_symbol(sym, "Max Drawdown Exceeded")
+                    engine = self.engines[sym]
+                    positions = self.executor.get_positions(sym)
+                    
+                    unrealized_pnl = sum(p['unrealized_pnl'] for p in positions)
+                    # Общий PnL сетки = Фиксированный (total_profit) + Плавающий (unrealized)
+                    current_grid_pnl = engine.total_profit + unrealized_pnl
+                    
+                    # Просадка считается от выделенного инвестиционного капитала для этой сетки
+                    if engine.start_balance > 0:
+                        drawdown_pct = (-current_grid_pnl / engine.start_balance) * 100
+                        if drawdown_pct >= cfg.MAX_DRAWDOWN_PCT:
+                            logger.error(f"[{sym}] 🛑 MAX DRAWDOWN REACHED: {drawdown_pct:.2f}% (PnL: ${current_grid_pnl:.2f})")
+                            self._stop_symbol(sym, f"Max Drawdown Exceeded ({drawdown_pct:.1f}%)")
                         
                 # 4. Проверяем Funding Rate каждые N минут
                 if (now - self._last_funding_check).total_seconds() >= 180:
@@ -329,7 +336,19 @@ class GridBotMulti:
         total_pnl = sum(e.total_profit for e in self.engines.values())
         total_trades = sum(e.total_trades for e in self.engines.values())
         
-        logger.info(f"[HEARTBEAT] Equ: ${equity:.2f} | PnL: ${total_pnl:.4f} | Grids: {len(self.engines)}/{cfg.MAX_CONCURRENT_GRIDS}")
+        # Получаем плавающий PnL для лога
+        total_unrealized = 0
+        grid_stats = []
+        for sym, eng in self.engines.items():
+            pos = self.executor.get_positions(sym)
+            unrealized = sum(p['unrealized_pnl'] for p in pos)
+            total_unrealized += unrealized
+            grid_stats.append({
+                'sym': sym, 'pnl': eng.total_profit, 'unrealized': unrealized, 
+                'trades': eng.total_trades, 'range': f"{eng.lower:.4f}-{eng.upper:.4f}"
+            })
+
+        logger.info(f"[HEARTBEAT] Equ: ${equity:.2f} | Realized: ${total_pnl:.2f} | Unrealized: ${total_unrealized:.2f}")
         
         for sym, eng in self.engines.items():
             logger.info(f" - [{sym}] Pnl: ${eng.total_profit:.2f} ({eng.total_trades} t) | Range: {eng.lower:.2f} - {eng.upper:.2f}")

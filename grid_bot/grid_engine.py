@@ -147,8 +147,21 @@ class GridEngine:
             tp_price = round(filled_level.price - step, 4)
             return GridLevel(price=tp_price, side="Buy")
 
-    def record_profit(self, profit: float):
-        self.total_profit += profit
+    def record_profit(self, profit: float, fee_rate: float = 0.001):
+        """
+        Записывает прибыль, вычитая комиссии за вход и выход.
+        fee_rate: 0.001 = 0.1% (стандарт Bybit)
+        """
+        # Весь объем сделки: qty * price. Для сетки это engine.qty_per_level * price.
+        # Но мы получаем уже разницу (step * qty). 
+        # Нам нужно вычесть комиссию за открытие (0.1%) и закрытие (0.1%).
+        # Приблизительно: (BasePrice * Qty * 0.001) + (TPPrice * Qty * 0.001)
+        # Упрощенно вычитаем 0.2% от оборота уровня.
+        estimated_fees = (self.qty_per_level * self.upper / self.count) * 2 * fee_rate 
+        # Точнее: за одну сделку (Buy+Sell) мы платим 2 комиссии.
+        
+        real_profit = profit - estimated_fees
+        self.total_profit += real_profit
         self.total_trades += 1
 
     def should_rebalance(self, current_price: float, threshold: float = 0.8) -> bool:

@@ -78,8 +78,13 @@ class GridTelegram:
         
         for sym, engine in self.main_bot.engines.items():
             price = self.main_bot.executor.get_price(sym)
+            pos = self.main_bot.executor.get_positions(sym)
+            unrealized = sum(p['unrealized_pnl'] for p in pos)
+            
             text += f"💹 <b>{sym}</b>: <code>{price:.4f}</code>\n"
-            text += f"📈 PnL: <code>${engine.total_profit:+.2f}</code> | 🔄 {engine.total_trades} tr.\n"
+            text += f"💵 Realized: <code>${engine.total_profit:+.2f}</code>\n"
+            text += f"⏳ Floating: <code>${unrealized:+.2f}</code>\n"
+            text += f"🔄 Trades: {engine.total_trades}\n"
             text += f"{'─'*20}\n"
             
         await update.message.reply_html(text)
@@ -131,13 +136,42 @@ class GridTelegram:
             f"📊 Total: <b>${total_profit:+.2f}</b> ({total_trades} trades)"
         )
 
+    def send_status(self, symbol: str, price: float, upper: float, lower: float,
+                    total_profit: float, total_trades: int, balance: float, 
+                    active_orders: int, positions: int, uptime: str):
+        """Регулярный Heartbeat-статус в канал"""
+        # Считаем суммарный Unrealized
+        total_unrealized = 0
+        if self.main_bot:
+            for s in self.main_bot.engines:
+                pos = self.main_bot.executor.get_positions(s)
+                total_unrealized += sum(p['unrealized_pnl'] for p in pos)
+
+        self.send(
+            f"💓 <b>GRID HEARTBEAT</b>\n"
+            f"{'═' * 28}\n"
+            f"💰 Equity: <b>${balance:.2f}</b>\n"
+            f"📈 Realized: <b>${total_profit:+.2f}</b>\n"
+            f"⏳ Floating: <b>${total_unrealized:+.2f}</b>\n"
+            f"🔌 Active Grids: <b>{positions}</b>\n"
+            f"📦 Orders: <b>{active_orders}</b>\n"
+            f"⏱ Uptime: <code>{uptime}</code>"
+        )
+
+    def notify_rebalance(self, new_upper: float, new_lower: float, reason: str):
+        self.send(
+            f"⚠️ <b>GRID REBALANCED</b>\n"
+            f"📝 Reason: {reason}\n"
+            f"📐 New Range: <code>{new_lower:.4f} — {new_upper:.4f}</code>"
+        )
+
     def notify_stop(self, reason: str, total_profit: float, total_trades: int,
                     final_balance: float):
         self.send(
             f"🛑 <b>GRID BOT STOPPED</b>\n"
             f"{'═' * 28}\n"
             f"📝 Reason: {reason}\n"
-            f"💰 Total PnL: <b>${total_profit:+.2f}</b>\n"
+            f"💰 Total Realized: <b>${total_profit:+.2f}</b>\n"
             f"📊 Trades: {total_trades}\n"
-            f"💵 Balance: <code>${final_balance:.2f}</code>\n"
+            f"💵 Final Equ: <code>${final_balance:.2f}</code>\n"
         )
