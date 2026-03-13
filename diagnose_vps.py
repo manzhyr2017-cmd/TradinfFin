@@ -2,14 +2,26 @@ import sqlite3
 import os
 from datetime import datetime
 
-DB_PATH = "grid_bot/data/grid_state.db"
+# Проверяем пути и в корне, и в подпапке
+DB_PATHS = [
+    "data/grid_state.db",
+    "grid_bot/data/grid_state.db",
+    "/opt/grid-bot/data/grid_state.db"
+]
+
+def get_db_path():
+    for p in DB_PATHS:
+        if os.path.exists(p):
+            return p
+    return None
 
 def diagnose():
-    if not os.path.exists(DB_PATH):
-        print(f"DB not found at {DB_PATH}")
+    db_path = get_db_path()
+    if not db_path:
+        print(f"❌ База данных не найдена! Проверены пути: {DB_PATHS}")
         return
 
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
     print("=== GRID BOT DIAGNOSTICS ===")
