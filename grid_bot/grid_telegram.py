@@ -82,7 +82,8 @@ class GridTelegram:
             unrealized = sum(p['unrealized_pnl'] for p in pos)
             
             text += f"💹 <b>{sym}</b>: <code>{price:.4f}</code>\n"
-            text += f"💵 Realized: <code>${engine.total_profit:+.2f}</code>\n"
+            text += f"💵 Net Profit: <b>${engine.realized_profit:+.2f}</b>\n"
+            text += f"💸 Fees Paid: <code>${engine.fees_paid:.2f}</code>\n"
             text += f"⏳ Floating: <code>${unrealized:+.2f}</code>\n"
             text += f"🔄 Trades: {engine.total_trades}\n"
             text += f"{'─'*20}\n"
@@ -130,10 +131,12 @@ class GridTelegram:
             f"🎯 TP {tp_side} → <code>{tp_price:.4f}</code>"
         )
 
-    def notify_profit(self, profit: float, total_profit: float, total_trades: int):
+    def notify_profit(self, profit: float, total_profit: float, total_trades: int, realized_profit: float = 0):
+        real_label = f" (Net: <b>${realized_profit:+.2f}</b>)" if realized_profit != 0 else ""
         self.send(
             f"💰 <b>Grid Profit: ${profit:+.4f}</b>\n"
-            f"📊 Total: <b>${total_profit:+.2f}</b> ({total_trades} trades)"
+            f"📊 Total Gross: <b>${total_profit:+.2f}</b>{real_label}\n"
+            f"🔄 Trades: {total_trades}"
         )
 
     def send_status(self, symbol: str, price: float, upper: float, lower: float,
@@ -147,11 +150,19 @@ class GridTelegram:
                 pos = self.main_bot.executor.get_positions(s)
                 total_unrealized += sum(p['unrealized_pnl'] for p in pos)
 
+        # Считаем суммарный Realized Net и Fees
+        total_realized_net = 0
+        total_fees = 0
+        if self.main_bot:
+            total_realized_net = sum(e.realized_profit for e in self.main_bot.engines.values())
+            total_fees = sum(e.fees_paid for e in self.main_bot.engines.values())
+
         self.send(
             f"💓 <b>GRID HEARTBEAT</b>\n"
             f"{'═' * 28}\n"
             f"💰 Equity: <b>${balance:.2f}</b>\n"
-            f"📈 Realized: <b>${total_profit:+.2f}</b>\n"
+            f"📈 Net Profit: <b>${total_realized_net:+.2f}</b>\n"
+            f"💸 Total Fees: <code>${total_fees:.2f}</code>\n"
             f"⏳ Floating: <b>${total_unrealized:+.2f}</b>\n"
             f"🔌 Active Grids: <b>{positions}</b>\n"
             f"📦 Orders: <b>{active_orders}</b>\n"

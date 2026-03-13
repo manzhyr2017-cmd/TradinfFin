@@ -33,8 +33,10 @@ class GridState:
     grid_count: int = 0
     qty_per_level: float = 0
     levels: List[dict] = field(default_factory=list)
-    total_profit: float = 0
     total_trades: int = 0
+    realized_profit: float = 0 # Чистая прибыль после комиссий
+    fees_paid: float = 0
+    max_equity_seen: float = 0 # Для трейлинг-стопа профита
     start_balance: float = 0
     started_at: str = ""
     last_update: str = ""
@@ -49,9 +51,14 @@ class GridEngine:
         self.mode = mode
         self.levels: List[GridLevel] = []
         self.qty_per_level: float = 0
-        self.total_profit: float = 0.0
+        self.qty_per_level: float = 0
+        self.total_profit: float = 0.0 # Это грязная база (step * qty)
+        self.realized_profit: float = 0.0 # Это чистая (profit - fees)
+        self.fees_paid: float = 0.0
+        self.max_equity_seen: float = 0.0
         self.total_trades: int = 0
         self.start_balance: float = start_balance
+        self.last_fill_at: str = datetime.now(timezone.utc).isoformat()
         
         # Разрешаем пути до папки data/
         if not os.path.exists(os.path.dirname(db_path)) and os.path.dirname(db_path):
@@ -72,8 +79,12 @@ class GridEngine:
                         lower REAL,
                         qty_per_level REAL,
                         total_profit REAL,
+                        realized_profit REAL,
+                        fees_paid REAL,
+                        max_equity_seen REAL,
                         total_trades INTEGER,
                         start_balance REAL,
+                        last_fill_at TEXT,
                         updated_at TEXT
                     )
                 ''')
@@ -89,6 +100,23 @@ class GridEngine:
                         PRIMARY KEY (symbol, price, side)
                     )
                 ''')
+                
+                # Миграция: Проверяем наличие новых колонок
+                cursor.execute("PRAGMA table_info(grid_state)")
+                columns = [col[1] for col in cursor.fetchall()]
+                
+                new_cols = {
+                    "realized_profit": "REAL DEFAULT 0",
+                    "fees_paid": "REAL DEFAULT 0",
+                    "max_equity_seen": "REAL DEFAULT 0",
+                    "last_fill_at": "TEXT"
+                }
+                
+                for col_name, col_def in new_cols.items():
+                    if col_name not in columns:
+                        logger.info(f"[DB] Миграция: Добавление колонки {col_name}")
+                        cursor.execute(f"ALTER TABLE grid_state ADD COLUMN {col_name} {col_def}")
+                
                 conn.commit()
         except Exception as e:
             logger.error(f"[{self.symbol}] Ошибка инициализации БД: {e}")
@@ -147,22 +175,44 @@ class GridEngine:
             tp_price = round(filled_level.price - step, 4)
             return GridLevel(price=tp_price, side="Buy")
 
-    def record_profit(self, profit: float, fee_rate: float = 0.001):
+    def record_profit(self, profit: float, fee_rate: float = 0.0006):
         """
-        Записывает прибыль, вычитая комиссии за вход и выход.
-        fee_rate: 0.001 = 0.1% (стандарт Bybit)
+        Записывает прибыль и реально считает комиссию Bybit (0.06% для Taker).
         """
-        # Весь объем сделки: qty * price. Для сетки это engine.qty_per_level * price.
-        # Но мы получаем уже разницу (step * qty). 
-        # Нам нужно вычесть комиссию за открытие (0.1%) и закрытие (0.1%).
-        # Приблизительно: (BasePrice * Qty * 0.001) + (TPPrice * Qty * 0.001)
-        # Упрощенно вычитаем 0.2% от оборота уровня.
-        estimated_fees = (self.qty_per_level * self.upper / self.count) * 2 * fee_rate 
-        # Точнее: за одну сделку (Buy+Sell) мы платим 2 комиссии.
+        # При исполнении уровня Buy и затем Sell мы платим комиссию дважды.
+        # Оборот одной "петли" (Buy+Sell) примерно: qty * price * 2
+        trade_volume = self.qty_per_level * (self.upper + self.lower) / 2
+        fees = trade_volume * fee_rate * 2
         
-        real_profit = profit - estimated_fees
-        self.total_profit += real_profit
+        self.total_profit += profit
+        self.fees_paid += fees
+        self.realized_profit += (profit - fees)
         self.total_trades += 1
+        self.last_fill_at = datetime.now(timezone.utc).isoformat()
+        
+        logger.debug(f"[{self.symbol}] Profit: +${profit:.2f}, Fee: -${fees:.2f}, Net: +${profit-fees:.2f}")
+
+    def update_max_equity(self, current_equity: float):
+        if current_equity > self.max_equity_seen:
+            self.max_equity_seen = current_equity
+
+    def check_profit_protection(self, current_equity: float, threshold_pct: float, cutoff_pct: float) -> bool:
+        """
+        Если профит вырос выше 5%, и упал на 20% от пика - пора закрывать.
+        """
+        if self.start_balance <= 0 or self.max_equity_seen <= self.start_balance:
+            return False
+            
+        profit_pct = (self.max_equity_seen - self.start_balance) / self.start_balance * 100
+        if profit_pct < threshold_pct:
+            return False
+            
+        peak_profit = self.max_equity_seen - self.start_balance
+        current_profit = current_equity - self.start_balance
+        
+        if current_profit < peak_profit * (1 - cutoff_pct / 100):
+            return True
+        return False
 
     def should_rebalance(self, current_price: float, threshold: float = 0.8) -> bool:
         total_range = self.upper - self.lower
@@ -208,10 +258,11 @@ class GridEngine:
                 
                 cursor.execute('''
                     INSERT OR REPLACE INTO grid_state 
-                    (symbol, upper, lower, qty_per_level, total_profit, total_trades, start_balance, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    (symbol, upper, lower, qty_per_level, total_profit, realized_profit, fees_paid, max_equity_seen, total_trades, start_balance, last_fill_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ''', (self.symbol, self.upper, self.lower, self.qty_per_level, 
-                      self.total_profit, self.total_trades, self.start_balance, datetime.now(timezone.utc).isoformat()))
+                      self.total_profit, self.realized_profit, self.fees_paid, self.max_equity_seen,
+                      self.total_trades, self.start_balance, self.last_fill_at, datetime.now(timezone.utc).isoformat()))
                 
                 cursor.execute('DELETE FROM grid_levels WHERE symbol = ?', (self.symbol,))
                 for lvl in self.levels:
@@ -231,12 +282,12 @@ class GridEngine:
         try:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
-                cursor.execute('SELECT upper, lower, qty_per_level, total_profit, total_trades, start_balance FROM grid_state WHERE symbol=?', (self.symbol,))
+                cursor.execute('SELECT upper, lower, qty_per_level, total_profit, realized_profit, fees_paid, max_equity_seen, total_trades, start_balance, last_fill_at FROM grid_state WHERE symbol=?', (self.symbol,))
                 state_row = cursor.fetchone()
                 
                 if not state_row: return False
                     
-                self.upper, self.lower, self.qty_per_level, self.total_profit, self.total_trades, self.start_balance = state_row
+                self.upper, self.lower, self.qty_per_level, self.total_profit, self.realized_profit, self.fees_paid, self.max_equity_seen, self.total_trades, self.start_balance, self.last_fill_at = state_row
                 
                 cursor.execute('SELECT price, side, status, order_id, filled_at, pair_order_id FROM grid_levels WHERE symbol=? ORDER BY price DESC', (self.symbol,))
                 level_rows = cursor.fetchall()

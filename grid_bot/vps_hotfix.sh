@@ -18,9 +18,10 @@ echo "✅ Бэкап старого кода создан в $BACKUP_DIR"
 
 cp main_grid.py $BOTDIR/
 cp grid_engine.py $BOTDIR/
+cp grid_config.py $BOTDIR/
+cp grid_executor.py $BOTDIR/
 cp grid_telegram.py $BOTDIR/
-cp .env $BOTDIR/
-cp diagnose_vps.py $BOTDIR/
+cp logger.py $BOTDIR/
 
 echo "✅ Файлы обновлены (база данных не затронута)."
 

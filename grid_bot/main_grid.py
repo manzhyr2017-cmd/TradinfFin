@@ -68,14 +68,34 @@ class GridBotMulti:
     def _start_grid_for_symbol(self, symbol: str, is_recovery: bool = False):
         """Пытается создать и запустить сетку для одной пары"""
         if symbol in self.engines: return
+        
+        # 0. Проверка лимита на сектор (корреляция)
+        if not is_recovery:
+            sector = self._get_sector(symbol)
+            count_in_sector = sum(1 for s in self.engines if self._get_sector(s) == sector)
+            if count_in_sector >= cfg.MAX_SYMBOLS_PER_SECTOR:
+                logger.warning(f"[{symbol}] Sector '{sector}' Limit Reached ({count_in_sector}/{cfg.MAX_SYMBOLS_PER_SECTOR}). Skipping.")
+                return
 
-        # 1. Узнаем цену
+        # 1. Защита от Flash Crash (если не восстановление)
+        if not is_recovery and cfg.FLASH_CRASH_PROTECTION:
+            if self._is_market_crashing():
+                logger.warning(f"[{symbol}] MARKET CRASH DETECTED. Stopping fresh entries.")
+                return
+
+        # 2. Узнаем цену и спред
         price = self.executor.get_price(symbol)
         if price <= 0:
             logger.error(f"[{symbol}] Ошибка получения цены")
             return
 
-        # 2. Сколько выделить баланса?
+        if not is_recovery:
+            spread = self.executor.get_orderbook_spread(symbol)
+            if spread > cfg.MAX_SPREAD_PCT:
+                logger.warning(f"[{symbol}] High Spread {spread:.2f}% > {cfg.MAX_SPREAD_PCT}%. Skipping.")
+                return
+
+        # 3. Сколько выделить баланса?
         total_balance = self.executor.get_balance()
         if cfg.INVESTMENT > 0 and cfg.SYMBOL != "AUTO":
             # Ручной режим с жестко заданной суммой
@@ -191,20 +211,47 @@ class GridBotMulti:
                         for scan_sym in top_pairs:
                             if len(self.engines) >= cfg.MAX_CONCURRENT_GRIDS: break
                             if scan_sym not in self.engines:
+                                # Diversity Check: не берем слишком много похожих монет (по префиксу)
+                                sector = scan_sym[:3]
+                                sector_count = sum(1 for s in self.engines.keys() if s.startswith(sector))
+                                if sector_count >= cfg.MAX_SYMBOLS_PER_SECTOR:
+                                    logger.debug(f"[Сканер] Слишком много монет сектора {sector}. Пропускаем {scan_sym}.")
+                                    continue
+
                                 logger.info(f"[Сканер] Обнаружена волатильная пара: {scan_sym}, попытка входа...")
                                 self._start_grid_for_symbol(scan_sym)
 
                 # 2. Обслуживаем каждую работающую сетку
                 for sym in list(self.engines.keys()):
-                    engine = self.engines[sym]
-                    
-                    self._check_fills_for_symbol(sym, engine)
-                    
-                    price = self.executor.get_price(sym)
-                    if price > 0 and engine.should_rebalance(price, cfg.REBALANCE_THRESHOLD):
-                        logger.info(f"[{sym}] ⚠️ Цена {price} вышла из диапазона. Rebalance!")
-                        self._do_rebalance_for_symbol(sym, engine, price)
-                        continue
+                    try:
+                        engine = self.engines[sym]
+                        
+                        self._check_fills_for_symbol(sym, engine)
+                        
+                        price = self.executor.get_price(sym)
+                        if price <= 0: continue
+
+                        # 2.1 Проверка Trailing (если цена ушла далеко без ордеров)
+                        if cfg.TRAILING_GRID_ENABLED:
+                            center = (engine.upper + engine.lower) / 2
+                            deviation = abs(price - center) / center * 100
+                            if deviation > cfg.TRAILING_DEVIATION_PCT:
+                                 # Проверяем, нет ли заполненных уровней. Если сетка "чистая", можно её двигать.
+                                 filled_count = sum(1 for l in engine.levels if l.status == "filled")
+                                 if filled_count == 0:
+                                     logger.info(f"[{sym}] Trailing: Цена ушла на {deviation:.1f}%. Сдвигаем сетку за ценой.")
+                                     self._do_rebalance_for_symbol(sym, engine, price)
+                                     continue
+
+                        # 2.2 Обычный Rebalance (выход за границы)
+                        if engine.should_rebalance(price, cfg.REBALANCE_THRESHOLD):
+                            logger.info(f"[{sym}] ⚠️ Цена {price} вышла из диапазона. Rebalance!")
+                            self._do_rebalance_for_symbol(sym, engine, price)
+                            continue
+                    except Exception as e:
+                        logger.error(f"[{sym}] CRITICAL ERROR in grid loop: {e}")
+                        # Пытаемся сохранить состояние даже при ошибке
+                        if sym in self.engines: self.engines[sym].save_state()
 
                 # 3. Глобальные проверки (Drawdown)
                 equity = self.executor.get_equity()
@@ -215,7 +262,11 @@ class GridBotMulti:
                     
                     unrealized_pnl = sum(p['unrealized_pnl'] for p in positions)
                     # Общий PnL сетки = Фиксированный (total_profit) + Плавающий (unrealized)
-                    current_grid_pnl = engine.total_profit + unrealized_pnl
+                    current_grid_pnl = engine.realized_profit + unrealized_pnl
+                    current_equity = engine.start_balance + current_grid_pnl
+                    
+                    # Обновляем максимум для защиты прибыли
+                    engine.update_max_equity(current_equity)
                     
                     # Просадка считается от выделенного инвестиционного капитала для этой сетки
                     if engine.start_balance > 0:
@@ -223,6 +274,24 @@ class GridBotMulti:
                         if drawdown_pct >= cfg.MAX_DRAWDOWN_PCT:
                             logger.error(f"[{sym}] 🛑 MAX DRAWDOWN REACHED: {drawdown_pct:.2f}% (PnL: ${current_grid_pnl:.2f})")
                             self._stop_symbol(sym, f"Max Drawdown Exceeded ({drawdown_pct:.1f}%)")
+                            continue
+
+                        # Защита накопленной прибыли
+                        if engine.check_profit_protection(current_equity, cfg.PROFIT_TRAIILING_THRESHOLD, cfg.PROFIT_DRAWDOWN_CUTOFF):
+                            logger.info(f"[{sym}] 💰 PROFIT PROTECTION: Фиксируем прибыль на откате.")
+                            self._stop_symbol(sym, "Profit Protection Triggered")
+                            continue
+
+                        # ТАЙМ-СТОП (Inactivity Check)
+                        if engine.last_fill_at:
+                            last_fill = datetime.fromisoformat(engine.last_fill_at)
+                            if last_fill.tzinfo is None: last_fill = last_fill.replace(tzinfo=timezone.utc)
+                            
+                            hours_inactive = (datetime.now(timezone.utc) - last_fill).total_seconds() / 3600
+                            if hours_inactive >= cfg.GRID_INACTIVITY_CLOSE_HOURS:
+                                logger.info(f"[{sym}] ⏳ TIME-STOP: Сеть неактивна {hours_inactive:.1f}ч. Закрываем.")
+                                self._stop_symbol(sym, f"Time-Stop (Inactive {int(hours_inactive)}h)")
+                                continue
                         
                 # 4. Проверяем Funding Rate каждые N минут
                 if (now - self._last_funding_check).total_seconds() >= 180:
@@ -287,7 +356,8 @@ class GridBotMulti:
 
                     if engine.total_trades % 5 == 0:
                         self.telegram.notify_profit(
-                            profit=approx_profit, total_profit=engine.total_profit, total_trades=engine.total_trades
+                            profit=approx_profit, total_profit=engine.total_profit, 
+                            total_trades=engine.total_trades, realized_profit=engine.realized_profit
                         )
 
     def _do_rebalance_for_symbol(self, symbol: str, engine: GridEngine, new_price: float):
@@ -378,6 +448,39 @@ class GridBotMulti:
             # Удаляем из оперативной памяти 
             # (чтобы она не мешала сканеру брать новые, или скажем удалить её из БД - по идее нам просто не нужно ее больше трекать)
             self._remove_grid(symbol)
+
+    def _get_sector(self, symbol: str) -> str:
+        """Определяет 'сектор' монеты для диверсификации"""
+        # Простая логика: первые 3-4 буквы часто определяют экосистему или тип (PEPE, SHIB, DOGE -> MEME-ish)
+        # Но лучше использовать префиксы или карту.
+        memes = ["DOGE", "SHIB", "PEPE", "FLOKI", "BONK", "WIF", "MEME"]
+        ai = ["FET", "OCEAN", "AGIX", "RENDER", "NEAR"]
+        
+        for m in memes:
+            if symbol.startswith(m): return "MEME"
+        for a in ai:
+            if symbol.startswith(a): return "AI"
+            
+        # По умолчанию - первые 3 символа как группа
+        return symbol[:3]
+
+    def _is_market_crashing(self) -> bool:
+        """Проверяет, падает ли BTC (или рынок вообще) слишком быстро"""
+        try:
+            # Используем BTCUSDT как индикатор рынка
+            klines = self.executor.get_kline("BTCUSDT", interval="15", limit=1)
+            if not klines: return False
+            
+            # Сравниваем Open и Close последней 15м свечи
+            open_p = float(klines[0][1])
+            close_p = float(klines[0][4])
+            
+            drop = (open_p - close_p) / open_p * 100
+            if drop >= cfg.CRASH_THRESHOLD_PCT:
+                return True
+        except Exception:
+            pass
+        return False
 
     def _handle_shutdown(self, signum, frame):
         if not self.running: return

@@ -32,18 +32,63 @@ class GridExecutor:
         mode = "DEMO" if cfg.BYBIT_DEMO else ("TESTNET" if cfg.TESTNET else "MAINNET")
         logger.info(f"[GridExecutor] Connected to Bybit ({mode})")
 
+    def _call_api(self, method, *args, **kwargs):
+        """
+        Универсальная обертка для вызовов API с обработкой ошибок и ретраями.
+        """
+        max_retries = 3
+        retry_delay = 1.0 # секунд
+        
+        for attempt in range(max_retries):
+            try:
+                resp = method(*args, **kwargs)
+                
+                # Код 10001 - превышение лимита запросов (Rate Limit)
+                if resp.get('retCode') == 10001:
+                    logger.warning(f"[GridExecutor] Rate Limited. Waiting {retry_delay}s... (Attempt {attempt+1})")
+                    time.sleep(retry_delay * (attempt + 1))
+                    continue
+                
+                return resp
+            except Exception as e:
+                # Ошибки сети или таймауты
+                if attempt < max_retries - 1:
+                    logger.warning(f"[GridExecutor] API Error: {e}. Retrying... ({attempt+1})")
+                    time.sleep(retry_delay)
+                else:
+                    logger.error(f"[GridExecutor] API Fatal Error after {max_retries} attempts: {e}")
+                    raise e
+        return {'retCode': -1, 'retMsg': 'Max retries reached'}
+
     # === Market Data ===
 
     def get_price(self, symbol: str = None) -> float:
         """Текущая цена символа"""
         symbol = symbol or cfg.SYMBOL
         try:
-            resp = self.public_session.get_tickers(category=cfg.CATEGORY, symbol=symbol)
+            resp = self._call_api(self.public_session.get_tickers, category=cfg.CATEGORY, symbol=symbol)
             if resp['retCode'] == 0:
                 return float(resp['result']['list'][0]['lastPrice'])
         except Exception as e:
             logger.error(f"[GridExecutor] Error getting price: {e}")
         return 0.0
+
+    def get_orderbook_spread(self, symbol: str) -> float:
+        """Возвращает спред между bid и ask в процентах"""
+        try:
+            resp = self._call_api(self.public_session.get_orderbook, category=cfg.CATEGORY, symbol=symbol, limit=1)
+            if resp['retCode'] == 0:
+                bids = resp['result']['b']
+                asks = resp['result']['a']
+                if bids and asks:
+                    best_bid = float(bids[0][0])
+                    best_ask = float(asks[0][0])
+                    if best_bid > 0:
+                        spread = (best_ask - best_bid) / best_bid * 100
+                        return spread
+        except Exception as e:
+            logger.error(f"[GridExecutor] Error getting spread: {e}")
+        return 100.0 # Огромный спред в случае ошибки
 
     def get_symbol_info(self, symbol: str = None) -> dict:
         """Получает параметры символа: precision, min qty, tick size"""
@@ -51,7 +96,7 @@ class GridExecutor:
         if symbol in self._symbol_cache:
             return self._symbol_cache[symbol]
         try:
-            resp = self.public_session.get_instruments_info(category=cfg.CATEGORY, symbol=symbol)
+            resp = self._call_api(self.public_session.get_instruments_info, category=cfg.CATEGORY, symbol=symbol)
             if resp['retCode'] == 0:
                 info = resp['result']['list'][0]
                 result = {
@@ -78,7 +123,8 @@ class GridExecutor:
         """Fetches recent klines for indicator calculations."""
         symbol = symbol or cfg.SYMBOL
         try:
-            resp = self.public_session.get_kline(
+            resp = self._call_api(
+                self.public_session.get_kline,
                 category=cfg.CATEGORY,
                 symbol=symbol,
                 interval=interval,
@@ -146,7 +192,7 @@ class GridExecutor:
         """Fetches the current funding rate for the symbol."""
         symbol = symbol or cfg.SYMBOL
         try:
-            resp = self.session.get_tickers(category=cfg.CATEGORY, symbol=symbol)
+            resp = self._call_api(self.session.get_tickers, category=cfg.CATEGORY, symbol=symbol)
             if resp['retCode'] == 0:
                 list_data = resp['result'].get('list', [])
                 if list_data:
@@ -158,7 +204,7 @@ class GridExecutor:
     def get_top_volatile_pairs(self, limit: int = 10, min_volume: float = 10_000_000) -> list:
         """Получает топ самых волатильных пар за 24 часа"""
         try:
-            resp = self.public_session.get_tickers(category=cfg.CATEGORY)
+            resp = self._call_api(self.public_session.get_tickers, category=cfg.CATEGORY)
             if resp['retCode'] == 0:
                 tickers = resp['result']['list']
                 valid_pairs = []
@@ -186,7 +232,7 @@ class GridExecutor:
         """Доступный баланс USDT"""
         try:
             for acc_type in ["UNIFIED", "CONTRACT"]:
-                resp = self.session.get_wallet_balance(accountType=acc_type, coin="USDT")
+                resp = self._call_api(self.session.get_wallet_balance, accountType=acc_type, coin="USDT")
                 if resp['retCode'] == 0 and resp['result']['list']:
                     res_data = resp['result']['list'][0]
                     # Log raw data for debug
@@ -214,7 +260,7 @@ class GridExecutor:
         """Полный equity аккаунта (баланс + нереализованный PnL)"""
         try:
             for acc_type in ["UNIFIED", "CONTRACT"]:
-                resp = self.session.get_wallet_balance(accountType=acc_type, coin="USDT")
+                resp = self._call_api(self.session.get_wallet_balance, accountType=acc_type, coin="USDT")
                 if resp['retCode'] == 0 and resp['result']['list']:
                     res = resp['result']['list'][0]
                     eq = res.get('totalEquity') or res.get('totalWalletBalance')
@@ -235,7 +281,8 @@ class GridExecutor:
         symbol = symbol or cfg.SYMBOL
         leverage = leverage or cfg.LEVERAGE
         try:
-            resp = self.session.set_leverage(
+            resp = self._call_api(
+                self.session.set_leverage,
                 category=cfg.CATEGORY,
                 symbol=symbol,
                 buyLeverage=str(leverage),
@@ -283,7 +330,7 @@ class GridExecutor:
             params['reduceOnly'] = True
 
         try:
-            resp = self.session.place_order(**params)
+            resp = self._call_api(self.session.place_order, **params)
             if resp['retCode'] == 0:
                 oid = resp['result']['orderId']
                 logger.info(f"[GridExecutor] ✅ {side} {qty} {symbol} @ {price} → {oid[:8]}...")
@@ -298,7 +345,8 @@ class GridExecutor:
     def cancel_order(self, symbol: str, order_id: str) -> bool:
         """Отменяет конкретный ордер"""
         try:
-            resp = self.session.cancel_order(
+            resp = self._call_api(
+                self.session.cancel_order,
                 category=cfg.CATEGORY,
                 symbol=symbol,
                 orderId=order_id
@@ -317,7 +365,8 @@ class GridExecutor:
         """Отменяет ВСЕ ордера по символу"""
         symbol = symbol or cfg.SYMBOL
         try:
-            resp = self.session.cancel_all_orders(
+            resp = self._call_api(
+                self.session.cancel_all_orders,
                 category=cfg.CATEGORY,
                 symbol=symbol
             )
@@ -335,7 +384,8 @@ class GridExecutor:
         """Список активных ордеров"""
         symbol = symbol or cfg.SYMBOL
         try:
-            resp = self.session.get_open_orders(
+            resp = self._call_api(
+                self.session.get_open_orders,
                 category=cfg.CATEGORY,
                 symbol=symbol,
                 limit=50
@@ -361,7 +411,8 @@ class GridExecutor:
         """Текущие открытые позиции"""
         symbol = symbol or cfg.SYMBOL
         try:
-            resp = self.session.get_positions(
+            resp = self._call_api(
+                self.session.get_positions,
                 category=cfg.CATEGORY,
                 symbol=symbol
             )

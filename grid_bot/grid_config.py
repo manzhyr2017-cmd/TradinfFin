@@ -76,6 +76,23 @@ REBALANCE_THRESHOLD = float(os.getenv("REBALANCE_THRESHOLD", "0.8"))
 GRID_MODE = os.getenv("GRID_MODE", "neutral")
 HEARTBEAT_INTERVAL = int(os.getenv("HEARTBEAT_INTERVAL", "900"))  
 
+# --- NEW: Advanced Features ---
+TRAILING_GRID_ENABLED = os.getenv("TRAILING_GRID_ENABLED", "True").lower() == "true"
+TRAILING_DEVIATION_PCT = float(os.getenv("TRAILING_DEVIATION_PCT", "1.5")) # Если цена ушла дальше этого % от центра сетки, двигаем её
+
+# Лимиты на диверсификацию (предотвращение захода во все мемы или все гейминг сразу)
+MAX_SYMBOLS_PER_SECTOR = int(os.getenv("MAX_SYMBOLS_PER_SECTOR", "2")) 
+GRID_INACTIVITY_CLOSE_HOURS = int(os.getenv("GRID_INACTIVITY_CLOSE_HOURS", "24")) # Закрывать сетку через 24ч бездействия
+
+# Защита накопленной прибыли (Trailling Stop-Loss для всей сетки)
+PROFIT_TRAIILING_THRESHOLD = float(os.getenv("PROFIT_TRAIILING_THRESHOLD", "5.0")) # Начинаем следить при 5% прибыли
+PROFIT_DRAWDOWN_CUTOFF = float(os.getenv("PROFIT_DRAWDOWN_CUTOFF", "20.0")) # Закрываем, если профит упал на 20% от максимума
+
+# --- NEW: VPS Safety Guards ---
+MAX_SPREAD_PCT = float(os.getenv("MAX_SPREAD_PCT", "0.3")) # Не входим, если спред > 0.3% (защита от неликвида)
+FLASH_CRASH_PROTECTION = os.getenv("FLASH_CRASH_PROTECTION", "True").lower() == "true"
+CRASH_THRESHOLD_PCT = float(os.getenv("CRASH_THRESHOLD_PCT", "5.0")) # Если BTC падает более чем на 5% за 15м, пауза entries
+
 STATE_FILE = str(script_dir / "data" / "grid_state.db")
 
 mode = "DEMO" if BYBIT_DEMO else ("TESTNET" if TESTNET else "MAINNET")
