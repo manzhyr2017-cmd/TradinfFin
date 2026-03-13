@@ -51,6 +51,11 @@ class GridExecutor:
                 
                 return resp
             except Exception as e:
+                # Специальная обработка: если плечо уже установлено, Bybit кидает ошибку. Это не повод для ретраев.
+                err_msg = str(e).lower()
+                if "leverage not modified" in err_msg or "110043" in err_msg:
+                    raise e # Пробрасываем выше, там это обработано как debug
+                
                 # Ошибки сети или таймауты
                 if attempt < max_retries - 1:
                     logger.warning(f"[GridExecutor] API Error: {e}. Retrying... ({attempt+1})")
