@@ -60,6 +60,10 @@ class GridEngine:
         self.start_balance: float = start_balance
         self.last_fill_at: str = datetime.now(timezone.utc).isoformat()
         
+        # Инвентаризация (для честного PnL)
+        self.current_pos: float = 0.0
+        self.avg_entry: float = 0.0
+        
         # Разрешаем пути до папки data/
         if not os.path.exists(os.path.dirname(db_path)) and os.path.dirname(db_path):
             os.makedirs(os.path.dirname(db_path), exist_ok=True)
@@ -109,7 +113,9 @@ class GridEngine:
                     "realized_profit": "REAL DEFAULT 0",
                     "fees_paid": "REAL DEFAULT 0",
                     "max_equity_seen": "REAL DEFAULT 0",
-                    "last_fill_at": "TEXT"
+                    "last_fill_at": "TEXT",
+                    "current_pos": "REAL DEFAULT 0",
+                    "avg_entry": "REAL DEFAULT 0"
                 }
                 
                 for col_name, col_def in new_cols.items():
@@ -175,22 +181,84 @@ class GridEngine:
             tp_price = round(filled_level.price - step, 4)
             return GridLevel(price=tp_price, side="Buy")
 
-    def record_profit(self, profit: float, fee_rate: float = 0.0006):
+    def record_trade(self, side: str, price: float, qty: float, fee_rate: float = 0.0006):
         """
-        Записывает прибыль и реально считает комиссию Bybit (0.06% для Taker).
+        Честный учет сделки: обновление позиции, средней цены и расчет PnL.
+        Подходит для neutral, long и short сеток.
         """
-        # При исполнении уровня Buy и затем Sell мы платим комиссию дважды.
-        # Оборот одной "петли" (Buy+Sell) примерно: qty * price * 2
-        trade_volume = self.qty_per_level * (self.upper + self.lower) / 2
-        fees = trade_volume * fee_rate * 2
+        pnl = 0.0
         
-        self.total_profit += profit
-        self.fees_paid += fees
-        self.realized_profit += (profit - fees)
+        # 1. Расчет PnL если сделка закрывающая (уменьшает позицию)
+        if side == "Sell":
+            if self.current_pos > 0: # Мы в лонге, фиксируем прибыль/убыток
+                closing_qty = min(qty, self.current_pos)
+                pnl = closing_qty * (price - self.avg_entry)
+        else: # side == "Buy"
+            if self.current_pos < 0: # Мы в шорте (pos отрицательный), фиксируем
+                closing_qty = min(qty, abs(self.current_pos))
+                pnl = closing_qty * (self.avg_entry - price)
+        
+        # 2. Расчет комиссии
+        fee = price * qty * fee_rate
+        
+        # 3. Обновление позиции и средней цены
+        if side == "Buy":
+            if self.current_pos >= 0: # Наращиваем лонг
+                total_qty = self.current_pos + qty
+                if total_qty > 0:
+                    self.avg_entry = (self.avg_entry * self.current_pos + price * qty) / total_qty
+                else:
+                    self.avg_entry = price
+                self.current_pos += qty
+            else: # Сокращаем шорт
+                if qty > abs(self.current_pos): # Переворот в лонг
+                    remaining = qty - abs(self.current_pos)
+                    self.current_pos = remaining
+                    self.avg_entry = price
+                else: # Остаемся в шорте или 0
+                    self.current_pos += qty
+                    if abs(self.current_pos) < 1e-10: 
+                        self.current_pos = 0
+                        self.avg_entry = 0
+        else: # side == "Sell"
+            if self.current_pos <= 0: # Наращиваем шорт
+                total_abs_qty = abs(self.current_pos) + qty
+                if total_abs_qty > 0:
+                    self.avg_entry = (self.avg_entry * abs(self.current_pos) + price * qty) / total_abs_qty
+                else:
+                    self.avg_entry = price
+                self.current_pos -= qty
+            else: # Сокращаем лонг
+                if qty > self.current_pos: # Переворот в шорт
+                    remaining = qty - self.current_pos
+                    self.current_pos = -remaining
+                    self.avg_entry = price
+                else: # Остаемся в лонге или 0
+                    self.current_pos -= qty
+                    if abs(self.current_pos) < 1e-10:
+                        self.current_pos = 0
+                        self.avg_entry = 0
+        
+        # 4. Сохраняем статистику
+        self.total_profit += pnl
+        self.fees_paid += fee
+        self.realized_profit += (pnl - fee)
         self.total_trades += 1
         self.last_fill_at = datetime.now(timezone.utc).isoformat()
         
-        logger.debug(f"[{self.symbol}] Profit: +${profit:.2f}, Fee: -${fees:.2f}, Net: +${profit-fees:.2f}")
+        msg = f"[{self.symbol}] {side} {qty} @ {price}. "
+        if pnl != 0:
+            msg += f"PnL: ${pnl:.2f} (Net: ${pnl-fee:.2f}). "
+        msg += f"Pos: {self.current_pos:.4f} (@{self.avg_entry:.2f})"
+        logger.info(msg)
+
+    def record_manual_pnl(self, pnl: float):
+        """Для случаев принудительного закрытия или ребаланса"""
+        self.realized_profit += pnl
+        self.total_profit += pnl
+        self.current_pos = 0
+        self.avg_entry = 0
+        logger.warning(f"[{self.symbol}] Manual PnL adjusted: ${pnl:.2f}. Position reset.")
 
     def update_max_equity(self, current_equity: float):
         if current_equity > self.max_equity_seen:
@@ -258,11 +326,12 @@ class GridEngine:
                 
                 cursor.execute('''
                     INSERT OR REPLACE INTO grid_state 
-                    (symbol, upper, lower, qty_per_level, total_profit, realized_profit, fees_paid, max_equity_seen, total_trades, start_balance, last_fill_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    (symbol, upper, lower, qty_per_level, total_profit, realized_profit, fees_paid, max_equity_seen, total_trades, start_balance, last_fill_at, updated_at, current_pos, avg_entry)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ''', (self.symbol, self.upper, self.lower, self.qty_per_level, 
                       self.total_profit, self.realized_profit, self.fees_paid, self.max_equity_seen,
-                      self.total_trades, self.start_balance, self.last_fill_at, datetime.now(timezone.utc).isoformat()))
+                      self.total_trades, self.start_balance, self.last_fill_at, datetime.now(timezone.utc).isoformat(),
+                      self.current_pos, self.avg_entry))
                 
                 cursor.execute('DELETE FROM grid_levels WHERE symbol = ?', (self.symbol,))
                 for lvl in self.levels:
@@ -282,12 +351,12 @@ class GridEngine:
         try:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
-                cursor.execute('SELECT upper, lower, qty_per_level, total_profit, realized_profit, fees_paid, max_equity_seen, total_trades, start_balance, last_fill_at FROM grid_state WHERE symbol=?', (self.symbol,))
+                cursor.execute('SELECT upper, lower, qty_per_level, total_profit, realized_profit, fees_paid, max_equity_seen, total_trades, start_balance, last_fill_at, current_pos, avg_entry FROM grid_state WHERE symbol=?', (self.symbol,))
                 state_row = cursor.fetchone()
                 
                 if not state_row: return False
                     
-                self.upper, self.lower, self.qty_per_level, self.total_profit, self.realized_profit, self.fees_paid, self.max_equity_seen, self.total_trades, self.start_balance, self.last_fill_at = state_row
+                self.upper, self.lower, self.qty_per_level, self.total_profit, self.realized_profit, self.fees_paid, self.max_equity_seen, self.total_trades, self.start_balance, self.last_fill_at, self.current_pos, self.avg_entry = state_row
                 
                 cursor.execute('SELECT price, side, status, order_id, filled_at, pair_order_id FROM grid_levels WHERE symbol=? ORDER BY price DESC', (self.symbol,))
                 level_rows = cursor.fetchall()

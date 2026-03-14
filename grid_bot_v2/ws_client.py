@@ -18,7 +18,7 @@ class OrderWebSocket:
 
     def start(self):
         self.ws = WebSocket(
-            testnet=getattr(config, 'TESTNET', False),
+            testnet=config.BYBIT_DEMO,
             channel_type="private",
             api_key=config.BYBIT_API_KEY,
             api_secret=config.BYBIT_API_SECRET,
@@ -64,7 +64,7 @@ class TickerWebSocket:
 
     def start(self):
         self.ws = WebSocket(
-            testnet=getattr(config, 'TESTNET', False),
+            testnet=config.BYBIT_DEMO,
             channel_type="spot",
         )
         self.ws.ticker_stream(symbol=config.SYMBOL, callback=self._handle_ticker)

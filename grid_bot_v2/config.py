@@ -6,6 +6,7 @@ load_dotenv()
 # --- API Configuration ---
 BYBIT_API_KEY = os.getenv('BYBIT_API_KEY', 'YOUR_KEY')
 BYBIT_API_SECRET = os.getenv('BYBIT_API_SECRET', 'YOUR_SECRET')
+BYBIT_DEMO = os.getenv('BYBIT_DEMO', 'false').lower() == 'true'
 
 # --- Bot Configuration ---
 SYMBOL = "ETHUSDT"

@@ -14,7 +14,7 @@ from decimal import Decimal
 class GridBot:
     def __init__(self):
         self.session = HTTP(
-            testnet=False,
+            testnet=BYBIT_DEMO,
             api_key=BYBIT_API_KEY,
             api_secret=BYBIT_API_SECRET,
         )

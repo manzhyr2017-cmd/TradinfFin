@@ -345,20 +345,22 @@ class GridBotMulti:
                     opposite.status = "active"
                     self.active_orders[symbol][new_oid] = opposite
 
-                    step = engine.get_step_size()
-                    approx_profit = step * engine.qty_per_level
-                    engine.record_profit(approx_profit)
-
+                    # Новая честная логика учета сделок
+                    engine.record_trade(side=level.side, price=level.price, qty=engine.qty_per_level)
+                    
+                    if engine.total_trades % 5 == 0:
+                        self.telegram.notify_profit(
+                            profit=0, # В новой логике profit за одну сделку не передаем отдельно
+                            total_profit=engine.total_profit, 
+                            total_trades=engine.total_trades, 
+                            realized_profit=engine.realized_profit
+                        )
+                    
                     self.telegram.notify_fill(
                         side=level.side, price=level.price, qty=engine.qty_per_level,
                         tp_side=opposite.side, tp_price=opposite.price
                     )
 
-                    if engine.total_trades % 5 == 0:
-                        self.telegram.notify_profit(
-                            profit=approx_profit, total_profit=engine.total_profit, 
-                            total_trades=engine.total_trades, realized_profit=engine.realized_profit
-                        )
 
     def _do_rebalance_for_symbol(self, symbol: str, engine: GridEngine, new_price: float):
         self.executor.cancel_all_orders(symbol)
@@ -366,7 +368,15 @@ class GridBotMulti:
         time.sleep(0.5)
 
         if cfg.REBALANCE_MODE.upper() == "CLOSE_ALL":
+            # Фиксируем реализованный убыток при закрытии всех позиций
+            positions = self.executor.get_positions(symbol)
+            rebalance_pnl = sum(p['unrealized_pnl'] for p in positions)
+            
             self.executor.close_all_positions(symbol)
+            
+            if rebalance_pnl != 0:
+                engine.record_manual_pnl(rebalance_pnl)
+                self.telegram.send(f"📉 <b>Rebalance Loss: ${rebalance_pnl:.2f}</b> (Positions closed)")
 
         range_pct = cfg.GRID_RANGE_PCT
         if cfg.USE_ATR_STEP:
