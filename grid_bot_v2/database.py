@@ -24,7 +24,7 @@ class BotState(Base):
 
 # Initialize Database
 from sqlalchemy import create_engine
-engine = create_engine('sqlite:///grid_bot_v2/trading_bot.db')
+engine = create_engine('sqlite:///trading_bot.db')
 Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 session = Session()
