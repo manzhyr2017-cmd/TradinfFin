@@ -1,0 +1,6 @@
+pybit
+pandas
+pandas-ta
+python-dotenv
+requests
+sqlalchemy
