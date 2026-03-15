@@ -1,7 +1,9 @@
 pybit
 pandas
-pandas-ta
 python-dotenv
 requests
 sqlalchemy
-numba
+lightgbm
+scikit-learn
+numpy
+scipy

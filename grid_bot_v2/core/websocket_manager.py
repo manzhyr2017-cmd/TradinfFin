@@ -21,7 +21,7 @@ class OrderWebSocket:
             testnet=config.BYBIT_DEMO,
             channel_type="private",
             api_key=config.BYBIT_API_KEY,
-            api_secret=config.BYBIT_API_SECRET,
+            api_secret=config.BYBIT_API_SECRET
         )
         self.ws.order_stream(callback=self._handle_order_update)
         self._running = True
@@ -65,7 +65,7 @@ class TickerWebSocket:
     def start(self):
         self.ws = WebSocket(
             testnet=config.BYBIT_DEMO,
-            channel_type="spot",
+            channel_type="spot"
         )
         self.ws.ticker_stream(symbol=config.SYMBOL, callback=self._handle_ticker)
         log.info(f"📡 Ticker WS connected: {config.SYMBOL}")
@@ -74,7 +74,8 @@ class TickerWebSocket:
         try:
             if "data" in message:
                 data = message["data"]
-                self.on_price(data.get("lastPrice", "0"), data.get("volume24h", "0"))
+                ts = message.get("ts") # Bybit WS ticker usually has 'ts' field
+                self.on_price(data.get("lastPrice", "0"), data.get("volume24h", "0"), timestamp=ts)
         except Exception as e:
             log.error(f"Ticker WS Error: {e}")
 
