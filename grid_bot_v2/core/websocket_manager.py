@@ -178,20 +178,76 @@ class RobustWebSocket:
                 self._schedule_reconnect()
 
     def _start_heartbeat(self):
+        """
+        Мониторинг здоровья WS.
+        
+        ВАЖНО: private WS может молчать минутами (нет событий).
+        Поэтому для private используем PING проверку,
+        а не "время последнего сообщения".
+        """
         def heartbeat_loop():
             while self._running:
                 try:
-                    time.sleep(5)
-                    if not self._running: break
-                    since_last = (datetime.utcnow() - self._last_message_time).total_seconds()
-                    if since_last > self.heartbeat_timeout:
-                        log.warning(f"💓 Heartbeat: нет данных {since_last:.0f}s → reconnect")
-                        self._schedule_reconnect()
+                    time.sleep(10)
+
+                    if not self._running:
+                        break
+
+                    # ─── Проверка для PUBLIC WS ──────────
+                    # (тикер шлёт данные каждую секунду)
+                    if self.channel_type in ("spot", "linear"):
+                        since_last = (
+                            datetime.utcnow() - self._last_message_time
+                        ).total_seconds()
+
+                        if since_last > self.heartbeat_timeout:
+                            log.warning(
+                                f"💓 [{self.channel_type}] "
+                                f"нет данных {since_last:.0f}s → reconnect"
+                            )
+                            self._schedule_reconnect()
+
+                    # ─── Проверка для PRIVATE WS ─────────
+                    # (может молчать долго — это нормально)
+                    elif self.channel_type == "private":
+                        # Проверяем живость через ping
+                        if not self._check_ws_alive():
+                            log.warning(
+                                f"💓 [private] WS не отвечает → reconnect"
+                            )
+                            self._schedule_reconnect()
+
                 except Exception as e:
                     log.debug(f"Heartbeat error: {e}")
 
-        self._heartbeat_thread = threading.Thread(target=heartbeat_loop, daemon=True, name=f"ws-hb-{self.channel_type}")
+        self._heartbeat_thread = threading.Thread(
+            target=heartbeat_loop,
+            daemon=True,
+            name=f"ws-heartbeat-{self.channel_type}",
+        )
         self._heartbeat_thread.start()
+
+    def _check_ws_alive(self) -> bool:
+        """
+        Проверяем жив ли WebSocket без ожидания данных.
+        Для private WS — проверяем сам объект соединения.
+        """
+        try:
+            if self._ws is None:
+                return False
+
+            # Проверяем внутренний websocket объект pybit
+            if hasattr(self._ws, 'ws') and self._ws.ws:
+                ws_inner = self._ws.ws
+                if hasattr(ws_inner, 'sock') and ws_inner.sock:
+                    return ws_inner.sock.connected
+                # Если нет sock — проверяем по-другому
+                return True
+
+            return self._connected
+
+        except Exception:
+            return False
 
     def _schedule_reconnect(self):
         if not self._running: return
@@ -217,8 +273,16 @@ class RobustWebSocket:
 
 class WebSocketManager:
     def __init__(self):
-        self.private_ws = RobustWebSocket(channel_type="private")
-        self.public_ws = RobustWebSocket(channel_type=config.CATEGORY)
+        # Private WS: НЕ проверяем по данным (ордера редкие)
+        self.private_ws = RobustWebSocket(
+            channel_type="private",
+            heartbeat_timeout_sec=300.0,   # 5 минут (было 30)
+        )
+        # Public WS: проверяем часто (тикер шлёт постоянно)
+        self.public_ws = RobustWebSocket(
+            channel_type="spot",           # config.CATEGORY обычно spot
+            heartbeat_timeout_sec=15.0,    # 15 сек — ок для тикера
+        )
 
         self.last_price: Optional[float] = None
         self.last_bid: Optional[float] = None

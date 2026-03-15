@@ -271,6 +271,16 @@ class MarketSnapshot:
 
 
 @dataclass
+class BrainLevel:
+    """Уровень сетки во внутреннем представлении мозга."""
+    index: int
+    price: Decimal
+    side: str = ""
+    recommended_qty: Decimal = Decimal("0")
+    skewed_price: Decimal = Decimal("0") # Для обратной совместимости с AS
+
+
+@dataclass
 class BrainDecision:
     """
     Решение Master Brain.
@@ -681,7 +691,7 @@ class MasterBrain:
                 lambda: self.timing._analyze_orderbook(),
                 ttl_sec=5,
             )
-            obi = ob_result.get("obi", 0.5)
+            obi = ob_result.get("obi", 0.5) if ob_result else 0.5
         else:
             obi = 0.5
 
@@ -800,19 +810,9 @@ class MasterBrain:
     ) -> TradingMode:
         """
         ТРЕТИЙ УРОВЕНЬ — выбор режима торговли.
-        
-        ЛОГИКА ВЫБОРА:
-        
-        EMERGENCY → если что-то критично сломалось
-        DCA       → если сильный нисходящий тренд
-        SELL_ONLY → если сильный восходящий тренд
-        INFINITY  → если умеренный рост + хороший Hurst
-        ARBITRAGE → если есть межбиржевой спред >0.15%
-        GRID      → если боковик (дефолт)
+        Выбирает режим с гистерезисом (не прыгаем туда-сюда).
         """
-        votes: Dict[TradingMode, int] = {
-            mode: 0 for mode in TradingMode
-        }
+        votes = {mode: 0 for mode in TradingMode}
         reasons = []
 
         # ── Голос 1: ML Режим ─────────────────────────
@@ -828,86 +828,117 @@ class MasterBrain:
                 reasons.append("ML: боковик")
 
         # ── Голос 2: MTF ──────────────────────────────
-        if "downtrend" in snap.mtf_regime.lower():
-            votes[TradingMode.DCA_ACCUMULATE] += 2
-        elif "sideways" in snap.mtf_regime.lower():
-            votes[TradingMode.GRID_STANDARD] += 2
+        if hasattr(snap, 'mtf_regime') and snap.mtf_regime:
+            if "downtrend" in str(snap.mtf_regime).lower():
+                votes[TradingMode.DCA_ACCUMULATE] += 2
+            elif "sideways" in str(snap.mtf_regime).lower():
+                votes[TradingMode.GRID_STANDARD] += 2
 
         # ── Голос 3: RSI + Тренд ──────────────────────
-        if snap.rsi < 30 and snap.trend_strength < -0.3:
-            # Перепродано + нисходящий тренд = DCA
+        if snap.rsi < 30:
             votes[TradingMode.DCA_ACCUMULATE] += 2
-            reasons.append(f"RSI={snap.rsi:.0f} + нисходящий")
-        elif snap.rsi > 70 and snap.trend_strength > 0.3:
-            # Перекуплено + восходящий тренд = только продавать
+            reasons.append(f"RSI={snap.rsi:.0f} перепродано")
+        elif snap.rsi > 70:
             votes[TradingMode.SELL_ONLY] += 2
 
         # ── Голос 4: Hurst ────────────────────────────
         if snap.hurst < 0.4:
-            # Mean-reverting → идеально для грида
             votes[TradingMode.GRID_STANDARD] += 2
-            reasons.append(f"Hurst={snap.hurst:.2f}: mean-revert")
         elif snap.hurst > 0.65:
-            # Trending → грид плохо работает
             votes[TradingMode.GRID_STANDARD] -= 1
-            reasons.append(f"Hurst={snap.hurst:.2f}: trending")
 
-        # ── Голос 5: Funding Rate ─────────────────────
-        if snap.funding_rate > 0.0005:
-            # Много лонгов → скоро коррекция → не покупаем
-            votes[TradingMode.SELL_ONLY] += 1
-            reasons.append(f"Funding={snap.funding_rate:.4%}")
+        # ── Голос 5: Infinity Grid ────────────────────
+        # ТОЛЬКО если цена СИЛЬНО за пределами сетки
+        if self.grid_levels:
+            prices = [float(l.price) for l in self.grid_levels]
+            if prices:
+                upper = max(prices)
+                lower = min(prices)
+                price = float(snap.price)
+                grid_range = upper - lower
+
+                if grid_range > 0:
+                    position = (price - lower) / grid_range * 100
+
+                    # Только если цена ВЫШЕ верхней границы
+                    # (а не просто "близко")
+                    if price > upper * 1.02:   # >2% выше верхней
+                        votes[TradingMode.GRID_INFINITY] += 3
+                        reasons.append(
+                            f"Цена {price:.0f} выше сетки "
+                            f"({upper:.0f})"
+                        )
+                    elif position > 95:
+                        votes[TradingMode.GRID_INFINITY] += 1
 
         # ── Голос 6: Арбитраж ─────────────────────────
-        if hasattr(self, 'arbitrage') and self.arbitrage.is_available():
-            arb_opps = self._get_cached(
-                "arb_check",
-                lambda: self.arbitrage.find_opportunities(),
-                ttl_sec=10,
-            )
-            if arb_opps and any(o.is_actionable for o in arb_opps):
-                votes[TradingMode.ARBITRAGE] += 2
-                reasons.append("Арбитраж доступен")
-
-        # ── Голос 7: Infinity Grid ────────────────────
-        # Включаем если цена близко к верхней границе сетки
-        if self.grid_levels:
-            upper = max(
-                float(l.price) for l in self.grid_levels
-            )
-            if float(snap.price) > upper * 0.95:
-                votes[TradingMode.GRID_INFINITY] += 2
-                reasons.append("Цена близко к верхней границе")
+        if hasattr(self, 'arbitrage') and self.arbitrage and hasattr(self.arbitrage, 'is_available'):
+            try:
+                if self.arbitrage.is_available():
+                    arb_opps = self._get_cached(
+                        "arb_check",
+                        lambda: self.arbitrage.find_opportunities(),
+                        ttl_sec=30,
+                    )
+                    if arb_opps and any(
+                        o.is_actionable for o in arb_opps
+                    ):
+                        votes[TradingMode.ARBITRAGE] += 2
+            except Exception:
+                pass
 
         # ── Финальное решение ─────────────────────────
-        # Берём режим с максимальным числом голосов
         best_mode = max(votes, key=lambda m: votes[m])
         best_votes = votes[best_mode]
 
         # Если нет явного победителя → дефолт GRID
-        if best_votes <= 0:
+        if best_votes <= 1:
             best_mode = TradingMode.GRID_STANDARD
-            reasons.append("Дефолт: боковик")
 
-        # Логируем переключение режима
+        # ══════════════════════════════════════════════
+        #  ГИСТЕРЕЗИС: не переключаем режим слишком часто
+        # ══════════════════════════════════════════════
         if best_mode != self.state.current_mode:
+            time_in_current = (
+                datetime.utcnow() - self.state.last_mode_change
+            ).total_seconds()
+
+            # Минимум 5 минут в текущем режиме
+            # (кроме EMERGENCY — переключаемся сразу)
+            min_mode_duration = 300  # 5 минут
+
+            if (time_in_current < min_mode_duration
+                    and best_mode != TradingMode.EMERGENCY_STOP):
+                # Слишком рано для переключения
+                return self.state.current_mode
+
+            # Нужно минимум 3 голоса для переключения
+            # (избегаем случайных переключений)
+            if best_votes < 3 and best_mode != TradingMode.EMERGENCY_STOP:
+                return self.state.current_mode
+
+            # Переключаемся
             log.info(
                 f"🔄 РЕЖИМ: {self.state.current_mode.value} → "
-                f"{best_mode.value} | "
-                f"Причины: {', '.join(reasons[:3])}"
+                f"{best_mode.value} "
+                f"(голоса: {best_votes}, "
+                f"в текущем: {time_in_current:.0f}s) | "
+                f"{', '.join(reasons[:3])}"
             )
+            self.state.current_mode = best_mode
+            self.state.last_mode_change = datetime.utcnow()
             self.state.mode_history.append(
                 (datetime.utcnow(), best_mode)
             )
-            self.state.current_mode = best_mode
             self.stats["mode_switches"] += 1
 
-            self.notifier.send(
-                f"🔄 Режим: <b>{best_mode.value}</b>\n"
-                f"{', '.join(reasons[:2])}"
-            )
+            if self.notifier:
+                self.notifier.send(
+                    f"🔄 Режим: <b>{best_mode.value}</b>\n"
+                    f"{', '.join(reasons[:2])}"
+                )
 
-        return best_mode
+        return self.state.current_mode
 
     # ═══════════════════════════════════════════════════
     #  УРОВЕНЬ 4: TIMING GATE
@@ -1615,40 +1646,56 @@ class MasterBrain:
         if self.vpvr:
             vp_g = self.vpvr.generate_weighted_grid(float(lower), float(upper), rl_p.grid_levels)
         else:
-            # Простой равномерный грид
-            vp_g = []
-            step = (upper - lower) / (rl_p.grid_levels - 1)
-            for i in range(rl_p.grid_levels):
-                p = lower + i * step
-                vp_g.append(Any()) # Placeholder level object
-                vp_g[-1].price = p
-                vp_g[-1].index = i
+            # Простой равномерный грид — создаем список FLOATS
+            vp_g = list(np.linspace(float(lower), float(upper), rl_p.grid_levels))
 
         if self.liq_heatmap:
             filtered = self.liq_heatmap.filter_grid_levels(vp_g, float(price))
         else:
             filtered = vp_g
 
+        # Проставляем индексы и конвертируем в BrainLevel
+        self.grid_levels = []
+        base_qty = Decimal(str(config.BASE_ORDER_QTY))
+        
+        # Если есть as_model, она уже вернула список объектов (GridLevel)
+        # Если нет - у нас список floats (filtered)
         if self.as_model:
             klines_15m = self._fetch_klines("15", 100)
             p_dec = [Decimal(k[4]) for k in klines_15m] if klines_15m else [price]
-            skewed = self.as_model.skew_grid_levels(filtered, p_dec, price)
+            as_levels = self.as_model.skew_grid_levels(filtered, p_dec, price)
+            for sl in as_levels:
+                self.grid_levels.append(BrainLevel(
+                    index=sl.index,
+                    price=Decimal(str(sl.price)),
+                    side=sl.side,
+                    recommended_qty=sl.recommended_qty,
+                    skewed_price=sl.skewed_price
+                ))
         else:
-            skewed = filtered
+            for i, p in enumerate(sorted(filtered)):
+                p_dec = Decimal(str(p))
+                self.grid_levels.append(BrainLevel(
+                    index=i,
+                    price=p_dec,
+                    side="Buy" if p_dec < price else "Sell",
+                    recommended_qty=base_qty / p_dec if p_dec > 0 else Decimal("0"),
+                    skewed_price=p_dec
+                ))
 
-        self.grid_levels = skewed
-        
         # Сохраняем границы в конфиг для SL
-        config.GRID_LOWER_PRICE = float(lower)
-        config.GRID_UPPER_PRICE = float(upper)
+        lower_p = min(float(l.price) for l in self.grid_levels) if self.grid_levels else 0.0
+        upper_p = max(float(l.price) for l in self.grid_levels) if self.grid_levels else 0.0
+        config.GRID_LOWER_PRICE = lower_p
+        config.GRID_UPPER_PRICE = upper_p
         
         # Определяем режим позиции для учета Hedge Mode
         pos_mode = self.client.get_position_mode()
         
         orders = []
-        for sl in skewed:
-            adj_qty, adj_price = self._adjust_precision(sl.recommended_qty, sl.skewed_price)
-            side = "Buy" if sl.price < price else "Sell"
+        for bl in self.grid_levels:
+            adj_qty, adj_price = self._adjust_precision(bl.recommended_qty, bl.price)
+            side = bl.side
             
             # В Hedge Mode: 1=Buy, 2=Sell. В One-Way: 0.
             p_idx = 0
