@@ -44,7 +44,7 @@ import config
 from core.database import Database
 from core.notifier import TelegramNotifier
 from core.bybit_client import BybitClient
-from core.websocket_manager import OrderWebSocket, TickerWebSocket
+# WebSocketManager управляется внешне из main.py
 
 # Analysis
 from analysis.indicators import TechnicalAnalyzer
