@@ -1,7 +1,10 @@
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
+# Загружаем .env из папки, где лежит config.py
+env_path = Path(__file__).parent / ".env"
+load_dotenv(dotenv_path=env_path)
 
 # --- API Configuration ---
 BYBIT_API_KEY = os.getenv('BYBIT_API_KEY', 'YOUR_KEY')

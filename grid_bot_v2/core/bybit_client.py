@@ -48,6 +48,31 @@ class BybitClient:
             log.error(f"Error fetching price: {e}")
             raise
 
+    def get_instrument_info(self, symbol: Optional[str] = None) -> Dict[str, Any]:
+        """Получить правила торговли (min_qty, tick_size)."""
+        try:
+            response = self.session.get_instruments_info(
+                category=self.category,
+                symbol=symbol or self.symbol
+            )
+            item = response['result']['list'][0]
+            lot_size = item.get('lotSizeFilter', {})
+            price_filter = item.get('priceFilter', {})
+            
+            return {
+                "min_qty": Decimal(str(lot_size.get('minOrderQty', '0'))),
+                "qty_step": Decimal(str(lot_size.get('qtyStep', '0'))),
+                "tick_size": Decimal(str(price_filter.get('tickSize', '0.01'))),
+                "raw": item
+            }
+        except Exception as e:
+            log.error(f"Error fetching instrument info: {e}")
+            return {
+                "min_qty": Decimal("0.001"),
+                "qty_step": Decimal("0.001"),
+                "tick_size": Decimal("0.01")
+            }
+
     def get_orderbook(self, limit: int = 50, symbol: Optional[str] = None) -> Dict[str, Any]:
         """Получить стакан ордеров."""
         try:

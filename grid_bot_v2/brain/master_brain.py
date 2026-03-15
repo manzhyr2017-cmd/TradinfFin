@@ -337,6 +337,7 @@ class MasterBrain:
         self.active_orders: Dict[str, Any] = {}
         self.grid_levels: List[Any] = []
         self.current_symbol = config.SYMBOL
+        self._instrument_info = None
 
         # Кэш последних результатов модулей
         self._cache: Dict[str, Any] = {}
@@ -962,8 +963,9 @@ class MasterBrain:
         level: Any,
     ) -> Optional[str]:
         """СЕДЬМОЙ УРОВЕНЬ — исполнение."""
-        qty_str = str(qty.quantize(Decimal(str(config.MIN_ORDER_QTY))))
-        price_str = str(price.quantize(Decimal("0.01")))
+        adj_qty, adj_price = self._adjust_precision(qty, price)
+        qty_str = str(adj_qty)
+        price_str = str(adj_price)
 
         order_id = self.fee_optimizer.place_postonly_order(
             side=side, qty=qty_str, price=price_str,
@@ -1153,6 +1155,29 @@ class MasterBrain:
 
     # ── Вспомогательные методы ──
 
+    def _adjust_precision(self, qty: Decimal, price: Decimal) -> Tuple[Decimal, Decimal]:
+        """Корректировка объема и цены под правила биржи (Lot Size/Tick Size)."""
+        if not self._instrument_info:
+            self._instrument_info = self.client.get_instrument_info(self.current_symbol)
+            
+        info = self._instrument_info
+        min_qty = info["min_qty"]
+        qty_step = info["qty_step"]
+        tick_size = info["tick_size"]
+        
+        # 1. Округляем цену до шага
+        adj_price = (price / tick_size).quantize(Decimal('1'), rounding="ROUND_HALF_UP") * tick_size
+        
+        # 2. Округляем объем до шага
+        adj_qty = (qty / qty_step).quantize(Decimal('1'), rounding="ROUND_DOWN") * qty_step
+        
+        # 3. Проверка на минимальный объем
+        if adj_qty < min_qty:
+            log.warning(f"⚠️ Qty {adj_qty} < Min Qty {min_qty}. Поднимаем до минимального.")
+            adj_qty = min_qty
+            
+        return adj_qty, adj_price
+
     def _get_cached(self, key, factory, ttl_sec=30):
         now = datetime.utcnow()
         last = self._cache_times.get(key)
@@ -1263,10 +1288,11 @@ class MasterBrain:
         config.GRID_UPPER_PRICE = float(upper)
         orders = []
         for sl in skewed:
+            adj_qty, adj_price = self._adjust_precision(sl.recommended_qty, sl.skewed_price)
             orders.append({
                 "side": "Buy" if sl.price < price else "Sell",
-                "qty": str(sl.recommended_qty.quantize(Decimal(str(config.MIN_ORDER_QTY)))),
-                "price": str(sl.skewed_price.quantize(Decimal("0.01"))),
+                "qty": str(adj_qty),
+                "price": str(adj_price),
             })
         if orders:
             ids, errs = self.batch_manager.place_grid_batch(orders, use_postonly=True)
@@ -1378,5 +1404,6 @@ class MasterBrain:
         
         # 4. Обновляем аналитику
         self.smart_entry = SmartEntryAnalyzer(symbol=new_symbol)
+        self._instrument_info = None
         
         self.notifier.send_message(f"🔄 Бот переключился на {new_symbol}\nПричина: лучший 'боковик' для сетки.")
