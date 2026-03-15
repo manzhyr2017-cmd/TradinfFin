@@ -60,9 +60,9 @@ class BatchOrderManager:
                     if res.get('orderId'):
                         order_ids.append(res['orderId'])
                     else:
-                        ret_msg = res.get('retMsg', 'Unknown error')
-                        ret_code = res.get('retCode', 'No code')
-                        log.error(f"❌ Batch order item failed: {ret_code} - {ret_msg}")
+                        ret_msg = res.get('retMsg') or res.get('msg') or 'Unknown error'
+                        ret_code = res.get('retCode') or res.get('code') or 'No code'
+                        log.error(f"❌ Batch order item failed: {ret_code} - {ret_msg} | Full: {json.dumps(res)}")
                         errors.append(res)
                         
             except Exception as e:

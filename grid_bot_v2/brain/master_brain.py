@@ -375,11 +375,12 @@ class MasterBrain:
         checks = []
 
         # ① Stop Loss
-        sl_price = Decimal(str(config.GRID_LOWER_PRICE)) * Decimal(
-            str(1 - config.STOP_LOSS_PCT / 100)
-        )
-        if price < sl_price:
-            return False, f"🛑 STOP LOSS: {price} < {sl_price}"
+        if config.GRID_LOWER_PRICE > 0:
+            sl_price = Decimal(str(config.GRID_LOWER_PRICE)) * Decimal(
+                str(1 - config.STOP_LOSS_PCT / 100)
+            )
+            if price < sl_price:
+                return False, f"🛑 STOP LOSS: {price} < {sl_price}"
 
         # ② Max Drawdown
         net_profit = self.db.get_total_profit()
@@ -1256,6 +1257,10 @@ class MasterBrain:
         skewed = self.as_model.skew_grid_levels(filtered, p_dec, price)
 
         self.grid_levels = skewed
+        
+        # Сохраняем границы в конфиг для SL
+        config.GRID_LOWER_PRICE = float(lower)
+        config.GRID_UPPER_PRICE = float(upper)
         orders = []
         for sl in skewed:
             orders.append({
@@ -1339,14 +1344,24 @@ class MasterBrain:
         if not best: return
         
         if best.symbol != self.current_symbol and best.score > 70:
+            # Проверяем наличие активной позиции ПЕРЕД переключением
+            pos = self.client.get_position(symbol=self.current_symbol)
+            has_pos = any(float(p.get('size', 0)) != 0 for p in pos)
+            
+            if has_pos:
+                log.warning(f"⚠️ Scanner: Найдена лучшая пара {best.symbol}, но есть открытая позиция по {self.current_symbol}. Пропуск.")
+                return
+
             log.info(f"💎 Scanner: Найдена лучшая пара: {best.symbol} (Score: {best.score:.1f})")
-            # Переключаемся только если нет активной позиции (безопасный режим)
-            # В реальной торговле можно добавить принудительное закрытие
             self._switch_symbol(best.symbol)
 
     def _switch_symbol(self, new_symbol: str):
         """Логика переключения на новый торговый инструмент."""
         log.info(f"🔄 Switching symbol: {self.current_symbol} -> {new_symbol}")
+        
+        # 0. Сбрасываем лимиты в конфиге, чтобы не сработал Stop Loss прошлого символа
+        config.GRID_LOWER_PRICE = 0.0
+        config.GRID_UPPER_PRICE = 0.0
         
         # 1. Отменяем всё на старом символе
         self.client.cancel_all()

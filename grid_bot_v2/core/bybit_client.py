@@ -21,8 +21,20 @@ class BybitClient:
             api_secret=config.BYBIT_API_SECRET
         )
         self.symbol = config.SYMBOL
-        self.category = "spot" # Либо "linear" для деривативов
+        self.category = config.CATEGORY
         
+    def get_position(self, symbol: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Получить текущие позиции."""
+        try:
+            response = self.session.get_positions(
+                category=self.category,
+                symbol=symbol or self.symbol
+            )
+            return response['result']['list']
+        except Exception as e:
+            log.error(f"Error fetching position: {e}")
+            return []
+
     def get_price(self, symbol: Optional[str] = None) -> Decimal:
         """Получить текущую рыночную цену (last price)."""
         try:
