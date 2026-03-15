@@ -67,7 +67,7 @@ class TickerWebSocket:
         self.ws = WebSocket(
             testnet=False,
             demo=config.BYBIT_DEMO,
-            channel_type="spot"
+            channel_type=config.CATEGORY # Используем 'linear' из конфига
         )
         self.ws.ticker_stream(symbol=config.SYMBOL, callback=self._handle_ticker)
         log.info(f"📡 Ticker WS connected: {config.SYMBOL}")
