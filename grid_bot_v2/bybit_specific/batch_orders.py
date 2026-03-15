@@ -28,6 +28,8 @@ class BatchOrderManager:
         to_retry = []
 
         for i in range(0, len(orders), batch_limit):
+            if i > 0:
+                time.sleep(0.3) # Небольшая пауза между пакетами по 10
             chunk = orders[i:i + batch_limit]
             request_list = []
             for o in chunk:
