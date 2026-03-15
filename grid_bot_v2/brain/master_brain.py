@@ -1179,12 +1179,17 @@ class MasterBrain:
                 as_mult = Decimal(str(min(1.5, 1 + inv / 0.1)))
 
         compound_mult = Decimal("1")
-        if self.compounder:
-            compound_mult = Decimal(str(
-                1 + float(self.compounder.state.total_compounded)
-                / max(float(self.compounder.state.initial_capital), 1)
-                * 0.5
-            ))
+        if self.compounder and hasattr(self.compounder, 'state'):
+            try:
+                # Ensure initial_capital is not zero to prevent division by zero
+                initial_capital = float(self.compounder.state.initial_capital)
+                if initial_capital == 0:
+                    initial_capital = 1.0 # Fallback to 1 to avoid division by zero
+                raw_mult = 1 + float(self.compounder.state.total_compounded) / initial_capital * 0.5
+                compound_mult = Decimal(str(raw_mult))
+            except (AttributeError, ValueError, TypeError) as e:
+                log.warning(f"Error calculating compound_mult: {e}. Using default 1.")
+                compound_mult = Decimal("1")
         compound_mult = min(compound_mult, Decimal("2.0"))
 
         final_qty = (
@@ -1290,7 +1295,10 @@ class MasterBrain:
                 self.delta_hedge.on_spot_sell(Decimal(str(qty)), Decimal(str(fill_price)))
 
         if self.compounder and profit > 0:
-            self.compounder.add_profit(Decimal(str(profit)))
+            try:
+                self.compounder.add_profit(Decimal(str(profit)))
+            except Exception as e:
+                log.warning(f"Error adding profit to compounder: {e}")
 
         if self.ab_tester and self.ab_tester.is_testing:
             variant, _ = self.ab_tester.get_variant_for_trade()
@@ -1378,7 +1386,7 @@ class MasterBrain:
                 notes.append(f"L7: {'✅' if placed else '❌'}")
                 if placed: self.stats["trades_executed"] += 1
 
-        if self.compounder.should_compound():
+        if self.compounder and getattr(self.compounder, 'should_compound', False):
             self._run_compound()
 
         dec_type = (DecisionType.PLACE_SELL if result_side == "Sell" else DecisionType.PLACE_BUY) if placed else DecisionType.NO_ACTION
@@ -1456,7 +1464,7 @@ class MasterBrain:
         # Auto-compound: проверяем каждые 500 циклов
         if self.compounder and cycle % 500 == 0:
             try:
-                if self.compounder.should_compound():
+                if getattr(self.compounder, 'should_compound', False):
                     self._run_compound()
             except Exception as e:
                 log.warning(f"Compound error: {e}")
@@ -1737,10 +1745,13 @@ class MasterBrain:
 
     def _run_compound(self):
         if not self.compounder: return
-        res = self.compounder.compound(Decimal(str(config.BASE_ORDER_QTY)), config.GRID_LEVELS)
-        if res.get("compounded"):
-            config.BASE_ORDER_QTY, config.GRID_LEVELS = float(res["new_qty"]), res["new_levels"]
-            self.notifier.send(f"💰 Авто-компаундинг #{res['compound_count']}\nРеинвестировано: {res['profit_reinvested']:.4f} USDT")
+        try:
+            res = self.compounder.compound(Decimal(str(config.BASE_ORDER_QTY)), config.GRID_LEVELS)
+            if res.get("compounded"):
+                config.BASE_ORDER_QTY, config.GRID_LEVELS = float(res["new_qty"]), res["new_levels"]
+                self.notifier.send(f"💰 Авто-компаундинг #{res['compound_count']}\nРеинвестировано: {res['profit_reinvested']:.4f} USDT")
+        except Exception as e:
+            log.error(f"Error during _run_compound: {e}")
 
     def _maybe_retrain_ml(self):
         """Переобучаем ML если пришло время."""
@@ -1853,8 +1864,13 @@ class MasterBrain:
     def _log_full_stats(self, snap):
         projection_info = ""
         if self.compounder:
-            prj = self.compounder.get_projection(2.0, 12)
-            projection_info = f" | Compound ROI: {self.compounder.state.compound_roi_pct:.2f}%"
+            try:
+                if hasattr(self.compounder, 'get_projection'):
+                    prj = self.compounder.get_projection(2.0, 12)
+                    if prj and 'total_roi_pct' in prj:
+                        projection_info = f" | Compound ROI: {prj['total_roi_pct']:.2f}%"
+            except Exception as e:
+                log.warning(f"Error getting compounder projection: {e}")
 
         total_profit = float(self.db.get_total_profit()) if self.db else 0.0
         
