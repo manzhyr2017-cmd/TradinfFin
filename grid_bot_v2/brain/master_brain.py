@@ -44,47 +44,162 @@ import config
 from core.database import Database
 from core.notifier import TelegramNotifier
 from core.bybit_client import BybitClient
-# WebSocketManager управляется внешне из main.py
 
-# Analysis
-from analysis.indicators import TechnicalAnalyzer
-from analysis.smart_entry import SmartEntryAnalyzer, EntrySignal
-from analysis.spread_analyzer import SpreadAnalyzer
-from analysis.multi_timeframe import MultiTimeframeAnalyzer
-from analysis.anomaly_detector import AnomalyDetector
-from analysis.market_scanner import MarketScanner
+# ── WebSocket (новая bulletproof версия) ──────────────
+from core.websocket_manager import RobustWebSocket, WebSocketManager
 
-# ML
-from ml.regime_detector import MLRegimeDetector, MarketRegime, HAS_LGB, HAS_SKLEARN
-from ml.reinforcement import RLGridOptimizer, GridParams
-from ml.sentiment import SentimentAnalyzer
+# ── Analysis ──────────────────────────────────────────
+try:
+    from analysis.indicators import TechnicalAnalyzer
+except ImportError:
+    TechnicalAnalyzer = None
 
-# Strategies
-from strategies.avellaneda_stoikov import AvellanedaStoikovModel
-from strategies.liquidation_heatmap import LiquidationHeatmapAnalyzer
-from strategies.volume_profile import VolumeProfileAnalyzer
-from strategies.delta_neutral import DeltaNeutralHedger
-from strategies.adverse_selection import AdverseSelectionDetector
-from strategies.spoofing_detector import SpoofingDetector
-from strategies.genetic_optimizer import GeneticOptimizer
-from strategies.arbitrage import CrossExchangeArbitrage
-from strategies.onchain import OnChainAnalyzer
-from strategies.ab_testing import ABTestEngine
+try:
+    from analysis.smart_entry import SmartEntryAnalyzer, EntrySignal
+except ImportError:
+    SmartEntryAnalyzer = None
+    EntrySignal = None
 
-# New modules
-from strategies.auto_compound import AutoCompounder
-from strategies.hybrid_grid_dca import HybridGridDCA, BotMode
-from strategies.infinity_grid import InfinityGridEngine
+try:
+    from analysis.spread_analyzer import SpreadAnalyzer
+except ImportError:
+    SpreadAnalyzer = None
 
-# Bybit specific
-from bybit_specific.fee_optimizer import BybitFeeOptimizer
-from bybit_specific.rate_limiter import RateLimitManager
-from bybit_specific.batch_orders import BatchOrderManager
+try:
+    from analysis.multi_timeframe import MultiTimeframeAnalyzer
+except ImportError:
+    MultiTimeframeAnalyzer = None
 
-# Precision
-from analysis.precision_timing import PrecisionTimingEngine, TimingScore
-from analysis.smart_pause import SmartPauseEngine, PauseLevel, PauseDecision
-from strategies.adaptive_sizing import AdaptiveSizingEngine, SizingResult
+try:
+    from analysis.anomaly_detector import AnomalyDetector
+except ImportError:
+    AnomalyDetector = None
+
+try:
+    from analysis.market_scanner import MarketScanner
+except ImportError:
+    MarketScanner = None
+
+# ── ML ────────────────────────────────────────────────
+try:
+    from ml.regime_detector import MLRegimeDetector, MarketRegime
+except ImportError:
+    MLRegimeDetector = None
+    MarketRegime = None
+
+try:
+    from ml.reinforcement import RLGridOptimizer, GridParams
+except ImportError:
+    RLGridOptimizer = None
+    GridParams = None
+
+try:
+    from ml.sentiment import SentimentAnalyzer
+except ImportError:
+    SentimentAnalyzer = None
+
+# ── Strategies ────────────────────────────────────────
+try:
+    from strategies.avellaneda_stoikov import AvellanedaStoikovModel
+except ImportError:
+    AvellanedaStoikovModel = None
+
+try:
+    from strategies.liquidation_heatmap import LiquidationHeatmapAnalyzer
+except ImportError:
+    LiquidationHeatmapAnalyzer = None
+
+try:
+    from strategies.volume_profile import VolumeProfileAnalyzer
+except ImportError:
+    VolumeProfileAnalyzer = None
+
+try:
+    from strategies.delta_neutral import DeltaNeutralHedger
+except ImportError:
+    DeltaNeutralHedger = None
+
+try:
+    from strategies.adverse_selection import AdverseSelectionDetector
+except ImportError:
+    AdverseSelectionDetector = None
+
+try:
+    from strategies.spoofing_detector import SpoofingDetector
+except ImportError:
+    SpoofingDetector = None
+
+try:
+    from strategies.genetic_optimizer import GeneticOptimizer
+except ImportError:
+    GeneticOptimizer = None
+
+try:
+    from strategies.arbitrage import CrossExchangeArbitrage
+except ImportError:
+    CrossExchangeArbitrage = None
+
+try:
+    from strategies.onchain import OnChainAnalyzer
+except ImportError:
+    OnChainAnalyzer = None
+
+try:
+    from strategies.ab_testing import ABTestEngine
+except ImportError:
+    ABTestEngine = None
+
+try:
+    from strategies.auto_compound import AutoCompounder
+except ImportError:
+    AutoCompounder = None
+
+try:
+    from strategies.hybrid_grid_dca import HybridGridDCA, BotMode
+except ImportError:
+    HybridGridDCA = None
+    BotMode = None
+
+try:
+    from strategies.infinity_grid import InfinityGridEngine
+except ImportError:
+    InfinityGridEngine = None
+
+# ── Bybit Specific ────────────────────────────────────
+try:
+    from bybit_specific.fee_optimizer import BybitFeeOptimizer
+except ImportError:
+    BybitFeeOptimizer = None
+
+try:
+    from bybit_specific.rate_limiter import RateLimitManager
+except ImportError:
+    RateLimitManager = None
+
+try:
+    from bybit_specific.batch_orders import BatchOrderManager
+except ImportError:
+    BatchOrderManager = None
+
+# ── Precision Decision Engines ────────────────────────
+try:
+    from analysis.precision_timing import PrecisionTimingEngine, TimingScore
+except ImportError:
+    PrecisionTimingEngine = None
+    TimingScore = None
+
+try:
+    from analysis.smart_pause import SmartPauseEngine, PauseLevel, PauseDecision
+except ImportError:
+    SmartPauseEngine = None
+    PauseLevel = None
+    PauseDecision = None
+
+try:
+    from strategies.adaptive_sizing import AdaptiveSizingEngine, SizingResult
+except ImportError:
+    AdaptiveSizingEngine = None
+    SizingResult = None
 
 
 log = logging.getLogger("GridBot")
@@ -231,55 +346,136 @@ class MasterBrain:
         self._init_ml()
         self._init_strategies()
         self._init_bybit_specific()
-        # self._init_websockets() # Теперь управляется внешне
         self._init_state()
-        log.info("🧠 Master Brain: готов к работе")
+
+        # Считаем сколько модулей загрузилось
+        loaded = sum(1 for v in [
+            self.classic, self.smart_entry, self.spread_analyzer,
+            self.mtf, self.anomaly, self.timing, self.pause_engine,
+            self.sizer, self.ml_regime, self.rl_optimizer,
+            self.sentiment, self.as_model, self.liq_heatmap,
+            self.vpvr, self.delta_hedge, self.adverse,
+            self.spoof_detector, self.genetic, self.arbitrage,
+            self.onchain, self.ab_tester, self.compounder,
+            self.hybrid_dca, self.fee_optimizer, self.rate_limiter,
+            self.batch_manager,
+        ] if v is not None)
+
+        log.info(f"🧠 Master Brain: готов ({loaded}/26 модулей)")
 
     def _init_core(self):
-        """Ядро системы."""
+        """Ядро — обязательно."""
         self.client = BybitClient()
         self.db = Database()
         self.notifier = TelegramNotifier()
-        self.rate_limiter = RateLimitManager()
-        self.batch_manager = BatchOrderManager(self.client)
+        self.ws_manager = WebSocketManager()
+        self.rate_limiter = RateLimitManager() if RateLimitManager else None
+        self.batch_manager = BatchOrderManager(self.client) if BatchOrderManager else None
 
     def _init_analysis(self):
-        """Аналитические модули."""
-        self.classic = TechnicalAnalyzer()
-        self.smart_entry = SmartEntryAnalyzer(symbol=config.SYMBOL)
-        self.spread_analyzer = SpreadAnalyzer(self.client)
-        self.mtf = MultiTimeframeAnalyzer(self.client)
-        self.anomaly = AnomalyDetector()
-        self.timing = PrecisionTimingEngine(self.client)
-        self.pause_engine = SmartPauseEngine(self.client, self.db)
-        self.sizer = AdaptiveSizingEngine(self.client, self.db)
-        self.scanner = MarketScanner(self.client)
+        """Аналитика — graceful если нет."""
+        self.classic = (
+            TechnicalAnalyzer() if TechnicalAnalyzer else None
+        )
+        self.smart_entry = (
+            SmartEntryAnalyzer(symbol=config.SYMBOL) if SmartEntryAnalyzer else None
+        )
+        self.spread_analyzer = (
+            SpreadAnalyzer(self.client) if SpreadAnalyzer else None
+        )
+        self.mtf = (
+            MultiTimeframeAnalyzer(self.client)
+            if MultiTimeframeAnalyzer else None
+        )
+        self.anomaly = (
+            AnomalyDetector() if AnomalyDetector else None
+        )
+        self.timing = (
+            PrecisionTimingEngine(self.client)
+            if PrecisionTimingEngine else None
+        )
+        self.pause_engine = (
+            SmartPauseEngine(self.client, self.db)
+            if SmartPauseEngine else None
+        )
+        self.sizer = (
+            AdaptiveSizingEngine(self.client, self.db)
+            if AdaptiveSizingEngine else None
+        )
+        self.scanner = (
+            MarketScanner(self.client) if MarketScanner else None
+        )
 
     def _init_ml(self):
-        """ML модули."""
-        self.ml_regime = MLRegimeDetector()
-        self.rl_optimizer = RLGridOptimizer()
-        self.sentiment = SentimentAnalyzer()
+        """ML — опционально."""
+        self.ml_regime = (
+            MLRegimeDetector() if MLRegimeDetector else None
+        )
+        self.rl_optimizer = (
+            RLGridOptimizer() if RLGridOptimizer else None
+        )
+        self.sentiment = (
+            SentimentAnalyzer() if SentimentAnalyzer else None
+        )
 
     def _init_strategies(self):
-        """Стратегические модули."""
-        self.as_model = AvellanedaStoikovModel(self.client)
-        self.liq_heatmap = LiquidationHeatmapAnalyzer(self.client)
-        self.vpvr = VolumeProfileAnalyzer(self.client)
-        self.delta_hedge = DeltaNeutralHedger(self.client)
-        self.adverse = AdverseSelectionDetector()
-        self.spoof_detector = SpoofingDetector(self.client)
-        self.genetic = GeneticOptimizer()
-        self.arbitrage = CrossExchangeArbitrage(self.client)
-        self.onchain = OnChainAnalyzer()
-        self.ab_tester = ABTestEngine()
-        self.compounder = AutoCompounder(self.client, self.db)
-        self.hybrid_dca = HybridGridDCA(self.client, self.db)
-        self.infinity_grid = InfinityGridEngine(self.client)
+        """Стратегии — опционально."""
+        self.as_model = (
+            AvellanedaStoikovModel(self.client)
+            if AvellanedaStoikovModel else None
+        )
+        self.liq_heatmap = (
+            LiquidationHeatmapAnalyzer(self.client)
+            if LiquidationHeatmapAnalyzer else None
+        )
+        self.vpvr = (
+            VolumeProfileAnalyzer(self.client)
+            if VolumeProfileAnalyzer else None
+        )
+        self.delta_hedge = (
+            DeltaNeutralHedger(self.client)
+            if DeltaNeutralHedger else None
+        )
+        self.adverse = (
+            AdverseSelectionDetector()
+            if AdverseSelectionDetector else None
+        )
+        self.spoof_detector = (
+            SpoofingDetector(self.client)
+            if SpoofingDetector else None
+        )
+        self.genetic = (
+            GeneticOptimizer() if GeneticOptimizer else None
+        )
+        self.arbitrage = (
+            CrossExchangeArbitrage(self.client)
+            if CrossExchangeArbitrage else None
+        )
+        self.onchain = (
+            OnChainAnalyzer() if OnChainAnalyzer else None
+        )
+        self.ab_tester = (
+            ABTestEngine() if ABTestEngine else None
+        )
+        self.compounder = (
+            AutoCompounder(self.client, self.db)
+            if AutoCompounder else None
+        )
+        self.hybrid_dca = (
+            HybridGridDCA(self.client, self.db)
+            if HybridGridDCA else None
+        )
+        self.infinity_grid = (
+            InfinityGridEngine(self.client)
+            if InfinityGridEngine else None
+        )
 
     def _init_bybit_specific(self):
-        """Bybit-специфичные модули."""
-        self.fee_optimizer = BybitFeeOptimizer(self.client)
+        """Bybit-специфика — опционально."""
+        self.fee_optimizer = (
+            BybitFeeOptimizer(self.client)
+            if BybitFeeOptimizer else None
+        )
 
     # def _init_websockets(self):
     #     """WebSockets для реального времени (выключено, управляет WebSocketManager)."""
@@ -360,27 +556,29 @@ class MasterBrain:
             return False, f"🛑 DAILY LIMIT: {daily_pnl} USDT"
 
         # ④ Smart Pause Engine
-        pause = self._get_cached(
-            "smart_pause",
-            lambda: self.pause_engine.evaluate(),
-            ttl_sec=10,
-        )
-        if pause.level == PauseLevel.EMERGENCY_STOP:
-            return False, f"🛑 EMERGENCY PAUSE: {pause.reasons[0] if pause.reasons else '?'}"
+        if self.pause_engine:
+            pause = self._get_cached(
+                "smart_pause",
+                lambda: self.pause_engine.evaluate(),
+                ttl_sec=10,
+            )
+            if pause and hasattr(pause, 'level') and pause.level == PauseLevel.EMERGENCY_STOP:
+                return False, f"🛑 EMERGENCY PAUSE: {pause.reasons[0] if pause.reasons else '?'}"
 
         # ⑤ Аномалии
-        anomaly_check = self._get_cached(
-            "anomaly",
-            lambda: self.anomaly.should_pause(),
-            ttl_sec=5,
-        )
-        if isinstance(anomaly_check, tuple):
-            should_pause, reason = anomaly_check
-        else:
-            should_pause, reason = False, ""
+        if self.anomaly:
+            anomaly_check = self._get_cached(
+                "anomaly",
+                lambda: self.anomaly.should_pause(),
+                ttl_sec=5,
+            )
+            if isinstance(anomaly_check, tuple):
+                should_pause, reason = anomaly_check
+            else:
+                should_pause, reason = False, ""
 
-        if should_pause:
-            return False, f"⚠️ ANOMALY: {reason}"
+            if should_pause:
+                return False, f"⚠️ ANOMALY: {reason}"
 
         return True, "✅ Survival OK"
 
@@ -426,7 +624,7 @@ class MasterBrain:
         volatility = 0.0
         hurst = 0.5
 
-        if klines:
+        if klines and self.classic:
             closes = [Decimal(k[4]) for k in klines]
             highs = [Decimal(k[2]) for k in klines]
             lows = [Decimal(k[3]) for k in klines]
@@ -441,96 +639,126 @@ class MasterBrain:
             volatility = float(analysis.volatility_pct)
 
         # ③ ML режим (каждые 30 сек)
-        ml_result = self._get_cached(
-            "ml_regime",
-            lambda: self._predict_ml_regime(),
-            ttl_sec=30,
-        )
+        if self.ml_regime:
+            ml_result = self._get_cached(
+                "ml_regime",
+                lambda: self._predict_ml_regime(),
+                ttl_sec=30,
+            )
+        else:
+            ml_result = {"regime": "unknown", "confidence": 0.0}
+            
         ml_regime = ml_result.get("regime", "unknown")
         ml_confidence = ml_result.get("confidence", 0.0)
 
         # ④ Multi-Timeframe (каждые 60 сек)
-        mtf_result = self._get_cached(
-            "mtf",
-            lambda: self.mtf.full_analysis(),
-            ttl_sec=60,
-        )
-        mtf_regime = mtf_result.overall_regime if mtf_result else "unknown"
+        if self.mtf:
+            mtf_result = self._get_cached(
+                "mtf",
+                lambda: self.mtf.full_analysis(),
+                ttl_sec=60,
+            )
+            mtf_regime = mtf_result.overall_regime if mtf_result else "unknown"
+        else:
+            mtf_regime = "unknown"
         trend_strength = 0.0
 
         # ⑤ Funding Rate (каждые 30 сек)
-        funding = self._get_cached(
-            "funding",
-            lambda: self.timing._analyze_funding_rate(),
-            ttl_sec=30,
-        )
-        funding_rate = funding.get("funding_rate", 0.0)
+        if self.timing:
+            funding = self._get_cached(
+                "funding",
+                lambda: self.timing._analyze_funding_rate(),
+                ttl_sec=30,
+            )
+            funding_rate = funding.get("funding_rate", 0.0)
+        else:
+            funding_rate = 0.0
 
         # ⑥ Order Book Imbalance (каждые 5 сек)
-        ob_result = self._get_cached(
-            "orderbook",
-            lambda: self.timing._analyze_orderbook(),
-            ttl_sec=5,
-        )
-        obi = ob_result.get("obi", 0.5)
+        if self.timing:
+            ob_result = self._get_cached(
+                "orderbook",
+                lambda: self.timing._analyze_orderbook(),
+                ttl_sec=5,
+            )
+            obi = ob_result.get("obi", 0.5)
+        else:
+            obi = 0.5
 
         # ⑦ Spoofing (каждые 10 сек)
-        self.spoof_detector.take_snapshot()
-        spoof = self._get_cached(
-            "spoof",
-            lambda: self.spoof_detector.analyze(),
-            ttl_sec=10,
-        )
-        spoof_score = spoof.spoof_score if spoof else 0.0
+        if self.spoof_detector:
+            self.spoof_detector.take_snapshot()
+            spoof = self._get_cached(
+                "spoof",
+                lambda: self.spoof_detector.analyze(),
+                ttl_sec=10,
+            )
+            spoof_score = spoof.spoof_score if spoof else 0.0
+        else:
+            spoof_score = 0.0
 
         # ⑧ Adverse Selection (каждые 30 сек)
-        adverse = self._get_cached(
-            "adverse",
-            lambda: self.adverse.analyze(),
-            ttl_sec=30,
-        )
-        toxicity = adverse.toxicity_score if adverse else 0.0
+        if self.adverse:
+            adverse = self._get_cached(
+                "adverse",
+                lambda: self.adverse.analyze(),
+                ttl_sec=30,
+            )
+            toxicity = adverse.toxicity_score if adverse else 0.0
+        else:
+            toxicity = 0.0
 
         # ⑨ Sentiment (каждые 5 мин)
-        sentiment = self._get_cached(
-            "sentiment",
-            lambda: self.sentiment.get_sentiment(),
-            ttl_sec=300,
-        )
-        fear_greed = sentiment.fear_greed_value if sentiment else 50
+        if self.sentiment:
+            sentiment = self._get_cached(
+                "sentiment",
+                lambda: self.sentiment.get_sentiment(),
+                ttl_sec=300,
+            )
+            fear_greed = sentiment.fear_greed_value if sentiment else 50
+        else:
+            fear_greed = 50
 
         # ⑩ On-Chain (каждые 10 мин)
-        onchain = self._get_cached(
-            "onchain",
-            lambda: self.onchain.get_onchain_data(),
-            ttl_sec=600,
-        )
-        onchain_signal = onchain.overall_signal if onchain else 0.0
-        whale_alert = (
-            bool(onchain.alerts) if onchain else False
-        )
+        if self.onchain:
+            onchain = self._get_cached(
+                "onchain",
+                lambda: self.onchain.get_onchain_data(),
+                ttl_sec=600,
+            )
+            onchain_signal = onchain.overall_signal if onchain else 0.0
+            whale_alert = (
+                bool(onchain.alerts) if onchain else False
+            )
+        else:
+            onchain_signal = 0.0
+            whale_alert = False
 
         # ⑪ Timing Score (каждые 10 сек)
-        timing = self._get_cached(
-            "timing_score",
-            lambda: self.timing.calculate_timing_score(),
-            ttl_sec=10,
-        )
-        timing_score = timing.score if timing else 50
+        if self.timing:
+            timing = self._get_cached(
+                "timing_score",
+                lambda: self.timing.calculate_timing_score(),
+                ttl_sec=10,
+            )
+            timing_score = timing.score if timing else 50
+        else:
+            timing_score = 50
 
         # ⑫ Avellaneda-Stoikov Quotes (обновляем каждые 5 сек)
-        # q (inventory) берем из модели AS
-        inv = float(self.as_model.current_inventory)
-        self._get_cached(
-            "as_quotes",
-            lambda: self.as_model.calculate_quotes(
-                mid_price=float(price),
-                volatility=volatility / 100, # Переводим из % в десятичный вид
-                inventory=inv,
-                time_left=1.0 # Упрощенно 1.0 для вечной сетки
-            ),
-            ttl_sec=5,
-        )
+        if self.as_model:
+            # q (inventory) берем из модели AS
+            inv = float(self.as_model.current_inventory)
+            self._get_cached(
+                "as_quotes",
+                lambda: self.as_model.calculate_quotes(
+                    mid_price=float(price),
+                    volatility=volatility / 100, # Переводим из % в десятичный вид
+                    inventory=inv,
+                    time_left=1.0 # Упрощенно 1.0 для вечной сетки
+                ),
+                ttl_sec=5,
+            )
 
         snapshot = MarketSnapshot(
             timestamp=now,
@@ -805,7 +1033,7 @@ class MasterBrain:
             ttl_sec=15,
         )
 
-        if klines_5m:
+        if klines_5m and self.smart_entry:
             klines_5m_reversed = list(reversed(klines_5m))
             closes = np.array([float(k[4]) for k in klines_5m_reversed])
             highs = np.array([float(k[2]) for k in klines_5m_reversed])
@@ -830,13 +1058,13 @@ class MasterBrain:
                 )
 
             # Если сигнал очень против → не ставим
-            if not entry_signal.should_enter and entry_signal.score < -0.4:
+            if entry_signal and not entry_signal.should_enter and entry_signal.score < -0.4:
                 return False, (
                     f"Smart Entry отклонил: score={entry_signal.score:.2f}"
                 )
 
         # Avellaneda-Stoikov: проверяем reservation price
-        if self.as_model.last_quotes:
+        if self.as_model and self.as_model.last_quotes:
             quotes = self.as_model.last_quotes
             if side == "Buy":
                 if order_price > quotes.reservation_price * Decimal("1.005"):
@@ -880,17 +1108,20 @@ class MasterBrain:
         """
         ШЕСТОЙ УРОВЕНЬ — точный расчёт объёма.
         """
-        base_qty_res = self.sizer.calculate_order_size(
-            level_index=level_index,
-            price=price,
-            side=side,
-            next_level_price=next_level_price,
-            active_orders=self.active_orders,
-            timing_score=snap.timing_score,
-            pause_qty_mult=self._get_pause_qty_mult(),
-            ml_qty_mult=self._get_ml_qty_mult(snap),
-        )
-        base_qty = base_qty_res.adjusted_qty
+        if self.sizer:
+            base_qty_res = self.sizer.calculate_order_size(
+                level_index=level_index,
+                price=price,
+                side=side,
+                next_level_price=next_level_price,
+                active_orders=self.active_orders,
+                timing_score=snap.timing_score,
+                pause_qty_mult=self._get_pause_qty_mult(),
+                ml_qty_mult=self._get_ml_qty_mult(snap),
+            )
+            base_qty = base_qty_res.adjusted_qty
+        else:
+            base_qty = Decimal(str(config.ORDER_QTY_USDT)) / price
 
         mode_multipliers = {
             TradingMode.GRID_STANDARD: 1.0,
@@ -909,18 +1140,20 @@ class MasterBrain:
             toxicity_mult = Decimal("1")
 
         as_mult = Decimal("1")
-        if self.as_model.last_quotes:
+        if self.as_model and self.as_model.last_quotes:
             inv = float(self.as_model.current_inventory)
             if side == "Buy" and inv > 0:
                 as_mult = Decimal(str(max(0.5, 1 - inv / 0.1)))
             elif side == "Sell" and inv > 0:
                 as_mult = Decimal(str(min(1.5, 1 + inv / 0.1)))
 
-        compound_mult = Decimal(str(
-            1 + float(self.compounder.state.total_compounded)
-            / max(float(self.compounder.state.initial_capital), 1)
-            * 0.5
-        ))
+        compound_mult = Decimal("1")
+        if self.compounder:
+            compound_mult = Decimal(str(
+                1 + float(self.compounder.state.total_compounded)
+                / max(float(self.compounder.state.initial_capital), 1)
+                * 0.5
+            ))
         compound_mult = min(compound_mult, Decimal("2.0"))
 
         final_qty = (
@@ -957,9 +1190,11 @@ class MasterBrain:
         # Формат: SYMBOL-LVL-INDEX-TIMESTAMP
         order_link_id = f"{config.SYMBOL}-LVL-{level.index}-{int(time.time()*1000)}"
 
-        order_id = self.fee_optimizer.place_postonly_order(
-            side=side, qty=qty_str, price=price_str, order_link_id=order_link_id
-        )
+        order_id = None
+        if self.fee_optimizer:
+            order_id = self.fee_optimizer.place_postonly_order(
+                side=side, qty=qty_str, price=price_str, order_link_id=order_link_id
+            )
 
         if not order_id:
             order_id = self.client.place_order(
@@ -987,10 +1222,11 @@ class MasterBrain:
         level_index: int,
     ):
         """ВОСЬМОЙ УРОВЕНЬ — обучение."""
-        self.sizer.record_cycle_result(level_index, profit)
+        if self.sizer:
+            self.sizer.record_cycle_result(level_index, profit)
 
         state = self._get_rl_state()
-        if state is not None and self.rl_optimizer.last_action is not None:
+        if self.rl_optimizer and state is not None and self.rl_optimizer.last_action is not None:
             reward = profit / max(fill_price * qty, 1) * 100
             new_state = self._get_rl_state()
             if new_state is not None:
@@ -1001,29 +1237,31 @@ class MasterBrain:
                     new_state=new_state,
                 )
 
-        self.adverse.record_fill(
-            order_id=order_id,
-            side=side,
-            fill_price=fill_price,
-            price_after_1min=float(self.client.get_price()),
-        )
+        if self.adverse:
+            self.adverse.record_fill(
+                order_id=order_id,
+                side=side,
+                fill_price=fill_price,
+                price_after_1min=float(self.client.get_price()),
+            )
 
-        self.as_model.update_inventory(
-            side=side,
-            qty=Decimal(str(qty)),
-            price=Decimal(str(fill_price)),
-        )
+        if self.as_model:
+            self.as_model.update_inventory(
+                side=side,
+                qty=Decimal(str(qty)),
+                price=Decimal(str(fill_price)),
+            )
 
-        if config.USE_DELTA_NEUTRAL and profit > 0:
+        if self.delta_hedge and config.USE_DELTA_NEUTRAL and profit > 0:
             if side == "Buy":
                 self.delta_hedge.on_spot_buy(Decimal(str(qty)), Decimal(str(fill_price)))
             else:
                 self.delta_hedge.on_spot_sell(Decimal(str(qty)), Decimal(str(fill_price)))
 
-        if profit > 0:
+        if self.compounder and profit > 0:
             self.compounder.add_profit(Decimal(str(profit)))
 
-        if self.ab_tester.is_testing:
+        if self.ab_tester and self.ab_tester.is_testing:
             variant, _ = self.ab_tester.get_variant_for_trade()
             self.ab_tester.record_trade_result(
                 variant_name=variant,
@@ -1031,7 +1269,7 @@ class MasterBrain:
                 fee=fill_price * qty * float(config.MAKER_FEE_PCT) / 100,
             )
 
-        if side == "Buy":
+        if side == "Buy" and self.hybrid_dca:
             for level in self.hybrid_dca.dca_levels:
                 if level.order_id == order_id:
                     self.hybrid_dca.on_dca_fill(level, Decimal(str(fill_price)))
@@ -1296,22 +1534,41 @@ class MasterBrain:
     def _place_initial_grid(self, snap, mode):
         price = snap.price
         klines = self._fetch_klines("15", 200)
-        if klines:
+        if klines and self.rl_optimizer:
             ps = np.array([float(k[4]) for k in klines])
             vs = np.array([float(k[5]) for k in klines])
             rl_p = self.rl_optimizer.get_optimal_params(ps, vs, float(self.db.get_total_profit()), float(self.client.get_balance()))
         else:
-            levels_count = getattr(config, "GRID_LEVELS", config.GRID_LEVEL_COUNT)
-            rl_p = GridParams(levels_count, 15.0, 1.0)
+            levels_count = getattr(config, "GRID_LEVELS", 20)
+            rl_p = GridParams(grid_levels=levels_count, grid_range_pct=15.0, profit_target_pct=1.0)
 
         half = price * Decimal(str(rl_p.grid_range_pct / 100 / 2))
         lower, upper = price - half, price + half
-        vp_g = self.vpvr.generate_weighted_grid(float(lower), float(upper), rl_p.grid_levels)
-        filtered = self.liq_heatmap.filter_grid_levels(vp_g, float(price))
         
-        klines_15m = self._fetch_klines("15", 100)
-        p_dec = [Decimal(k[4]) for k in klines_15m] if klines_15m else [price]
-        skewed = self.as_model.skew_grid_levels(filtered, p_dec, price)
+        # Генерация уровней
+        if self.vpvr:
+            vp_g = self.vpvr.generate_weighted_grid(float(lower), float(upper), rl_p.grid_levels)
+        else:
+            # Простой равномерный грид
+            vp_g = []
+            step = (upper - lower) / (rl_p.grid_levels - 1)
+            for i in range(rl_p.grid_levels):
+                p = lower + i * step
+                vp_g.append(Any()) # Placeholder level object
+                vp_g[-1].price = p
+                vp_g[-1].index = i
+
+        if self.liq_heatmap:
+            filtered = self.liq_heatmap.filter_grid_levels(vp_g, float(price))
+        else:
+            filtered = vp_g
+
+        if self.as_model:
+            klines_15m = self._fetch_klines("15", 100)
+            p_dec = [Decimal(k[4]) for k in klines_15m] if klines_15m else [price]
+            skewed = self.as_model.skew_grid_levels(filtered, p_dec, price)
+        else:
+            skewed = filtered
 
         self.grid_levels = skewed
         
@@ -1339,41 +1596,48 @@ class MasterBrain:
                 "positionIdx": p_idx
             })
         if orders:
-            ids, errs = self.batch_manager.place_grid_batch(orders, use_postonly=True)
-            log.info(f"📋 Начальная сетка: {len(ids)} ордеров | Ошибок: {len(errs)}")
+            if self.batch_manager:
+                ids, errs = self.batch_manager.place_grid_batch(orders, use_postonly=True)
+                log.info(f"📋 Начальная сетка: {len(ids)} ордеров | Ошибок: {len(errs)}")
+            else:
+                # Поодиночке если нет batch manager
+                for o in orders:
+                    self.client.place_order(side=o["side"], qty=o["qty"], price=o["price"])
 
     def _handle_mode_specific_actions(self, snap, mode):
-        if mode == TradingMode.DCA_ACCUMULATE:
+        if mode == TradingMode.DCA_ACCUMULATE and self.hybrid_dca:
             if len(self.hybrid_dca.dca_levels) == 0 and float(self.hybrid_dca.dca_accumulated_qty) == 0:
                 self.client.cancel_all()
                 self.active_orders.clear()
                 self.hybrid_dca.activate_dca_mode(snap.price)
-        elif mode == TradingMode.GRID_STANDARD:
+        elif mode == TradingMode.GRID_STANDARD and self.hybrid_dca:
             if float(self.hybrid_dca.dca_accumulated_qty) > 0:
                 self.hybrid_dca.switch_dca_to_grid()
-        elif mode == TradingMode.ARBITRAGE:
+        elif mode == TradingMode.ARBITRAGE and self.arbitrage:
             opps = self.arbitrage.find_opportunities()
             for o in opps:
                 if o.is_actionable: self.arbitrage.execute_arbitrage(o)
 
-        if config.USE_DELTA_NEUTRAL:
+        if self.delta_hedge and config.USE_DELTA_NEUTRAL:
             s = self.delta_hedge.get_status()
             if s.get("rebalance_needed"): self.delta_hedge.rebalance()
 
     def _run_compound(self):
+        if not self.compounder: return
         res = self.compounder.compound(Decimal(str(config.BASE_ORDER_QTY)), config.GRID_LEVELS)
         if res.get("compounded"):
             config.BASE_ORDER_QTY, config.GRID_LEVELS = float(res["new_qty"]), res["new_levels"]
             self.notifier.send(f"💰 Авто-компаундинг #{res['compound_count']}\nРеинвестировано: {res['profit_reinvested']:.4f} USDT")
 
     def _maybe_retrain_ml(self):
-        if not HAS_LGB or not HAS_SKLEARN: return
+        if not HAS_LGB or not HAS_SKLEARN or not self.ml_regime: return
         if self.ml_regime.needs_retrain():
             ks = self._fetch_klines("15", 1000)
             if len(ks) >= 200:
                 self.ml_regime.train(np.array([float(k[1]) for k in ks]), np.array([float(k[2]) for k in ks]), np.array([float(k[3]) for k in ks]), np.array([float(k[4]) for k in ks]), np.array([float(k[5]) for k in ks]))
 
     def _maybe_run_genetic(self):
+        if not self.genetic: return
         last = self._cache_times.get("genetic_run")
         if last and (datetime.utcnow() - last).total_seconds() < 86400: return
         ks = self._fetch_klines("5", 1000)
@@ -1389,10 +1653,16 @@ class MasterBrain:
         self.notifier.send_alert(f"🛑 EMERGENCY SHUTDOWN\n{reason}")
 
     def _log_full_stats(self, snap):
-        prj = self.compounder.get_projection(2.0, 12)
+        projection_info = ""
+        if self.compounder:
+            prj = self.compounder.get_projection(2.0, 12)
+            projection_info = f" | Compound ROI: {self.compounder.state.compound_roi_pct:.2f}%"
+
+        total_profit = float(self.db.get_total_profit()) if self.db else 0.0
+        
         log.info("═"*60)
         log.info(f"🧠 MASTER BRAIN — Режим: {self.state.current_mode.value} | Цена: {snap.price}")
-        log.info(f"   Net P&L: {float(self.db.get_total_profit()):.4f} | Compound ROI: {self.compounder.state.compound_roi_pct:.2f}%")
+        log.info(f"   Net P&L: {total_profit:.4f}{projection_info}")
         log.info("═"*60)
     def _is_interval_passed(self, key: str) -> bool:
         """Проверяет, прошло ли достаточно времени с последнего обновления."""
@@ -1407,6 +1677,7 @@ class MasterBrain:
 
     def _run_scanner(self):
         """Периодическое сканирование рынка на наличие лучших пар."""
+        if not self.scanner: return
         if not self._is_interval_passed("scanner"): return
         
         log.info("🔍 Scanner: Поиск лучшего инструмента...")
