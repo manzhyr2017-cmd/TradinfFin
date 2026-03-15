@@ -74,7 +74,9 @@ class BatchOrderManager:
                         
                         # Если ошибка "Unknown", попробуем вывести детали запроса
                         orig_req = request_list[i] if i < len(request_list) else {}
-                        log.error(f"❌ Batch Order Failed: {ret_code} - {ret_msg} | Req: {orig_req.get('side')} {orig_req.get('qty')} @ {orig_req.get('price')} | Full: {json.dumps(res)}")
+                        log.error(f"❌ Batch Order Failed: {ret_code} - {ret_msg} | Req: {orig_req.get('side')} {orig_req.get('qty')} @ {orig_req.get('price')}")
+                        log.debug(f"DEBUG: Full Item Keys: {list(res.keys())}")
+                        log.debug(f"DEBUG: Full Response: {json.dumps(response)}")
                         errors.append(res)
                         
             except Exception as e:

@@ -38,14 +38,19 @@ class BybitClient:
         try:
             # Пытаемся получить информацию о позиции для символа
             res = self.get_position()
-            # Если позиций больше одной на символ (или есть поле positionIdx > 0)
-            if any(p.get('positionIdx', 0) > 0 for p in res):
+            # В Hedge Mode Bybit возвращает 2 записи (даже с 0 qty) с positionIdx 1 и 2.
+            # В One-Way Mode возвращает 1 запись с positionIdx 0.
+            if len(res) >= 2:
                 self._position_mode = 3 # Hedge Mode
+            elif len(res) == 1 and res[0].get('positionIdx') in [1, 2]:
+                self._position_mode = 3 # Тоже Hedge Mode
             else:
                 self._position_mode = 0 # One-Way Mode
-            log.info(f"🎯 Position Mode detected: {'Hedge' if self._position_mode == 3 else 'One-Way'}")
+                
+            log.info(f"🎯 Position Mode detected: {'Hedge' if self._position_mode == 3 else 'One-Way'} (Items: {len(res)})")
             return self._position_mode
-        except:
+        except Exception as e:
+            log.warning(f"Failed to detect position mode: {e}. Defaulting to One-Way.")
             return 0
         
     def get_position(self, symbol: Optional[str] = None) -> List[Dict[str, Any]]:
