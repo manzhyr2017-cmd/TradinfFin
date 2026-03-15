@@ -244,7 +244,7 @@ class MasterBrain:
     def _init_analysis(self):
         """Аналитические модули."""
         self.classic = TechnicalAnalyzer()
-        self.smart_entry = SmartEntryAnalyzer()
+        self.smart_entry = SmartEntryAnalyzer(symbol=config.SYMBOL)
         self.spread_analyzer = SpreadAnalyzer(self.client)
         self.mtf = MultiTimeframeAnalyzer(self.client, self.classic)
         self.anomaly = AnomalyDetector()
