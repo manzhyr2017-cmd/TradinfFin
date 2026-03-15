@@ -246,7 +246,7 @@ class MasterBrain:
         self.classic = TechnicalAnalyzer()
         self.smart_entry = SmartEntryAnalyzer(symbol=config.SYMBOL)
         self.spread_analyzer = SpreadAnalyzer(self.client)
-        self.mtf = MultiTimeframeAnalyzer(self.client, self.classic)
+        self.mtf = MultiTimeframeAnalyzer(self.client)
         self.anomaly = AnomalyDetector()
         self.timing = PrecisionTimingEngine(self.client)
         self.pause_engine = SmartPauseEngine(self.client, self.db)
