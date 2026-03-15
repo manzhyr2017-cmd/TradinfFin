@@ -1253,7 +1253,7 @@ class MasterBrain:
         p_dec = [Decimal(k[4]) for k in klines_15m] if klines_15m else [price]
         skewed = self.as_model.skew_grid_levels(filtered, p_dec, price)
 
-        self.grid_levels = filtered
+        self.grid_levels = skewed
         orders = []
         for sl in skewed:
             orders.append({

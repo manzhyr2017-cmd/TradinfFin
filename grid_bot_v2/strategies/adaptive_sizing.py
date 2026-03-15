@@ -21,6 +21,13 @@ class AdaptiveSizingEngine:
         self.client = client
         self.db = db
         
+    def calculate_qty(self, price: Decimal, multiplier: float = 1.0) -> Decimal:
+        """
+        Упрощенный расчет объема для сетки.
+        """
+        base_qty = Decimal(str(config.BASE_ORDER_QTY))
+        return base_qty * Decimal(str(multiplier))
+
     def calculate_order_size(self, price: Decimal, side: str) -> SizingResult:
         """
          price: текущая цена

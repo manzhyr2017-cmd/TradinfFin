@@ -1,9 +1,20 @@
 import logging
 import numpy as np
+import config
 from decimal import Decimal
-from typing import Dict, Any
+from dataclasses import dataclass
+from typing import Dict, Any, List
 
 log = logging.getLogger("AvellanedaStoikov")
+
+@dataclass
+class GridLevel:
+    price: float
+    side: str
+    skewed_price: Decimal
+    recommended_qty: Decimal
+    index: int = 0
+    qty_mult: float = 1.0
 
 class AvellanedaStoikovModel:
     """
@@ -35,3 +46,33 @@ class AvellanedaStoikovModel:
             "reservation_price": reservation_price,
             "spread": spread
         }
+
+    def skew_grid_levels(self, levels: List[float], past_prices: List[Any], current_price: float) -> List[GridLevel]:
+        """
+        Преобразует список ценовых уровней в объекты GridLevel.
+        """
+        skewed = []
+        base_qty = Decimal(str(config.BASE_ORDER_QTY))
+        
+        # Сортируем уровни чтобы индекс был последовательным
+        sorted_levels = sorted(levels)
+        
+        for i, p in enumerate(sorted_levels):
+            side = "Buy" if p < current_price else "Sell"
+            mult = 1.0
+            
+            p_dec = Decimal(str(p))
+            qty_dec = base_qty * Decimal(str(mult))
+            
+            skewed.append(GridLevel(
+                price=p, 
+                side=side, 
+                skewed_price=p_dec, 
+                recommended_qty=qty_dec,
+                index=i,
+                qty_mult=mult
+            ))
+            
+        return skewed
+import config
+from decimal import Decimal
