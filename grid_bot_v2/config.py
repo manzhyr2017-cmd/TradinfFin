@@ -12,6 +12,7 @@ BYBIT_API_SECRET = os.getenv('BYBIT_API_SECRET', 'YOUR_SECRET')
 BYBIT_DEMO = os.getenv('BYBIT_DEMO', 'false').lower() == 'true'
 API_PROXY = os.getenv('API_PROXY', None) # 'http://user:pass@host:port'
 CATEGORY = "linear"
+BYBIT_TESTNET = os.getenv('BYBIT_TESTNET', 'false').lower() == 'true'
 
 # --- Bot Configuration ---
 SYMBOL = "ETHUSDT"
@@ -70,3 +71,8 @@ INFINITY_TRAILING_PCT = 3.0    # Trail floor 3% below price
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID') or os.getenv('TELEGRAM_CHANNEL', '')
 TELEGRAM_ADMIN_ID = os.getenv('TELEGRAM_ADMIN_ID', '')
+
+# --- Internal & Logging ---
+LOG_FILE = "grid_bot.log"
+POLL_INTERVAL_SEC = 2.0
+RETRY_DELAY_SEC = 5.0

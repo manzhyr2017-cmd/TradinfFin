@@ -186,7 +186,8 @@ class BybitClient:
         order_type: str = "Limit",
         post_only: bool = False,
         symbol: Optional[str] = None,
-        position_idx: Optional[int] = None
+        position_idx: Optional[int] = None,
+        order_link_id: Optional[str] = None
     ) -> Optional[str]:
         """Разместить ордер."""
         try:
@@ -208,6 +209,9 @@ class BybitClient:
                 "timeInForce": "PostOnly" if post_only else "GTC",
                 "positionIdx": position_idx
             }
+            if order_link_id:
+                params["orderLinkId"] = order_link_id
+                
             response = self.session.place_order(**params)
             return response['result']['orderId']
         except Exception as e:
@@ -239,8 +243,8 @@ class BybitClient:
             log.error(f"Error cancelling all orders: {e}")
             return False
 
-    def get_active_orders(self, symbol: Optional[str] = None) -> List[Dict[str, Any]]:
-        """Получить список всех активных ордеров."""
+    def get_open_orders(self, symbol: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Получить список всех открытых ордеров."""
         try:
             response = self.session.get_open_orders(
                 category=self.category,
@@ -249,4 +253,17 @@ class BybitClient:
             return response['result']['list']
         except Exception as e:
             log.error(f"Error fetching open orders: {e}")
+            return []
+
+    def get_order_history(self, symbol: Optional[str] = None, limit: int = 20) -> List[Dict[str, Any]]:
+        """Получить историю ордеров."""
+        try:
+            response = self.session.get_order_history(
+                category=self.category,
+                symbol=symbol or self.symbol,
+                limit=limit
+            )
+            return response['result']['list']
+        except Exception as e:
+            log.error(f"Error fetching order history: {e}")
             return []

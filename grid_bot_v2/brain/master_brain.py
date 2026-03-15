@@ -231,7 +231,7 @@ class MasterBrain:
         self._init_ml()
         self._init_strategies()
         self._init_bybit_specific()
-        self._init_websockets()
+        # self._init_websockets() # Теперь управляется внешне
         self._init_state()
         log.info("🧠 Master Brain: готов к работе")
 
@@ -281,54 +281,17 @@ class MasterBrain:
         """Bybit-специфичные модули."""
         self.fee_optimizer = BybitFeeOptimizer(self.client)
 
-    def _init_websockets(self):
-        """WebSockets для реального времени."""
-        self.order_ws = OrderWebSocket(
-            on_order_filled=self._on_ws_filled,
-            on_order_cancelled=self._on_ws_cancelled
-        )
-        self.ticker_ws = TickerWebSocket(
-            on_price_update=self._on_ws_price
-        )
-
-    def _on_ws_filled(self, order_data):
-        """Обработка исполнения через WS."""
-        log.info(f"⚡ WS Fill: {order_data['side']} @ {order_data['avgPrice']}")
-        # Находим уровень
-        level_index = 0
-        db_order = self.db.get_order_by_id(order_data['orderId'])
-        if db_order:
-            level_index = db_order.get("level_index", 0)
-        
-        # Вызываем логику мозга
-        self.decide(
-            filled_order_id=order_data['orderId'],
-            filled_side=order_data['side'],
-            filled_price=float(order_data['avgPrice']),
-            filled_qty=float(order_data['qty']),
-            filled_level_index=level_index
-        )
-
-    def _on_ws_cancelled(self, order_data):
-        log.warning(f"❌ WS Cancel: {order_data['orderId']}")
-
-    def _on_ws_price(self, price, volume, timestamp=None):
-        """Обновление цены через WS."""
-        # Можно использовать для сверхбыстрой реакции, но пока просто кешируем
-        pass
+    # def _init_websockets(self):
+    #     """WebSockets для реального времени (выключено, управляет WebSocketManager)."""
+    #     pass
 
     def start(self):
-        """Запуск всех систем."""
-        log.info("🚀 Запуск Master Brain...")
-        self.order_ws.start()
-        self.ticker_ws.start(self.current_symbol)
-        log.info(f"✅ Master Brain запущен на {self.current_symbol}")
-        
+        """Запуск Master Brain."""
+        log.info(f"🧠 Master Brain: запущен на {self.current_symbol}")
+
     def stop(self):
-        """Остановка всех систем."""
-        log.info("🛑 Остановка Master Brain...")
-        self.order_ws.stop()
-        self.ticker_ws.stop()
+        """Остановка Master Brain."""
+        log.info("🧠 Master Brain: остановка...")
 
     def _init_state(self):
         """Состояние мозга."""
@@ -990,13 +953,17 @@ class MasterBrain:
         qty_str = str(adj_qty)
         price_str = str(adj_price)
 
+        # Генерируем уникальный order_link_id для отслеживания в WS
+        # Формат: SYMBOL-LVL-INDEX-TIMESTAMP
+        order_link_id = f"{config.SYMBOL}-LVL-{level.index}-{int(time.time()*1000)}"
+
         order_id = self.fee_optimizer.place_postonly_order(
-            side=side, qty=qty_str, price=price_str,
+            side=side, qty=qty_str, price=price_str, order_link_id=order_link_id
         )
 
         if not order_id:
             order_id = self.client.place_order(
-                side=side, qty=qty_str, price=price_str,
+                side=side, qty=qty_str, price=price_str, order_link_id=order_link_id
             )
 
         if order_id:
@@ -1074,7 +1041,7 @@ class MasterBrain:
     #  ГЛАВНЫЙ ПУБЛИЧНЫЙ МЕТОД
     # ═══════════════════════════════════════════════════
 
-    def decide(
+    def decide_and_act(
         self,
         filled_order_id: Optional[str] = None,
         filled_side: Optional[str] = None,
@@ -1175,6 +1142,41 @@ class MasterBrain:
             self._log_full_stats(snap)
 
         return BrainDecision(DecisionType.NO_ACTION, mode, can_buy, can_sell, self._get_ml_qty_mult(snap), notes=notes)
+
+    def _check_orders_rest(self):
+        """
+        Проверка ордеров через REST API. 
+        Используется как fallback, если WebSocket упал.
+        """
+        try:
+            open_orders = self.client.get_open_orders()
+            market_oids = {o['orderId'] for o in open_orders}
+            
+            # Находим ордера, которые есть у нас в памяти, но пропали с биржи
+            missing_oids = [oid for oid in self.active_orders.keys() if oid not in market_oids]
+            
+            for oid in missing_oids:
+                # Проверяем историю, чтобы понять: был он зафиллен или отменен
+                history = self.client.get_order_history(limit=10) # Берем последние 10
+                for h in history:
+                    if h['orderId'] == oid:
+                        status = h['orderStatus']
+                        if status == "Filled":
+                            log.info(f"🔄 Polling Fill detected: {h['side']} @ {h['avgPrice']}")
+                            level = self.active_orders.get(oid)
+                            self.decide_and_act(
+                                filled_order_id=oid,
+                                filled_side=h['side'],
+                                filled_price=float(h['avgPrice']),
+                                filled_qty=float(h['qty']),
+                                filled_level_index=level.index if level else 0
+                            )
+                        elif status in ("Cancelled", "Rejected"):
+                            log.warning(f"🔄 Polling Cancel detected: {oid}")
+                            if oid in self.active_orders: del self.active_orders[oid]
+                        break
+        except Exception as e:
+            log.error(f"Error in _check_orders_rest: {e}")
 
     # ── Вспомогательные методы ──
 
@@ -1442,9 +1444,11 @@ class MasterBrain:
         self.grid_levels = []
         self.db.clear_active_orders() # Очистка БД от старых ордеров
         
-        # 3. Перезапускаем Ticker WS
-        self.ticker_ws.stop()
-        self.ticker_ws.start(new_symbol)
+        # 3. WS Перезапускается автоматически при смене символа в config.SYMBOL
+        # Но в RobustWebSocket нам стоит иметь метод для смены если нужно. 
+        # Пока просто сбрасываем состояние.
+        # self.ticker_ws.stop()
+        # self.ticker_ws.start(new_symbol)
         
         # 4. Обновляем аналитику
         self.smart_entry = SmartEntryAnalyzer(symbol=new_symbol)

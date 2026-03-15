@@ -34,14 +34,14 @@ class BybitFeeOptimizer:
         return True
 
     def place_postonly_order(
-        self, side: str, qty: str, price: str
+        self, side: str, qty: str, price: str, order_link_id: Optional[str] = None
     ) -> Optional[str]:
         """
         Размещает лимитный ордер с Post-Only.
         Если ордер бы исполнился немедленно как Taker - он будет отменен биржей.
         """
         return self.client.place_order(
-            side=side, qty=qty, price=price, post_only=True
+            side=side, qty=qty, price=price, post_only=True, order_link_id=order_link_id
         )
 
     def get_effective_fees(self):
