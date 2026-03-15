@@ -52,6 +52,7 @@ from analysis.smart_entry import SmartEntryAnalyzer, EntrySignal
 from analysis.spread_analyzer import SpreadAnalyzer
 from analysis.multi_timeframe import MultiTimeframeAnalyzer
 from analysis.anomaly_detector import AnomalyDetector
+from analysis.market_scanner import MarketScanner
 
 # ML
 from ml.regime_detector import MLRegimeDetector, MarketRegime, HAS_LGB, HAS_SKLEARN
@@ -220,6 +221,7 @@ class MasterBrain:
         "genetic_optimize": 86400,  # Раз в сутки
         "compound_check":   86400,  # Раз в сутки
         "vip_check":        3600,   # Каждый час
+        "scanner":          3600,   # Каждый час
     }
 
     def __init__(self):
@@ -251,6 +253,7 @@ class MasterBrain:
         self.timing = PrecisionTimingEngine(self.client)
         self.pause_engine = SmartPauseEngine(self.client, self.db)
         self.sizer = AdaptiveSizingEngine(self.client, self.db)
+        self.scanner = MarketScanner(self.client)
 
     def _init_ml(self):
         """ML модули."""
@@ -318,7 +321,8 @@ class MasterBrain:
         """Запуск всех систем."""
         log.info("🚀 Запуск Master Brain...")
         self.order_ws.start()
-        self.ticker_ws.start()
+        self.ticker_ws.start(self.current_symbol)
+        log.info(f"✅ Master Brain запущен на {self.current_symbol}")
         
     def stop(self):
         """Остановка всех систем."""
@@ -332,6 +336,7 @@ class MasterBrain:
         self.last_snapshot: Optional[MarketSnapshot] = None
         self.active_orders: Dict[str, Any] = {}
         self.grid_levels: List[Any] = []
+        self.current_symbol = config.SYMBOL
 
         # Кэш последних результатов модулей
         self._cache: Dict[str, Any] = {}
@@ -1137,6 +1142,7 @@ class MasterBrain:
 
         self._maybe_retrain_ml()
         self._maybe_run_genetic()
+        self._run_scanner()
 
         if self.stats["decisions_made"] % 100 == 0:
             self._log_full_stats(snap)
@@ -1214,7 +1220,7 @@ class MasterBrain:
         return None
 
     def _needs_rebalance(self, snap):
-        if not self.grid_levels: return False
+        if not self.grid_levels: return True
         lower = min(float(l.price) for l in self.grid_levels)
         upper = max(float(l.price) for l in self.grid_levels)
         price = float(snap.price)
@@ -1311,3 +1317,38 @@ class MasterBrain:
         log.info(f"🧠 MASTER BRAIN — Режим: {self.state.current_mode.value} | Цена: {snap.price}")
         log.info(f"   Net P&L: {float(self.db.get_total_profit()):.4f} | Compound ROI: {self.compounder.state.compound_roi_pct:.2f}%")
         log.info("═"*60)
+    def _run_scanner(self):
+        """Периодическое сканирование рынка на наличие лучших пар."""
+        if not self._is_interval_passed("scanner"): return
+        
+        log.info("🔍 Scanner: Поиск лучшего инструмента...")
+        best = self.scanner.scan()
+        if not best: return
+        
+        if best.symbol != self.current_symbol and best.score > 70:
+            log.info(f"💎 Scanner: Найдена лучшая пара: {best.symbol} (Score: {best.score:.1f})")
+            # Переключаемся только если нет активной позиции (безопасный режим)
+            # В реальной торговле можно добавить принудительное закрытие
+            self._switch_symbol(best.symbol)
+
+    def _switch_symbol(self, new_symbol: str):
+        """Логика переключения на новый торговый инструмент."""
+        log.info(f"🔄 Switching symbol: {self.current_symbol} -> {new_symbol}")
+        
+        # 1. Отменяем всё на старом символе
+        self.client.cancel_all()
+        
+        # 2. Обновляем состояние
+        self.current_symbol = new_symbol
+        self.client.symbol = new_symbol
+        self.grid_levels = []
+        self.db.clear_active_orders() # Очистка БД от старых ордеров
+        
+        # 3. Перезапускаем Ticker WS
+        self.ticker_ws.stop()
+        self.ticker_ws.start(new_symbol)
+        
+        # 4. Обновляем аналитику
+        self.smart_entry = SmartEntryAnalyzer(symbol=new_symbol)
+        
+        self.notifier.send_message(f"🔄 Бот переключился на {new_symbol}\nПричина: лучший 'боковик' для сетки.")

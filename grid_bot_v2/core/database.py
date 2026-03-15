@@ -60,6 +60,16 @@ class Database:
         except Exception as e:
             log.error(f"DB Error (save_trade): {e}")
 
+    def get_order_by_id(self, order_id: str) -> Optional[Dict]:
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.row_factory = sqlite3.Row
+                row = conn.execute("SELECT * FROM trades WHERE order_id = ?", (order_id,)).fetchone()
+                return dict(row) if row else None
+        except Exception as e:
+            log.error(f"DB Error (get_order_by_id): {e}")
+            return None
+
     def update_trade_profit(self, order_id: str, profit: Decimal):
         with sqlite3.connect(self.db_path) as conn:
             conn.execute("UPDATE trades SET profit_usdt = ?, status = 'FILLED' WHERE order_id = ?", (str(profit), order_id))
@@ -85,3 +95,12 @@ class Database:
         with sqlite3.connect(self.db_path) as conn:
             row = conn.execute("SELECT value FROM state WHERE key = ?", (key,)).fetchone()
             return row[0] if row else default
+
+    def clear_active_orders(self):
+        """Очистка всех 'NEW' ордеров в БД (например, при смене монеты)."""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.execute("DELETE FROM trades WHERE status = 'NEW'")
+                conn.commit()
+        except Exception as e:
+            log.error(f"DB Error (clear_active_orders): {e}")

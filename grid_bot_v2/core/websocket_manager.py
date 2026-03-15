@@ -33,8 +33,8 @@ class OrderWebSocket:
             if "data" not in message:
                 return
             for order in message["data"]:
-                if order.get("symbol") != config.SYMBOL:
-                    continue
+                # Фильтруем по символу динамически (если нужно) или берем все - 
+                # в мульти-аккаунтном режиме лучше брать все, но мы фильтруем по текущему в Brain
                 status = order.get("orderStatus")
                 order_data = {
                     "orderId": order.get("orderId"),
@@ -63,14 +63,15 @@ class TickerWebSocket:
         self.on_price = on_price_update
         self.ws: Optional[WebSocket] = None
 
-    def start(self):
+    def start(self, symbol: str):
+        self.symbol = symbol
         self.ws = WebSocket(
             testnet=False,
             demo=False, # Публичные данные берем из реального рынка (они идентичны)
             channel_type=config.CATEGORY
         )
-        self.ws.ticker_stream(symbol=config.SYMBOL, callback=self._handle_ticker)
-        log.info(f"📡 Ticker WS connected: {config.SYMBOL}")
+        self.ws.ticker_stream(symbol=self.symbol, callback=self._handle_ticker)
+        log.info(f"📡 Ticker WS connected: {self.symbol}")
 
     def _handle_ticker(self, message: dict):
         try:
