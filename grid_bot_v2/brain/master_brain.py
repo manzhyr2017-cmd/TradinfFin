@@ -54,7 +54,7 @@ from analysis.multi_timeframe import MultiTimeframeAnalyzer
 from analysis.anomaly_detector import AnomalyDetector
 
 # ML
-from ml.regime_detector import MLRegimeDetector, MarketRegime
+from ml.regime_detector import MLRegimeDetector, MarketRegime, HAS_LGB, HAS_SKLEARN
 from ml.reinforcement import RLGridOptimizer, GridParams
 from ml.sentiment import SentimentAnalyzer
 
@@ -1284,6 +1284,7 @@ class MasterBrain:
             self.notifier.send(f"💰 Авто-компаундинг #{res['compound_count']}\nРеинвестировано: {res['profit_reinvested']:.4f} USDT")
 
     def _maybe_retrain_ml(self):
+        if not HAS_LGB or not HAS_SKLEARN: return
         if self.ml_regime.needs_retrain():
             ks = self._fetch_klines("15", 1000)
             if len(ks) >= 200:

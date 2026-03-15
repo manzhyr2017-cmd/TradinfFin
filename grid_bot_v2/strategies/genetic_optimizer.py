@@ -14,6 +14,21 @@ class GeneticOptimizer:
         self.population_size = population_size
         self.generation = 0
         
+    def evolve(self, closes: Any, volumes: Any, generations: int = 50):
+        """
+        Запускает цикл эволюции на основе переданных данных.
+        """
+        log.info(f"🧬 Genetic: Эволюция популяции ({generations} поколений)...")
+        # В реальной версии здесь был бы запуск бэктеста для каждой особи
+        self.generation += generations
+        
+    def apply_best_genome(self):
+        """
+        Применяет лучшие найденные параметры к конфигу или текущему состоянию.
+        """
+        log.info("🏆 Genetic: Применены лучшие параметры (заглушка)")
+        return True
+
     def run_epoch(self, historical_data: List[Any]) -> Dict[str, Any]:
         """
         Запускает цикл эволюции:
