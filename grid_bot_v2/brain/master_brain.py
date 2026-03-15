@@ -1630,21 +1630,72 @@ class MasterBrain:
             self.notifier.send(f"💰 Авто-компаундинг #{res['compound_count']}\nРеинвестировано: {res['profit_reinvested']:.4f} USDT")
 
     def _maybe_retrain_ml(self):
-        if not HAS_LGB or not HAS_SKLEARN or not self.ml_regime: return
-        if self.ml_regime.needs_retrain():
-            ks = self._fetch_klines("15", 1000)
-            if len(ks) >= 200:
-                self.ml_regime.train(np.array([float(k[1]) for k in ks]), np.array([float(k[2]) for k in ks]), np.array([float(k[3]) for k in ks]), np.array([float(k[4]) for k in ks]), np.array([float(k[5]) for k in ks]))
+        """Переобучаем ML если пришло время."""
+        # Проверяем: ML модуль вообще загружен?
+        if not self.ml_regime:
+            return
+
+        # Проверяем: есть ли метод needs_retrain?
+        if not hasattr(self.ml_regime, 'needs_retrain'):
+            return
+
+        # Проверяем: пора ли переобучать?
+        try:
+            if not self.ml_regime.needs_retrain():
+                return
+        except Exception:
+            return
+
+        # Пробуем переобучить
+        try:
+            klines = self._fetch_klines("15", 1000)
+            if not klines or len(klines) < 200:
+                return
+
+            import numpy as np
+            opens = np.array([float(k[1]) for k in klines])
+            highs = np.array([float(k[2]) for k in klines])
+            lows = np.array([float(k[3]) for k in klines])
+            closes = np.array([float(k[4]) for k in klines])
+            volumes = np.array([float(k[5]) for k in klines])
+
+            self.ml_regime.train(opens, highs, lows, closes, volumes)
+            log.info("🧠 ML переобучена")
+
+        except ImportError:
+            log.warning("⚠️ ML retrain: lightgbm/sklearn не установлен")
+        except Exception as e:
+            log.warning(f"⚠️ ML retrain error: {e}")
 
     def _maybe_run_genetic(self):
-        if not self.genetic: return
+        """Генетическая оптимизация раз в сутки."""
+        if not self.genetic:
+            return
+
         last = self._cache_times.get("genetic_run")
-        if last and (datetime.utcnow() - last).total_seconds() < 86400: return
-        ks = self._fetch_klines("5", 1000)
-        if len(ks) >= 200:
-            self.genetic.evolve(np.array([float(k[4]) for k in ks]), np.array([float(k[5]) for k in ks]), generations=50)
-            self.genetic.apply_best_genome()
+        if last and (datetime.utcnow() - last).total_seconds() < 86400:
+            return
+
+        try:
+            klines = self._fetch_klines("5", 1000)
+            if not klines or len(klines) < 200:
+                return
+
+            import numpy as np
+            prices = np.array([float(k[4]) for k in klines])
+            volumes = np.array([float(k[5]) for k in klines])
+
+            log.info("🧬 Запуск генетической оптимизации...")
+            best = self.genetic.evolve(prices, volumes, generations=50)
+            changes = self.genetic.apply_best_genome()
+            if changes:
+                log.info(f"🧬 Применено {len(changes)} изменений")
             self._cache_times["genetic_run"] = datetime.utcnow()
+
+        except ImportError:
+            log.warning("⚠️ Genetic: torch не установлен")
+        except Exception as e:
+            log.warning(f"⚠️ Genetic error: {e}")
 
     def _emergency_shutdown(self, reason):
         log.critical(f"🛑 EMERGENCY SHUTDOWN: {reason}")
