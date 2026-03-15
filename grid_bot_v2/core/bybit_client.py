@@ -15,7 +15,8 @@ class BybitClient:
     
     def __init__(self):
         self.session = HTTP(
-            testnet=config.BYBIT_DEMO,
+            testnet=False, # Используем Mainnet или Demo Mainnet
+            demo=config.BYBIT_DEMO, # Специальный флаг для UTA Demo
             api_key=config.BYBIT_API_KEY,
             api_secret=config.BYBIT_API_SECRET
         )
