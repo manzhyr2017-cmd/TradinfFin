@@ -50,26 +50,47 @@ class BybitClient:
 
     def get_instrument_info(self, symbol: Optional[str] = None) -> Dict[str, Any]:
         """Получить правила торговли (min_qty, tick_size)."""
+        symbol = symbol or self.symbol
+        # Кэшируем на время сессии
+        if hasattr(self, '_instr_cache') and symbol in self._instr_cache:
+            return self._instr_cache[symbol]
+            
         try:
             response = self.session.get_instruments_info(
                 category=self.category,
-                symbol=symbol or self.symbol
+                symbol=symbol
             )
             item = response['result']['list'][0]
+            
+            # Разные поля для разных категорий
             lot_size = item.get('lotSizeFilter', {})
             price_filter = item.get('priceFilter', {})
             
-            return {
+            info = {
                 "min_qty": Decimal(str(lot_size.get('minOrderQty', '0'))),
                 "qty_step": Decimal(str(lot_size.get('qtyStep', '0'))),
                 "tick_size": Decimal(str(price_filter.get('tickSize', '0.01'))),
                 "raw": item
             }
+            if not hasattr(self, '_instr_cache'): self._instr_cache = {}
+            self._instr_cache[symbol] = info
+            return info
         except Exception as e:
-            log.error(f"Error fetching instrument info: {e}")
+            log.error(f"Error fetching instrument info for {symbol}: {e}")
+            
+            # Хардкод-фоллбэки для популярных монет (последний рубеж)
+            hardcoded = {
+                "BTCUSDT": {"min_qty": Decimal("0.001"), "qty_step": Decimal("0.001"), "tick_size": Decimal("0.1")},
+                "ETHUSDT": {"min_qty": Decimal("0.01"), "qty_step": Decimal("0.01"), "tick_size": Decimal("0.01")},
+                "BNBUSDT": {"min_qty": Decimal("0.01"), "qty_step": Decimal("0.01"), "tick_size": Decimal("0.01")},
+                "SOLUSDT": {"min_qty": Decimal("0.1"), "qty_step": Decimal("0.1"), "tick_size": Decimal("0.01")},
+            }
+            if symbol in hardcoded:
+                return hardcoded[symbol]
+                
             return {
-                "min_qty": Decimal("0.001"),
-                "qty_step": Decimal("0.001"),
+                "min_qty": Decimal("0.01"), 
+                "qty_step": Decimal("0.01"),
                 "tick_size": Decimal("0.01")
             }
 

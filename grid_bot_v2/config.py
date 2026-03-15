@@ -68,4 +68,5 @@ INFINITY_TRAILING_PCT = 3.0    # Trail floor 3% below price
 
 # --- Telegram Configuration ---
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '')
-TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID', '')
+TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID') or os.getenv('TELEGRAM_CHANNEL', '')
+TELEGRAM_ADMIN_ID = os.getenv('TELEGRAM_ADMIN_ID', '')

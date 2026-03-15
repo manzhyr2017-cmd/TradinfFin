@@ -24,7 +24,8 @@ class BatchOrderManager:
         order_ids = []
         errors = []
         
-        # Bybit позволяет макс 10 ордеров в batch для UTA Spot
+        # Bybit позволяет макс 10 ордеров в batch для UTA Spot (или 20 для Linear UTA)
+        # Ограничимся 10 для универсальности
         batch_limit = 10
         for i in range(0, len(orders), batch_limit):
             chunk = orders[i:i + batch_limit]
@@ -32,6 +33,7 @@ class BatchOrderManager:
             request_list = []
             for o in chunk:
                 request_list.append({
+                    "category": self.client.category,
                     "symbol": self.client.symbol,
                     "side": o['side'],
                     "orderType": "Limit",
@@ -41,6 +43,7 @@ class BatchOrderManager:
                 })
                 
             try:
+                log.debug(f"Sending batch: {json.dumps(request_list)}")
                 # В pybit метод для пакетного размещения
                 response = self.client.session.place_batch_order(
                     category=self.client.category,
@@ -55,11 +58,16 @@ class BatchOrderManager:
                     return [], [{"error": response.get('retMsg'), "code": ret_code_root}]
 
                 for res in result_list:
-                    if res.get('orderId'):
+                    # Bybit в батче возвращает retCode внутри каждого элемента
+                    # Иногда это retCode/retMsg, иногда code/msg
+                    r_code = res.get('retCode') if res.get('retCode') is not None else res.get('code')
+                    r_msg = res.get('retMsg') or res.get('msg')
+                    
+                    if res.get('orderId') and (r_code == 0 or r_code is None):
                         order_ids.append(res['orderId'])
                     else:
-                        ret_msg = res.get('retMsg') or res.get('msg') or 'Unknown error'
-                        ret_code = res.get('retCode') or res.get('code') or 'No code'
+                        ret_msg = r_msg or 'Unknown error'
+                        ret_code = r_code if r_code is not None else 'No code'
                         log.error(f"❌ Batch order item failed: {ret_code} - {ret_msg} | Full: {json.dumps(res)}")
                         errors.append(res)
                         

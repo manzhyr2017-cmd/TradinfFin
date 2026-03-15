@@ -1171,6 +1171,10 @@ class MasterBrain:
         # 2. Округляем объем до шага
         adj_qty = (qty / qty_step).quantize(Decimal('1'), rounding="ROUND_DOWN") * qty_step
         
+        # Если после округления вниз получили 0, но исходный qty > 0 -> берем минимальный шаг
+        if adj_qty == 0 and qty > 0:
+            adj_qty = qty_step
+            
         # 3. Проверка на минимальный объем
         if adj_qty < min_qty:
             log.warning(f"⚠️ Qty {adj_qty} < Min Qty {min_qty}. Поднимаем до минимального.")
