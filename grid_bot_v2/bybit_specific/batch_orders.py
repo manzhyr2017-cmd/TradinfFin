@@ -51,13 +51,18 @@ class BatchOrderManager:
                 
                 # Обрабатываем результаты каждого ордера в пакете
                 result_list = response.get('result', {}).get('list', [])
+                ret_code_root = response.get('retCode', 0)
+                if ret_code_root != 0:
+                    log.error(f"❌ Batch request rejected by server: {ret_code_root} - {response.get('retMsg')}")
+                    return [], [{"error": response.get('retMsg'), "code": ret_code_root}]
+
                 for res in result_list:
                     if res.get('orderId'):
                         order_ids.append(res['orderId'])
                     else:
                         ret_msg = res.get('retMsg', 'Unknown error')
                         ret_code = res.get('retCode', 'No code')
-                        log.error(f"❌ Batch order failed: {ret_code} - {ret_msg}")
+                        log.error(f"❌ Batch order item failed: {ret_code} - {ret_msg}")
                         errors.append(res)
                         
             except Exception as e:

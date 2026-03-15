@@ -23,12 +23,12 @@ class BybitClient:
         self.symbol = config.SYMBOL
         self.category = "spot" # Либо "linear" для деривативов
         
-    def get_price(self) -> Decimal:
+    def get_price(self, symbol: Optional[str] = None) -> Decimal:
         """Получить текущую рыночную цену (last price)."""
         try:
             response = self.session.get_tickers(
                 category=self.category,
-                symbol=self.symbol
+                symbol=symbol or self.symbol
             )
             price = response['result']['list'][0]['lastPrice']
             return Decimal(str(price))
@@ -36,12 +36,12 @@ class BybitClient:
             log.error(f"Error fetching price: {e}")
             raise
 
-    def get_orderbook(self, limit: int = 50) -> Dict[str, Any]:
+    def get_orderbook(self, limit: int = 50, symbol: Optional[str] = None) -> Dict[str, Any]:
         """Получить стакан ордеров."""
         try:
             response = self.session.get_orderbook(
                 category=self.category,
-                symbol=self.symbol,
+                symbol=symbol or self.symbol,
                 limit=limit
             )
             return response['result']
@@ -49,7 +49,7 @@ class BybitClient:
             log.error(f"Error fetching orderbook: {e}")
             return {}
 
-    def get_klines(self, interval: str = "15", limit: int = 200) -> List[List[Any]]:
+    def get_klines(self, interval: str = "15", limit: int = 200, symbol: Optional[str] = None) -> List[List[Any]]:
         """
         Получить исторические свечи.
         Интервалы: 1, 3, 5, 15, 30, 60, 120, 240, D, W, M
@@ -57,7 +57,7 @@ class BybitClient:
         try:
             response = self.session.get_kline(
                 category=self.category,
-                symbol=self.symbol,
+                symbol=symbol or self.symbol,
                 interval=interval,
                 limit=limit
             )
@@ -75,7 +75,7 @@ class BybitClient:
                 coin=coin
             )
             # Для UTA баланс находится в списке монет
-            coins = response['result']['list'][0]['coin']
+            coins = response['result']['list'][0].get('coin', [])
             for c in coins:
                 if c['coin'] == coin:
                     return Decimal(str(c['walletBalance']))
@@ -90,13 +90,14 @@ class BybitClient:
         qty: str, 
         price: str, 
         order_type: str = "Limit",
-        post_only: bool = False
+        post_only: bool = False,
+        symbol: Optional[str] = None
     ) -> Optional[str]:
         """Разместить ордер."""
         try:
             params = {
                 "category": self.category,
-                "symbol": self.symbol,
+                "symbol": symbol or self.symbol,
                 "side": side,
                 "orderType": order_type,
                 "qty": qty,
@@ -109,12 +110,12 @@ class BybitClient:
             log.error(f"Error placing order: {e}")
             return None
 
-    def cancel_order(self, order_id: str) -> bool:
+    def cancel_order(self, order_id: str, symbol: Optional[str] = None) -> bool:
         """Отменить конкретный ордер."""
         try:
             self.session.cancel_order(
                 category=self.category,
-                symbol=self.symbol,
+                symbol=symbol or self.symbol,
                 orderId=order_id
             )
             return True
@@ -122,24 +123,24 @@ class BybitClient:
             log.error(f"Error cancelling order {order_id}: {e}")
             return False
 
-    def cancel_all(self) -> bool:
+    def cancel_all(self, symbol: Optional[str] = None) -> bool:
         """Отменить все активные ордера по инструменту."""
         try:
             self.session.cancel_all_orders(
                 category=self.category,
-                symbol=self.symbol
+                symbol=symbol or self.symbol
             )
             return True
         except Exception as e:
             log.error(f"Error cancelling all orders: {e}")
             return False
 
-    def get_active_orders(self) -> List[Dict[str, Any]]:
+    def get_active_orders(self, symbol: Optional[str] = None) -> List[Dict[str, Any]]:
         """Получить список всех активных ордеров."""
         try:
             response = self.session.get_open_orders(
                 category=self.category,
-                symbol=self.symbol
+                symbol=symbol or self.symbol
             )
             return response['result']['list']
         except Exception as e:

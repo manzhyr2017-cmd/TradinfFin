@@ -24,6 +24,7 @@ LEVERAGE = 1
 STOP_LOSS_PCT = 5.0          # Стоп-лосс от нижней границы
 MAX_DRAWDOWN_USDT = 100.0    # Макс. просадка в долларах
 DAILY_LOSS_LIMIT_USDT = 50.0  # Дневной лимит убытка
+REBALANCE_THRESHOLD_PCT = 10.0 # Порог для ребаланса сетки
 USE_DYNAMIC_QTY = True
 DYNAMIC_QTY_BALANCE_PCT = 0.5 
 MIN_ORDER_QTY = 0.001

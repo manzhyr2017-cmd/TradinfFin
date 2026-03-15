@@ -1227,7 +1227,7 @@ class MasterBrain:
         price = float(snap.price)
         if upper <= lower: return False
         pos = (price - lower) / (upper - lower) * 100
-        return pos > config.REBALANCE_THRESHOLD_PCT or pos < (100 - config.REBALANCE_THRESHOLD_PCT)
+        return pos > (100 - config.REBALANCE_THRESHOLD_PCT) or pos < config.REBALANCE_THRESHOLD_PCT
 
     def _rebalance_grid(self, snap, mode):
         log.info(f"🔄 Ребаланс сетки @ {snap.price}")
