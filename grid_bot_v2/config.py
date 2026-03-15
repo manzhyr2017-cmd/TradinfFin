@@ -13,19 +13,23 @@ CATEGORY = "linear"
 # --- Bot Configuration ---
 SYMBOL = "ETHUSDT"
 QUOTE_COIN = "USDT"
-GRID_LEVELS = 10
-GRID_STEP_PERCENT = 0.5  # Percentage between levels
-BASE_ORDER_QTY = 0.05    # Size of one order in ETH
-LEVERAGE = 1             # Leverage for Spot/Margin
+GRID_LEVEL_COUNT = 10
+GRID_STEP_PERCENT = 0.5
+GRID_LOWER_PRICE = 2400.0   # НИЖНЯЯ ГРАНИЦА СЕТКИ
+GRID_UPPER_PRICE = 2800.0   # ВЕРХНЯЯ ГРАНИЦА СЕТКИ
+BASE_ORDER_QTY = 0.05
+LEVERAGE = 1
 
 # --- Risk & Sizing ---
-MAX_DRAWDOWN_PCT = 5.0
+STOP_LOSS_PCT = 5.0          # Стоп-лосс от нижней границы
+MAX_DRAWDOWN_USDT = 100.0    # Макс. просадка в долларах
+DAILY_LOSS_LIMIT_USDT = 50.0  # Дневной лимит убытка
 USE_DYNAMIC_QTY = True
-DYNAMIC_QTY_BALANCE_PCT = 0.5 # % of balance for one level
+DYNAMIC_QTY_BALANCE_PCT = 0.5 
 MIN_ORDER_QTY = 0.001
 MAX_ORDER_QTY = 1.0
 MAKER_FEE_PCT = float(os.getenv('MAKER_FEE_PCT', 0.02))
-VELOCITY_THRESHOLD_PCT = 2.0 # Max price change in 5m
+VELOCITY_THRESHOLD_PCT = 2.0 
 MAX_API_LATENCY_MS = 500
 BTC_SYMBOL = "BTCUSDT"
 
@@ -35,6 +39,7 @@ RSI_PERIOD = 14
 RSI_OVERBOUGHT = 70
 RSI_OVERSOLD = 30
 USE_ARBITRAGE = False
+USE_DELTA_NEUTRAL = False      # Выключим пока для простоты
 STATS_INTERVAL_CYCLES = 100
 
 # --- Bybit Specific Optimizations ---
