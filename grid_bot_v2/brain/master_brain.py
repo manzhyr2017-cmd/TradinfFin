@@ -1433,6 +1433,8 @@ class MasterBrain:
         
         # 1. Отменяем всё на старом символе
         self.client.cancel_all()
+        import time
+        time.sleep(0.5) # Даем бирже "выдохнуть" перед новой сеткой
         
         # 2. Обновляем состояние
         self.current_symbol = new_symbol

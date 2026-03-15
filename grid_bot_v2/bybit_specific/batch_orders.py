@@ -15,26 +15,23 @@ class BatchOrderManager:
         
     def place_grid_batch(self, orders: List[Dict[str, str]], use_postonly: bool = True) -> Tuple[List[str], List[Dict]]:
         """
-        Размещает список ордеров пакетом.
-        orders: list of {'side': 'Buy/Sell', 'qty': '0.1', 'price': '25000'}
+        Размещает список ордеров пакетом. С автоматическим ретраем при rate limit.
         """
         if not orders:
             return [], []
             
-        order_ids = []
-        errors = []
+        final_order_ids = []
+        final_errors = []
         
-        # Лимит для Linear UTA - 20 ордеров, для Spot UTA - 10. 
-        # Оставляем 10 для безопасности.
+        # 1. Первая попытка пакетами по 10
         batch_limit = 10
+        to_retry = []
+
         for i in range(0, len(orders), batch_limit):
             chunk = orders[i:i + batch_limit]
-            
             request_list = []
             for o in chunk:
-                # Генерируем уникальный orderLinkId для каждого ордера для лучшей диагностики
                 link_id = f"grid_{uuid.uuid4().hex[:12]}"
-                
                 req_item = {
                     "symbol": self.client.symbol,
                     "side": o['side'],
@@ -43,48 +40,53 @@ class BatchOrderManager:
                     "price": o['price'],
                     "timeInForce": "PostOnly" if use_postonly else "GTC",
                     "orderLinkId": link_id,
-                    "positionIdx": o.get('positionIdx', 0) # 0 для One-Way, 1/2 для Hedge
+                    "positionIdx": o.get('positionIdx', 0)
                 }
                 request_list.append(req_item)
                 
             try:
-                # В pybit метод для пакетного размещения
-                response = self.client.session.place_batch_order(
-                    category=self.client.category,
-                    request=request_list
-                )
-                
-                # Обрабатываем результаты каждого ордера в пакете
+                response = self.client.session.place_batch_order(category=self.client.category, request=request_list)
                 result_list = response.get('result', {}).get('list', [])
-                ret_code_root = response.get('retCode', 0)
+                ext_info_list = response.get('retExtInfo', {}).get('list', [])
                 
-                if ret_code_root != 0:
-                    log.error(f"❌ Batch request rejected by server: {ret_code_root} - {response.get('retMsg')}")
-                    return [], [{"error": response.get('retMsg'), "code": ret_code_root}]
-
-                for i, res in enumerate(result_list):
-                    r_code = res.get('retCode') if res.get('retCode') is not None else res.get('code')
-                    r_msg = res.get('retMsg') or res.get('msg')
+                for idx, res in enumerate(result_list):
+                    ext_info = ext_info_list[idx] if idx < len(ext_info_list) else {}
+                    r_code = res.get('retCode') or res.get('code') or ext_info.get('code')
                     
                     if res.get('orderId') and (r_code == 0 or r_code is None):
-                        order_ids.append(res['orderId'])
+                        final_order_ids.append(res['orderId'])
+                    elif r_code == 10006:
+                        # Сохраняем оригинальный запрос для ретрая
+                        to_retry.append(chunk[idx])
                     else:
-                        ret_msg = r_msg or 'Unknown error'
-                        ret_code = r_code if r_code is not None else 'No code'
-                        
-                        # Если ошибка "Unknown", попробуем вывести детали запроса
-                        orig_req = request_list[i] if i < len(request_list) else {}
-                        log.error(f"❌ Batch Order Failed: {ret_code} - {ret_msg} | Req: {orig_req.get('side')} {orig_req.get('qty')} @ {orig_req.get('price')}")
-                        log.error(f"DEBUG: Full Item Keys: {list(res.keys())}")
-                        log.error(f"DEBUG: Full Response Item: {json.dumps(res)}")
-                        log.error(f"DEBUG: Root Response: {json.dumps(response)}")
-                        errors.append(res)
-                        
+                        final_errors.append(res)
             except Exception as e:
                 log.error(f"Batch placement Exception: {e}")
-                errors.append({"error": str(e)})
-                
-        return order_ids, errors
+                final_errors.append({"error": str(e)})
+
+        # 2. Ретрай для тех, кто попал под лимит (делаем паузу и по одному)
+        if to_retry:
+            import time
+            log.warning(f"⏳ Rate limited on {len(to_retry)} orders. Retrying individually after 1s...")
+            time.sleep(1.1)
+            for o in to_retry:
+                try:
+                    # Используем обычный place_order для надежности ретрая
+                    oid = self.client.place_order(
+                        side=o['side'],
+                        qty=o['qty'],
+                        price=o['price'],
+                        position_idx=o.get('positionIdx')
+                    )
+                    if oid:
+                        final_order_ids.append(oid)
+                    else:
+                        final_errors.append({"msg": "Failed after individual retry", "req": o})
+                except Exception as e:
+                    final_errors.append({"error": f"Retry error: {e}", "req": o})
+                time.sleep(0.1) # Микро-пауза между ретраями
+
+        return final_order_ids, final_errors
 
     def cancel_batch(self, order_ids: List[str]) -> Tuple[int, List[Dict]]:
         """Отмена ордеров пакетом."""
