@@ -1354,32 +1354,98 @@ class MasterBrain:
         return BrainDecision(decision_type=dec_type, trading_mode=mode, should_buy=can_buy, should_sell=can_sell, qty_multiplier=self._get_ml_qty_mult(snap), notes=notes, confidence=snap.ml_confidence)
 
     def _periodic_check(self) -> BrainDecision:
+        """Периодическая проверка."""
         notes = []
-        try: price = self.client.get_price()
-        except: return BrainDecision(DecisionType.NO_ACTION, self.state.current_mode, False, False, 0, "API Error", ["L1: API Error"])
+
+        # L1: Survival
+        try:
+            price = self.client.get_price()
+        except Exception:
+            return BrainDecision(
+                decision_type=DecisionType.NO_ACTION,
+                trading_mode=self.state.current_mode,
+                should_buy=False, should_sell=False,
+                qty_multiplier=0,
+                blocked_by="API недоступен",
+                notes=["L1: API error"],
+            )
 
         alive, msg = self._level1_survival_check(price)
         if not alive:
             self._emergency_shutdown(msg)
-            return BrainDecision(DecisionType.CANCEL_ALL, TradingMode.EMERGENCY_STOP, False, False, 0, msg, [msg])
+            return BrainDecision(
+                decision_type=DecisionType.CANCEL_ALL,
+                trading_mode=TradingMode.EMERGENCY_STOP,
+                should_buy=False, should_sell=False,
+                qty_multiplier=0, blocked_by=msg, notes=[msg],
+            )
 
+        # L2: Market Reading
         snap = self._level2_read_market()
-        mode = self._level3_select_mode(snap)
-        can_buy, can_sell, timing_msg = self._level4_timing_gate(snap, mode)
 
+        # L3: Mode
+        mode = self._level3_select_mode(snap)
+
+        # L4: Timing
+        can_buy, can_sell, timing_msg = self._level4_timing_gate(
+            snap, mode
+        )
+
+        # Режимные действия
         self._handle_mode_specific_actions(snap, mode)
+
+        # Ребаланс
         if self._needs_rebalance(snap):
             self._rebalance_grid(snap, mode)
             notes.append("Ребаланс сетки")
 
-        self._maybe_retrain_ml()
-        self._maybe_run_genetic()
-        self._run_scanner()
+        # ═══════════════════════════════════════════════
+        # ML и Genetic — только каждый N-й цикл
+        # (дополнительная защита помимо кэша)
+        # ═══════════════════════════════════════════════
+        cycle = self.stats["decisions_made"]
 
-        if self.stats["decisions_made"] % 100 == 0:
+        # ML retrain: проверяем каждые 100 циклов (~5 минут)
+        if cycle % 100 == 0:
+            self._maybe_retrain_ml()
+
+        # Genetic: проверяем каждые 1000 циклов (~50 минут)
+        if cycle % 1000 == 0:
+            self._maybe_run_genetic()
+
+        # A/B тест
+        if self.ab_tester and cycle % 50 == 0:
+            try:
+                result = self.ab_tester.check_test_completion()
+                if result:
+                    changes = self.ab_tester.apply_winner(result)
+            except Exception:
+                pass
+
+        # Auto-compound: проверяем каждые 500 циклов
+        if self.compounder and cycle % 500 == 0:
+            try:
+                if self.compounder.should_compound():
+                    self._run_compound()
+            except Exception as e:
+                log.warning(f"Compound error: {e}")
+
+        # Scanner: проверяем каждые 500 циклов
+        if self.scanner and cycle % 500 == 0:
+            self._run_scanner()
+
+        # Статистика
+        if cycle % 200 == 0:
             self._log_full_stats(snap)
 
-        return BrainDecision(DecisionType.NO_ACTION, mode, can_buy, can_sell, self._get_ml_qty_mult(snap), notes=notes)
+        return BrainDecision(
+            decision_type=DecisionType.NO_ACTION,
+            trading_mode=mode,
+            should_buy=can_buy,
+            should_sell=can_sell,
+            qty_multiplier=self._get_ml_qty_mult(snap),
+            notes=notes,
+        )
 
     def _check_orders_rest(self):
         """
@@ -1631,25 +1697,30 @@ class MasterBrain:
 
     def _maybe_retrain_ml(self):
         """Переобучаем ML если пришло время."""
-        # Проверяем: ML модуль вообще загружен?
+        # Модуль не загружен → выходим
         if not self.ml_regime:
             return
 
-        # Проверяем: есть ли метод needs_retrain?
-        if not hasattr(self.ml_regime, 'needs_retrain'):
-            return
-
-        # Проверяем: пора ли переобучать?
-        try:
-            if not self.ml_regime.needs_retrain():
+        # Проверяем кэш: не переобучали ли недавно?
+        last = self._cache_times.get("ml_retrain")
+        if last:
+            elapsed = (datetime.utcnow() - last).total_seconds()
+            if elapsed < 21600:  # 6 часов = 21600 секунд
                 return
-        except Exception:
-            return
 
         # Пробуем переобучить
         try:
+            # Проверяем есть ли метод train
+            if not hasattr(self.ml_regime, 'train'):
+                self._cache_times["ml_retrain"] = datetime.utcnow()
+                return
+
             klines = self._fetch_klines("15", 1000)
             if not klines or len(klines) < 200:
+                # Мало данных — попробуем через час
+                self._cache_times["ml_retrain"] = (
+                    datetime.utcnow() - timedelta(hours=5)
+                )
                 return
 
             import numpy as np
@@ -1659,24 +1730,45 @@ class MasterBrain:
             closes = np.array([float(k[4]) for k in klines])
             volumes = np.array([float(k[5]) for k in klines])
 
-            self.ml_regime.train(opens, highs, lows, closes, volumes)
-            log.info("🧠 ML переобучена")
+            result = self.ml_regime.train(
+                opens, highs, lows, closes, volumes
+            )
 
-        except ImportError:
-            log.warning("⚠️ ML retrain: lightgbm/sklearn не установлен")
+            # Ставим время ПОСЛЕ успешного обучения
+            self._cache_times["ml_retrain"] = datetime.utcnow()
+
+            if result and isinstance(result, dict):
+                acc = result.get("accuracy", "?")
+                log.info(f"🧠 ML переобучена: accuracy={acc}")
+            else:
+                log.info("🧠 ML retrain завершён (без метрик)")
+
         except Exception as e:
-            log.warning(f"⚠️ ML retrain error: {e}")
+            # При ЛЮБОЙ ошибке — ставим кэш чтобы не спамить
+            self._cache_times["ml_retrain"] = datetime.utcnow()
+            log.warning(f"⚠️ ML retrain: {e}")
 
     def _maybe_run_genetic(self):
         """Генетическая оптимизация раз в сутки."""
+        # Модуль не загружен → выходим
         if not self.genetic:
             return
 
+        # Проверяем кэш: не запускали ли недавно?
         last = self._cache_times.get("genetic_run")
-        if last and (datetime.utcnow() - last).total_seconds() < 86400:
-            return
+        if last:
+            elapsed = (datetime.utcnow() - last).total_seconds()
+            if elapsed < 86400:  # 24 часа = 86400 секунд
+                return
+
+        # Ставим кэш СРАЗУ (чтобы не запускать повторно при ошибке)
+        self._cache_times["genetic_run"] = datetime.utcnow()
 
         try:
+            # Проверяем есть ли метод evolve
+            if not hasattr(self.genetic, 'evolve'):
+                return
+
             klines = self._fetch_klines("5", 1000)
             if not klines or len(klines) < 200:
                 return
@@ -1685,17 +1777,25 @@ class MasterBrain:
             prices = np.array([float(k[4]) for k in klines])
             volumes = np.array([float(k[5]) for k in klines])
 
-            log.info("🧬 Запуск генетической оптимизации...")
+            log.info("🧬 Генетическая оптимизация...")
             best = self.genetic.evolve(prices, volumes, generations=50)
-            changes = self.genetic.apply_best_genome()
-            if changes:
-                log.info(f"🧬 Применено {len(changes)} изменений")
-            self._cache_times["genetic_run"] = datetime.utcnow()
 
-        except ImportError:
-            log.warning("⚠️ Genetic: torch не установлен")
+            # apply_best_genome может вернуть dict, bool, или None
+            if hasattr(self.genetic, 'apply_best_genome'):
+                changes = self.genetic.apply_best_genome()
+
+                # Проверяем тип перед len()
+                if isinstance(changes, dict) and changes:
+                    log.info(
+                        f"🧬 Применено {len(changes)} изменений"
+                    )
+                elif changes:
+                    log.info("🧬 Параметры обновлены")
+                else:
+                    log.info("🧬 Без изменений")
+
         except Exception as e:
-            log.warning(f"⚠️ Genetic error: {e}")
+            log.warning(f"⚠️ Genetic: {e}")
 
     def _emergency_shutdown(self, reason):
         log.critical(f"🛑 EMERGENCY SHUTDOWN: {reason}")
