@@ -32,6 +32,10 @@ class TelegramNotifier:
         except Exception as e:
             log.error(f"Error sending Telegram message: {e}")
 
+    def send_alert(self, message: str):
+        """Псевдоним для экстренных уведомлений."""
+        self.send_message(f"🚨 <b>ALERT</b>\n{message}")
+
 def send_telegram_message(message: str):
     """Функция-обертка для обратной совместимости."""
     notifier = TelegramNotifier()

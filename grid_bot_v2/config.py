@@ -13,11 +13,11 @@ CATEGORY = "linear"
 # --- Bot Configuration ---
 SYMBOL = "ETHUSDT"
 QUOTE_COIN = "USDT"
-GRID_LEVEL_COUNT = 10
+GRID_LEVEL_COUNT = 15
 GRID_STEP_PERCENT = 0.5
-GRID_LOWER_PRICE = 2400.0   # НИЖНЯЯ ГРАНИЦА СЕТКИ
-GRID_UPPER_PRICE = 2800.0   # ВЕРХНЯЯ ГРАНИЦА СЕТКИ
-BASE_ORDER_QTY = 0.05
+GRID_LOWER_PRICE = 1900.0   # НИЖНЯЯ ГРАНИЦА СЕТКИ
+GRID_UPPER_PRICE = 2300.0   # ВЕРХНЯЯ ГРАНИЦА СЕТКИ
+BASE_ORDER_QTY = 0.02
 LEVERAGE = 1
 
 # --- Risk & Sizing ---
