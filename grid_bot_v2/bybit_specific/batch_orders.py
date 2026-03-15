@@ -12,8 +12,6 @@ class BatchOrderManager:
     
     def __init__(self, client):
         self.client = client
-        self.category = client.category
-        self.symbol = client.symbol
         
     def place_grid_batch(self, orders: List[Dict[str, str]], use_postonly: bool = True) -> Tuple[List[str], List[Dict]]:
         """
@@ -34,7 +32,7 @@ class BatchOrderManager:
             request_list = []
             for o in chunk:
                 request_list.append({
-                    "symbol": self.symbol,
+                    "symbol": self.client.symbol,
                     "side": o['side'],
                     "orderType": "Limit",
                     "qty": o['qty'],
@@ -45,7 +43,7 @@ class BatchOrderManager:
             try:
                 # В pybit метод для пакетного размещения
                 response = self.client.session.place_batch_order(
-                    category=self.category,
+                    category=self.client.category,
                     request=request_list
                 )
                 
@@ -82,11 +80,11 @@ class BatchOrderManager:
         
         for i in range(0, len(order_ids), batch_limit):
             chunk = order_ids[i:i + batch_limit]
-            request_list = [{"symbol": self.symbol, "orderId": oid} for oid in chunk]
+            request_list = [{"symbol": self.client.symbol, "orderId": oid} for oid in chunk]
             
             try:
                 response = self.client.session.cancel_batch_order(
-                    category=self.category,
+                    category=self.client.category,
                     request=request_list
                 )
                 
