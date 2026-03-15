@@ -1,6 +1,7 @@
 import logging
 import json
 import uuid
+import time
 from typing import List, Dict, Optional, Tuple, Any
 
 log = logging.getLogger("BatchOrderManager")
@@ -68,7 +69,6 @@ class BatchOrderManager:
 
         # 2. Ретрай для тех, кто попал под лимит (делаем паузу и по одному)
         if to_retry:
-            import time
             log.warning(f"⏳ Rate limited on {len(to_retry)} orders. Retrying individually after 1s...")
             time.sleep(1.1)
             for o in to_retry:
