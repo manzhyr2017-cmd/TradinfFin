@@ -21,6 +21,7 @@ class OrderWebSocket:
             testnet=False,
             demo=config.BYBIT_DEMO,
             channel_type="private",
+            api_key=config.BYBIT_API_KEY,
             api_secret=config.BYBIT_API_SECRET,
             ping_interval=30, 
             ping_timeout=15,
