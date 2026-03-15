@@ -84,7 +84,7 @@ class BatchOrderManager:
                         final_errors.append({"msg": "Failed after individual retry", "req": o})
                 except Exception as e:
                     final_errors.append({"error": f"Retry error: {e}", "req": o})
-                time.sleep(0.1) # Микро-пауза между ретраями
+                time.sleep(0.5) # Пауза побольше для стабильности
 
         return final_order_ids, final_errors
 

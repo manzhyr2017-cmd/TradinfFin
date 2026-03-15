@@ -22,7 +22,9 @@ class OrderWebSocket:
             demo=config.BYBIT_DEMO,
             channel_type="private",
             api_key=config.BYBIT_API_KEY,
-            api_secret=config.BYBIT_API_SECRET
+            api_secret=config.BYBIT_API_SECRET,
+            ping_interval=30, # Пингуем раз в 30 сек
+            ping_timeout=15   # Ждем ответ 15 сек
         )
         self.ws.order_stream(callback=self._handle_order_update)
         self._running = True
