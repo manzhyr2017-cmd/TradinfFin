@@ -341,6 +341,7 @@ class MasterBrain:
         # Кэш последних результатов модулей
         self._cache: Dict[str, Any] = {}
         self._cache_times: Dict[str, datetime] = {}
+        self._last_updates: Dict[str, datetime] = {}
 
         # Статистика
         self.stats = {
@@ -1242,7 +1243,8 @@ class MasterBrain:
             vs = np.array([float(k[5]) for k in klines])
             rl_p = self.rl_optimizer.get_optimal_params(ps, vs, float(self.db.get_total_profit()), float(self.client.get_balance()))
         else:
-            rl_p = GridParams(config.GRID_LEVELS, 15.0, 1.0)
+            levels_count = getattr(config, "GRID_LEVELS", config.GRID_LEVEL_COUNT)
+            rl_p = GridParams(levels_count, 15.0, 1.0)
 
         half = price * Decimal(str(rl_p.grid_range_pct / 100 / 2))
         lower, upper = price - half, price + half
@@ -1317,6 +1319,17 @@ class MasterBrain:
         log.info(f"🧠 MASTER BRAIN — Режим: {self.state.current_mode.value} | Цена: {snap.price}")
         log.info(f"   Net P&L: {float(self.db.get_total_profit()):.4f} | Compound ROI: {self.compounder.state.compound_roi_pct:.2f}%")
         log.info("═"*60)
+    def _is_interval_passed(self, key: str) -> bool:
+        """Проверяет, прошло ли достаточно времени с последнего обновления."""
+        now = datetime.utcnow()
+        last = self._last_updates.get(key)
+        interval = self.UPDATE_INTERVALS.get(key, 0)
+        
+        if last is None or (now - last).total_seconds() >= interval:
+            self._last_updates[key] = now
+            return True
+        return False
+
     def _run_scanner(self):
         """Периодическое сканирование рынка на наличие лучших пар."""
         if not self._is_interval_passed("scanner"): return

@@ -55,6 +55,9 @@ class BatchOrderManager:
                     if res.get('orderId'):
                         order_ids.append(res['orderId'])
                     else:
+                        ret_msg = res.get('retMsg', 'Unknown error')
+                        ret_code = res.get('retCode', 'No code')
+                        log.error(f"❌ Batch order failed: {ret_code} - {ret_msg}")
                         errors.append(res)
                         
             except Exception as e:
