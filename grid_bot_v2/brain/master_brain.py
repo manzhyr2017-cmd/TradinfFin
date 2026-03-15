@@ -1042,7 +1042,7 @@ class MasterBrain:
     #  ГЛАВНЫЙ ПУБЛИЧНЫЙ МЕТОД
     # ═══════════════════════════════════════════════════
 
-    def decide_and_act(
+    def decide(
         self,
         filled_order_id: Optional[str] = None,
         filled_side: Optional[str] = None,
