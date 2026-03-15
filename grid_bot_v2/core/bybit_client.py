@@ -1,4 +1,5 @@
 import logging
+import os
 import time
 from decimal import Decimal
 from typing import List, Dict, Optional, Any
@@ -14,6 +15,11 @@ class BybitClient:
     """
     
     def __init__(self):
+        if config.API_PROXY:
+            os.environ['HTTP_PROXY'] = config.API_PROXY
+            os.environ['HTTPS_PROXY'] = config.API_PROXY
+            log.info(f"🌐 Proxy set to {config.API_PROXY}")
+
         self.session = HTTP(
             testnet=False, # Используем Mainnet или Demo Mainnet
             demo=config.BYBIT_DEMO, # Специальный флаг для UTA Demo
@@ -22,6 +28,25 @@ class BybitClient:
         )
         self.symbol = config.SYMBOL
         self.category = config.CATEGORY
+        self._instr_cache = {}
+        self._position_mode = None # 0 = One-Way, 3 = Hedge
+        
+    def get_position_mode(self) -> int:
+        """Определить текущий режим позиции (One-Way=0 или Hedge=3)."""
+        if self._position_mode is not None:
+            return self._position_mode
+        try:
+            # Пытаемся получить информацию о позиции для символа
+            res = self.get_position()
+            # Если позиций больше одной на символ (или есть поле positionIdx > 0)
+            if any(p.get('positionIdx', 0) > 0 for p in res):
+                self._position_mode = 3 # Hedge Mode
+            else:
+                self._position_mode = 0 # One-Way Mode
+            log.info(f"🎯 Position Mode detected: {'Hedge' if self._position_mode == 3 else 'One-Way'}")
+            return self._position_mode
+        except:
+            return 0
         
     def get_position(self, symbol: Optional[str] = None) -> List[Dict[str, Any]]:
         """Получить текущие позиции."""
@@ -42,6 +67,8 @@ class BybitClient:
                 category=self.category,
                 symbol=symbol or self.symbol
             )
+            if not response.get('result', {}).get('list'):
+                raise ValueError(f"Empty ticker list for {symbol or self.symbol}")
             price = response['result']['list'][0]['lastPrice']
             return Decimal(str(price))
         except Exception as e:
@@ -60,6 +87,8 @@ class BybitClient:
                 category=self.category,
                 symbol=symbol
             )
+            if not response.get('result', {}).get('list'):
+                raise ValueError(f"Empty instrument info for {symbol}")
             item = response['result']['list'][0]
             
             # Разные поля для разных категорий
@@ -133,6 +162,8 @@ class BybitClient:
                 coin=coin
             )
             # Для UTA баланс находится в списке монет
+            if not response.get('result', {}).get('list'):
+                return Decimal("0")
             coins = response['result']['list'][0].get('coin', [])
             for c in coins:
                 if c['coin'] == coin:
@@ -149,10 +180,19 @@ class BybitClient:
         price: str, 
         order_type: str = "Limit",
         post_only: bool = False,
-        symbol: Optional[str] = None
+        symbol: Optional[str] = None,
+        position_idx: Optional[int] = None
     ) -> Optional[str]:
         """Разместить ордер."""
         try:
+            # Авто-детект positionIdx если не указан
+            if position_idx is None:
+                mode = self.get_position_mode()
+                if mode == 3: # Hedge
+                    position_idx = 1 if side == "Buy" else 2
+                else:
+                    position_idx = 0
+                    
             params = {
                 "category": self.category,
                 "symbol": symbol or self.symbol,
@@ -160,7 +200,8 @@ class BybitClient:
                 "orderType": order_type,
                 "qty": qty,
                 "price": price,
-                "timeInForce": "PostOnly" if post_only else "GTC"
+                "timeInForce": "PostOnly" if post_only else "GTC",
+                "positionIdx": position_idx
             }
             response = self.session.place_order(**params)
             return response['result']['orderId']

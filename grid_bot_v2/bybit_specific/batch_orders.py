@@ -1,13 +1,13 @@
 import logging
 import json
+import uuid
 from typing import List, Dict, Optional, Tuple, Any
 
 log = logging.getLogger("BatchOrderManager")
 
 class BatchOrderManager:
     """
-    Управляет пакетным размещением ордеров в Bybit.
-    Позволяет разместить до 10 ордеров (Spot) или 20 (UTA Linear) за один запрос.
+    Управляет пакетным размещением ордеров в Bybit V5.
     """
     
     def __init__(self, client):
@@ -24,26 +24,30 @@ class BatchOrderManager:
         order_ids = []
         errors = []
         
-        # Bybit позволяет макс 10 ордеров в batch для UTA Spot (или 20 для Linear UTA)
-        # Ограничимся 10 для универсальности
+        # Лимит для Linear UTA - 20 ордеров, для Spot UTA - 10. 
+        # Оставляем 10 для безопасности.
         batch_limit = 10
         for i in range(0, len(orders), batch_limit):
             chunk = orders[i:i + batch_limit]
             
             request_list = []
             for o in chunk:
-                request_list.append({
-                    "category": self.client.category,
+                # Генерируем уникальный orderLinkId для каждого ордера для лучшей диагностики
+                link_id = f"grid_{uuid.uuid4().hex[:12]}"
+                
+                req_item = {
                     "symbol": self.client.symbol,
                     "side": o['side'],
                     "orderType": "Limit",
                     "qty": o['qty'],
                     "price": o['price'],
-                    "timeInForce": "PostOnly" if use_postonly else "GTC"
-                })
+                    "timeInForce": "PostOnly" if use_postonly else "GTC",
+                    "orderLinkId": link_id,
+                    "positionIdx": o.get('positionIdx', 0) # 0 для One-Way, 1/2 для Hedge
+                }
+                request_list.append(req_item)
                 
             try:
-                log.debug(f"Sending batch: {json.dumps(request_list)}")
                 # В pybit метод для пакетного размещения
                 response = self.client.session.place_batch_order(
                     category=self.client.category,
@@ -53,13 +57,12 @@ class BatchOrderManager:
                 # Обрабатываем результаты каждого ордера в пакете
                 result_list = response.get('result', {}).get('list', [])
                 ret_code_root = response.get('retCode', 0)
+                
                 if ret_code_root != 0:
                     log.error(f"❌ Batch request rejected by server: {ret_code_root} - {response.get('retMsg')}")
                     return [], [{"error": response.get('retMsg'), "code": ret_code_root}]
 
-                for res in result_list:
-                    # Bybit в батче возвращает retCode внутри каждого элемента
-                    # Иногда это retCode/retMsg, иногда code/msg
+                for i, res in enumerate(result_list):
                     r_code = res.get('retCode') if res.get('retCode') is not None else res.get('code')
                     r_msg = res.get('retMsg') or res.get('msg')
                     
@@ -68,11 +71,14 @@ class BatchOrderManager:
                     else:
                         ret_msg = r_msg or 'Unknown error'
                         ret_code = r_code if r_code is not None else 'No code'
-                        log.error(f"❌ Batch order item failed: {ret_code} - {ret_msg} | Full: {json.dumps(res)}")
+                        
+                        # Если ошибка "Unknown", попробуем вывести детали запроса
+                        orig_req = request_list[i] if i < len(request_list) else {}
+                        log.error(f"❌ Batch Order Failed: {ret_code} - {ret_msg} | Req: {orig_req.get('side')} {orig_req.get('qty')} @ {orig_req.get('price')} | Full: {json.dumps(res)}")
                         errors.append(res)
                         
             except Exception as e:
-                log.error(f"Batch placement failed: {e}")
+                log.error(f"Batch placement Exception: {e}")
                 errors.append({"error": str(e)})
                 
         return order_ids, errors
@@ -98,12 +104,13 @@ class BatchOrderManager:
                 
                 result_list = response.get('result', {}).get('list', [])
                 for res in result_list:
-                    if res.get('orderId'):
+                    r_code = res.get('retCode') if res.get('retCode') is not None else res.get('code')
+                    if res.get('orderId') and (r_code == 0 or r_code is None):
                         cancelled_count += 1
                     else:
                         errors.append(res)
             except Exception as e:
-                log.error(f"Batch cancel failed: {e}")
+                log.error(f"Batch cancel Exception: {e}")
                 errors.append({"error": str(e)})
                 
         return cancelled_count, errors

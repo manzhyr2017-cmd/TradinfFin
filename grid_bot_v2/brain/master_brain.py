@@ -555,6 +555,20 @@ class MasterBrain:
         )
         timing_score = timing.score if timing else 50
 
+        # ⑫ Avellaneda-Stoikov Quotes (обновляем каждые 5 сек)
+        # q (inventory) берем из модели AS
+        inv = float(self.as_model.current_inventory)
+        self._get_cached(
+            "as_quotes",
+            lambda: self.as_model.calculate_quotes(
+                mid_price=float(price),
+                volatility=volatility / 100, # Переводим из % в десятичный вид
+                inventory=inv,
+                time_left=1.0 # Упрощенно 1.0 для вечной сетки
+            ),
+            ttl_sec=5,
+        )
+
         snapshot = MarketSnapshot(
             timestamp=now,
             price=price,
@@ -835,13 +849,22 @@ class MasterBrain:
             lows = np.array([float(k[3]) for k in klines_5m_reversed])
             volumes = np.array([float(k[5]) for k in klines_5m_reversed])
 
-            entry_signal = self.smart_entry.analyze_buy_entry(
-                closes=closes,
-                highs=highs,
-                lows=lows,
-                volumes=volumes,
-                target_price=float(order_price),
-            )
+            if side == "Buy":
+                entry_signal = self.smart_entry.analyze_buy_entry(
+                    closes=closes,
+                    highs=highs,
+                    lows=lows,
+                    volumes=volumes,
+                    target_price=float(order_price),
+                )
+            else:
+                entry_signal = self.smart_entry.analyze_sell_entry(
+                    closes=closes,
+                    highs=highs,
+                    lows=lows,
+                    volumes=volumes,
+                    target_price=float(order_price),
+                )
 
             # Если сигнал очень против → не ставим
             if not entry_signal.should_enter and entry_signal.score < -0.4:
@@ -1195,7 +1218,10 @@ class MasterBrain:
 
     def _fetch_klines(self, interval, limit):
         klines = self.client.get_klines(interval=interval, limit=limit)
-        if klines: klines.reverse()
+        if klines:
+            klines.reverse()
+            # Filter valid candles (must have at least 6 elements [time, o, h, l, c, v])
+            klines = [k for k in klines if isinstance(k, (list, tuple)) and len(k) >= 6]
         return klines or []
 
     def _predict_ml_regime(self):
@@ -1290,13 +1316,25 @@ class MasterBrain:
         # Сохраняем границы в конфиг для SL
         config.GRID_LOWER_PRICE = float(lower)
         config.GRID_UPPER_PRICE = float(upper)
+        
+        # Определяем режим позиции для учета Hedge Mode
+        pos_mode = self.client.get_position_mode()
+        
         orders = []
         for sl in skewed:
             adj_qty, adj_price = self._adjust_precision(sl.recommended_qty, sl.skewed_price)
+            side = "Buy" if sl.price < price else "Sell"
+            
+            # В Hedge Mode: 1=Buy, 2=Sell. В One-Way: 0.
+            p_idx = 0
+            if pos_mode == 3: # My code for Hedge
+                p_idx = 1 if side == "Buy" else 2
+                
             orders.append({
-                "side": "Buy" if sl.price < price else "Sell",
+                "side": side,
                 "qty": str(adj_qty),
                 "price": str(adj_price),
+                "positionIdx": p_idx
             })
         if orders:
             ids, errs = self.batch_manager.place_grid_batch(orders, use_postonly=True)

@@ -25,23 +25,36 @@ class PrecisionTimingEngine:
     def calculate_timing_score(self) -> TimingScore:
         """Рассчитывает композитный скор от 0 до 100."""
         scores = []
+        reasons = []
         
-        # 1. Order Book Imbalance
+        # 1. Order Book Imbalance (40%)
         obi_data = self._analyze_orderbook()
-        scores.append(obi_data['obi'] * 100 * 0.4)
+        obi_score = obi_data['obi'] * 100
+        scores.append(obi_score * 0.4)
+        if obi_score > 70: reasons.append("Strong BID pressure")
         
-        # 2. Funding Rate Check
+        # 2. Funding Rate Check (20%)
         funding = self._analyze_funding_rate()
-        if funding['funding_rate'] > 0.0003: # Перекос в лонг
-            scores.append(30 * 0.3)
+        fr = funding['funding_rate']
+        if fr > 0.0003: # High funding (longs paying)
+            scores.append(20 * 0.2)
+            reasons.append(f"High funding: {fr:.4%}")
+        elif fr < -0.0003: # Low funding (shorts paying)
+            scores.append(80 * 0.2)
+            reasons.append(f"Low funding: {fr:.4%}")
         else:
-            scores.append(80 * 0.3)
+            scores.append(50 * 0.2)
             
-        # 3. Spread Stability
-        # ... 
+        # 3. Volatility Check (20%)
+        # Placeholder for real volatility check
+        scores.append(50 * 0.2)
+        
+        # 4. Momentum (20%)
+        # Placeholder for RSI/MACD timing
+        scores.append(50 * 0.2)
         
         total = int(sum(scores))
-        return TimingScore(score=total)
+        return TimingScore(score=total, reasons=reasons)
 
     def _analyze_orderbook(self) -> Dict[str, Any]:
         """Анализ давления в стакане."""
