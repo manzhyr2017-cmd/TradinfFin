@@ -66,8 +66,8 @@ class TickerWebSocket:
     def start(self):
         self.ws = WebSocket(
             testnet=False,
-            demo=config.BYBIT_DEMO,
-            channel_type=config.CATEGORY # Используем 'linear' из конфига
+            demo=False, # Публичные данные берем из реального рынка (они идентичны)
+            channel_type=config.CATEGORY
         )
         self.ws.ticker_stream(symbol=config.SYMBOL, callback=self._handle_ticker)
         log.info(f"📡 Ticker WS connected: {config.SYMBOL}")
