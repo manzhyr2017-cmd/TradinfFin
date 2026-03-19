@@ -30,17 +30,25 @@
 """
 
 import time
+import signal
+import sys
 import logging
+import warnings
 import threading
 import numpy as np
+from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
 from enum import Enum
 
-# ── Все наши модули ────────────────────────────────────
+# Отключаем шум от ML-библиотек
+warnings.filterwarnings("ignore", category=UserWarning)
+logging.getLogger('lightgbm').setLevel(logging.ERROR)
+
 import config
+
+# ── Все наши модули ────────────────────────────────────
 from core.database import Database
 from core.notifier import TelegramNotifier
 from core.bybit_client import BybitClient

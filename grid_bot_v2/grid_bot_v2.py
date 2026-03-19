@@ -8,6 +8,11 @@ import time
 import signal
 import sys
 import logging
+import warnings
+
+# Убираем лишний шум от ML-библиотек
+warnings.filterwarnings("ignore", category=UserWarning)
+logging.getLogger('lightgbm').setLevel(logging.ERROR)
 
 import config
 from brain.master_brain import MasterBrain
