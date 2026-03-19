@@ -655,7 +655,7 @@ class MasterBrain:
                 lambda: self._predict_ml_regime(),
                 ttl_sec=30,
             )
-        else:
+        if not ml_result:
             ml_result = {"regime": "unknown", "confidence": 0.0}
             
         ml_regime = ml_result.get("regime", "unknown")
