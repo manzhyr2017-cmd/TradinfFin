@@ -128,6 +128,30 @@ class BybitClient:
                 "tick_size": Decimal("0.01")
             }
 
+    def set_leverage(self, symbol: str, leverage: int) -> bool:
+        """Устанавливает плечо для символа."""
+        try:
+            log.info(f"⚙️ Setting leverage {leverage}x for {symbol}...")
+            res = self.session.set_leverage(
+                category="linear",
+                symbol=symbol,
+                buyLeverage=str(leverage),
+                sellLeverage=str(leverage)
+            )
+            if res.get('retCode') == 0:
+                log.info(f"✅ Leverage set to {leverage}x for {symbol}")
+                return True
+            else:
+                # Если плечо уже такое же, API может вернуть ошибку, это не критично
+                msg = res.get('retMsg', '')
+                if "leverage not modified" in msg.lower():
+                    return True
+                log.warning(f"⚠️ Failed to set leverage for {symbol}: {msg}")
+                return False
+        except Exception as e:
+            log.error(f"❌ Error setting leverage for {symbol}: {e}")
+            return False
+
     def get_orderbook(self, limit: int = 50, symbol: Optional[str] = None) -> Dict[str, Any]:
         """Получить стакан ордеров."""
         try:
@@ -140,6 +164,18 @@ class BybitClient:
         except Exception as e:
             log.error(f"Error fetching orderbook: {e}")
             return {}
+
+    def get_tickers(self, category: str = "linear") -> List[Dict[str, Any]]:
+        """Получить данные тикеров для всей категории."""
+        try:
+            res = self.session.get_tickers(category=category)
+            if res.get('retCode') == 0:
+                return res.get('result', {}).get('list', [])
+            log.warning(f"⚠️ Failed to fetch tickers: {res.get('retMsg')}")
+            return []
+        except Exception as e:
+            log.error(f"❌ Error fetching tickers: {e}")
+            return []
 
     def get_klines(self, interval: str = "15", limit: int = 200, symbol: Optional[str] = None) -> List[List[Any]]:
         """

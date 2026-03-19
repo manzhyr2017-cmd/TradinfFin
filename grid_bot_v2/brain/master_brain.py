@@ -346,7 +346,7 @@ class MasterBrain:
         "genetic_optimize": 86400,  # Раз в сутки
         "compound_check":   86400,  # Раз в сутки
         "vip_check":        3600,   # Каждый час
-        "scanner":          3600,   # Каждый час
+        "scanner":          300,    # Каждые 5 минут
     }
 
     def __init__(self):
@@ -1928,6 +1928,9 @@ class MasterBrain:
         self.client.symbol = new_symbol
         self.grid_levels = []
         self.db.clear_active_orders() # Очистка БД от старых ордеров
+        
+        # 2.1 Устанавливаем плечо для нового символа
+        self.client.set_leverage(symbol=new_symbol, leverage=getattr(config, 'LEVERAGE', 10))
         
         # 3. WS Перезапускается автоматически при смене символа в config.SYMBOL
         # Но в RobustWebSocket нам стоит иметь метод для смены если нужно. 

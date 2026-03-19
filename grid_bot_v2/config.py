@@ -17,18 +17,25 @@ BYBIT_TESTNET = os.getenv('BYBIT_TESTNET', 'false').lower() == 'true'
 # --- Bot Configuration ---
 SYMBOL = "ETHUSDT"
 QUOTE_COIN = "USDT"
-GRID_LEVEL_COUNT = 15
-GRID_STEP_PERCENT = 0.5
+GRID_LEVEL_COUNT = 20
+GRID_STEP_PERCENT = 0.4  # Шаг чуть меньше для частоты сделок
 GRID_LOWER_PRICE = 1900.0   # НИЖНЯЯ ГРАНИЦА СЕТКИ
 GRID_UPPER_PRICE = 2300.0   # ВЕРХНЯЯ ГРАНИЦА СЕТКИ
-BASE_ORDER_QTY = 0.02
-LEVERAGE = 1
+BASE_ORDER_QTY = 0.1     # Увеличено в 5 раз
+LEVERAGE = 10            # Плечо увеличено до x10
+
+# --- Market Scanner Configuration ---
+SCAN_ENABLED = True
+SCAN_INTERVAL_SEC = 300       # Каждые 5 минут
+SCAN_TOP_N = 20               # Анализировать ТОП-20 волатильных
+SCAN_MIN_VOL_USDT = 10000000  # Минимальный 24h объём (10M)
+SCAN_MIN_SCORE = 60           # Минимальный скор для переключения
 
 # --- Risk & Sizing ---
 STOP_LOSS_PCT = 5.0          # Стоп-лосс от нижней границы
-MAX_DRAWDOWN_USDT = 100.0    # Макс. просадка в долларах
-DAILY_LOSS_LIMIT_USDT = 50.0  # Дневной лимит убытка
-REBALANCE_THRESHOLD_PCT = 10.0 # Порог для ребаланса сетки
+MAX_DRAWDOWN_USDT = 200.0    # Макс. просадка в долларах (увеличено)
+DAILY_LOSS_LIMIT_USDT = 100.0 # Дневной лимит убытка (увеличено)
+REBALANCE_THRESHOLD_PCT = 5.0 # Порог для ребаланса сетки
 USE_DYNAMIC_QTY = True
 DYNAMIC_QTY_BALANCE_PCT = 0.5 
 MIN_ORDER_QTY = 0.001
@@ -56,7 +63,7 @@ BIT_FEE_DISCOUNT = False
 # --- Auto-Compounding (v4.0) ---
 COMPOUND_MODE = "hybrid"       # "qty", "grid", or "hybrid"
 MIN_COMPOUND_USDT = 10.0       # Reinvest every $10 profit
-INITIAL_CAPITAL = 1000.0       # For ROI calculation
+INITIAL_CAPITAL = 300.0       # For ROI calculation (реальный баланс)
 
 # --- Hybrid Grid + DCA (v4.0) ---
 DCA_ENABLED = True

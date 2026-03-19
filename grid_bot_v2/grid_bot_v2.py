@@ -108,6 +108,22 @@ def main():
             log.info("🌱 Сетка пуста. Размещаем начальные ордера...")
             brain._place_initial_grid(snap, mode)
         
+        banner = f"""
+        {'='*40}
+           GRID BOT v5.0 - PROFITABILITY UPGRADE
+        {'='*40}
+        Symbol:    {config.SYMBOL}
+        Leverage:  {config.LEVERAGE}x (Target 10x)
+        Grid Size: {config.GRID_LEVEL_COUNT} levels
+        Step:      {config.GRID_STEP_PERCENT}%
+        Risk:      Max Drawdown ${config.MAX_DRAWDOWN_USDT}
+        {'='*40}
+        """
+        print(banner)
+        
+        # 0. Установка плеча при старте
+        brain.client.set_leverage(symbol=config.SYMBOL, leverage=config.LEVERAGE)
+        
         brain.notifier.send_alert(
             f"🚀 Grid Bot v4.0 запущен!\n"
             f"Символ: {config.SYMBOL}\n"

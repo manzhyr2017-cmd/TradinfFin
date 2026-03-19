@@ -5,6 +5,8 @@ from decimal import Decimal
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 
+import config
+
 log = logging.getLogger("MarketScanner")
 
 class ScannerResult:
@@ -22,15 +24,48 @@ class MarketScanner:
     
     def __init__(self, client):
         self.client = client
-        self.symbols = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT"]
+        self.last_scan_ts = 0
         
+    def get_volatile_top_coins(self, limit: int = 20, min_vol: float = 10000000) -> List[str]:
+        """Получает список наиболее волатильных монет из ТОП по объему."""
+        try:
+            tickers = self.client.get_tickers(category="linear")
+            if not tickers:
+                return ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT"]
+            
+            # Фильтруем: только USDT пары, с объемом >= min_vol
+            valid = []
+            for t in tickers:
+                symbol = t.get('symbol', '')
+                vol = float(t.get('turnover24h', 0))
+                change = abs(float(t.get('price24hPcnt', '0')) * 100)
+                
+                if symbol.endswith('USDT') and vol >= min_vol:
+                    valid.append({"symbol": symbol, "change": change, "vol": vol})
+            
+            # Сортируем по волатильности (абс. изменению цены)
+            valid.sort(key=lambda x: x['change'], reverse=True)
+            
+            # Возвращаем топ N
+            top_symbols = [x['symbol'] for x in valid[:limit]]
+            log.info(f"📊 Scanner: Found {len(valid)} candidates, selected TOP {len(top_symbols)}")
+            return top_symbols
+        except Exception as e:
+            log.error(f"❌ Error getting volatile coins: {e}")
+            return ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT"]
+
     def scan(self) -> Optional[ScannerResult]:
         """Сканирует список пар и возвращает лучшую."""
+        top_n = getattr(config, 'SCAN_TOP_N', 20)
+        min_vol = getattr(config, 'SCAN_MIN_VOL_USDT', 10000000)
+        
+        symbols = self.get_volatile_top_coins(limit=top_n, min_vol=min_vol)
         results = []
-        for symbol in self.symbols:
+        
+        for symbol in symbols:
             try:
                 res = self.analyze_symbol(symbol)
-                if res:
+                if res and res.score >= getattr(config, 'SCAN_MIN_SCORE', 60):
                     results.append(res)
                     log.info(f"🔍 Scanner: {symbol} | Score: {res.score:.1f} | Regime: {res.regime}")
             except Exception as e:
