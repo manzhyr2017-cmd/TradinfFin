@@ -1,0 +1,9 @@
+pybit
+pandas
+python-dotenv
+requests
+sqlalchemy
+lightgbm
+scikit-learn
+numpy
+scipy
